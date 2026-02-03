@@ -5,7 +5,7 @@ A Flask-based web application for detecting diseases in chilli leaves using a tr
 
 ## 🎯 Features
 - **Real-time Disease Detection**: Upload chilli leaf images and get instant predictions
-- **6 Disease Classes**: Detects Whitefly, Yellowish, Healthy, Anthracnose, Leaf Curl Virus, and Leaf Spot
+- **5 Disease Classes**: Detects Whitefly, Yellowish, Healthy, Anthracnose, and Leaf Curl Virus
 - **Confidence Scores**: Shows prediction confidence and probability distribution
 - **Treatment Recommendations**: Provides symptoms and treatment guidelines for each disease
 - **User-Friendly Interface**: Clean, responsive design with drag-and-drop upload
