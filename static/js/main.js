@@ -1,0 +1,1015 @@
+// ChilliDoc AI - Main JavaScript
+// Industry-level frontend logic
+
+document.addEventListener('DOMContentLoaded', function() {
+    // DOM Elements
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const selectFileBtn = document.getElementById('selectFileBtn');
+    const previewArea = document.getElementById('previewArea');
+    const imagePreview = document.getElementById('imagePreview');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const loadingState = document.getElementById('loadingState');
+    const resultsSection = document.getElementById('resultsSection');
+    const newAnalysisBtn = document.getElementById('newAnalysisBtn');
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    
+    let selectedFile = null;
+
+    // ============================================
+    // File Upload Handlers
+    // ============================================
+    
+    // Click to select file
+    selectFileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        fileInput.click();
+    });
+
+    // Upload area click handler
+    uploadArea.addEventListener('click', (e) => {
+        // Trigger file input when clicking on upload area (but not on button)
+        if (e.target === uploadArea || e.target.closest('.upload-icon') || e.target.closest('.upload-content h3')) {
+            fileInput.click();
+        }
+    });
+
+    // File input change
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            handleFileSelect(file);
+        }
+    });
+
+    // Drag and drop
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', function() {
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            handleFileSelect(file);
+        } else {
+            showToast('Please upload a valid image file', 'error');
+        }
+    });
+
+    // Remove image
+    removeImageBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        resetUpload();
+    });
+
+    // Analyze button
+    analyzeBtn.addEventListener('click', function() {
+        if (selectedFile) {
+            analyzeImage(selectedFile);
+        }
+    });
+
+    // New analysis button
+    newAnalysisBtn.addEventListener('click', function() {
+        resetUpload();
+        resultsSection.classList.add('hidden');
+        document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // Mobile menu toggle
+    if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const navMenu = document.querySelector('.nav-menu');
+            navMenu.classList.toggle('active');
+            
+            // Change icon
+            const icon = mobileMenuToggle.querySelector('i');
+            if (navMenu.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const navMenu = document.querySelector('.nav-menu');
+            if (navMenu && navMenu.classList.contains('active')) {
+                if (!e.target.closest('.nav-wrapper')) {
+                    navMenu.classList.remove('active');
+                    const icon = mobileMenuToggle.querySelector('i');
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            }
+        });
+        
+        // Close menu when clicking a nav link
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', function() {
+                const navMenu = document.querySelector('.nav-menu');
+                navMenu.classList.remove('active');
+                const icon = mobileMenuToggle.querySelector('i');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            });
+        });
+    }
+    
+    // Touch-friendly improvements for mobile
+    if ('ontouchstart' in window) {
+        // Add touch class to body for CSS targeting
+        document.body.classList.add('touch-device');
+        
+        // Prevent click delay on buttons
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.98)';
+            });
+            btn.addEventListener('touchend', function() {
+                this.style.transform = '';
+            });
+        });
+    }
+    
+    // Viewport resize handler for responsive adjustments
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            // Adjust upload area on orientation change
+            if (window.innerWidth < 768 && uploadArea) {
+                uploadArea.style.minHeight = '250px';
+            } else if (uploadArea) {
+                uploadArea.style.minHeight = '';
+            }
+        }, 250);
+    });
+
+    // ============================================
+    // Core Functions
+    // ============================================
+
+    function handleFileSelect(file) {
+        // Log for debugging
+        console.log('File selected:', {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            lastModified: file.lastModified
+        });
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            showToast('Please select an image file', 'error');
+            return;
+        }
+
+        // Validate file size (16MB max)
+        if (file.size > 16 * 1024 * 1024) {
+            showToast('File size must be less than 16MB', 'error');
+            return;
+        }
+
+        // Process and optimize the image before preview
+        processAndPreviewImage(file);
+    }
+
+    function processAndPreviewImage(file) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const img = new Image();
+            
+            img.onload = function() {
+                // Create canvas for image processing
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Calculate dimensions (max 1920px on longest side for consistency)
+                const maxDimension = 1920;
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > maxDimension || height > maxDimension) {
+                    const scale = Math.min(maxDimension / width, maxDimension / height);
+                    width = Math.round(width * scale);
+                    height = Math.round(height * scale);
+                }
+                
+                // Set canvas size
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Draw and compress image
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert to blob
+                canvas.toBlob(function(blob) {
+                    if (!blob) {
+                        // Fallback to original file
+                        console.warn('Failed to process image, using original');
+                        displayImagePreview(e.target.result);
+                        selectedFile = file;
+                        showToast('Image loaded successfully!', 'success');
+                        return;
+                    }
+                    
+                    // Create optimized file
+                    const optimizedFile = new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    
+                    console.log('Image optimized:', {
+                        originalSize: file.size,
+                        optimizedSize: optimizedFile.size,
+                        dimensions: `${width}x${height}`,
+                        reduction: `${((1 - optimizedFile.size / file.size) * 100).toFixed(1)}%`
+                    });
+                    
+                    // Store optimized file
+                    selectedFile = optimizedFile;
+                    
+                    // Show preview
+                    displayImagePreview(canvas.toDataURL('image/jpeg', 0.92));
+                    
+                    showToast('Image loaded successfully!', 'success');
+                }, 'image/jpeg', 0.92);
+            };
+            
+            img.onerror = function() {
+                console.error('Failed to load image');
+                showToast('Failed to load image. Please try again.', 'error');
+            };
+            
+            img.src = e.target.result;
+        };
+        
+        reader.onerror = function(e) {
+            console.error('FileReader error:', e);
+            showToast('Failed to load image. Please try again.', 'error');
+        };
+        
+        reader.readAsDataURL(file);
+    }
+
+    function displayImagePreview(dataUrl) {
+        imagePreview.src = dataUrl;
+        uploadArea.classList.add('hidden');
+        previewArea.classList.remove('hidden');
+    }
+
+    function resetUpload() {
+        selectedFile = null;
+        fileInput.value = '';
+        imagePreview.src = '';
+        uploadArea.classList.remove('hidden');
+        previewArea.classList.add('hidden');
+        loadingState.classList.add('hidden');
+    }
+
+    async function analyzeImage(file) {
+        try {
+            console.log('Starting analysis for:', {
+                name: file.name,
+                type: file.type,
+                size: file.size
+            });
+
+            // Show loading state
+            previewArea.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+
+            // Create form data
+            const formData = new FormData();
+            formData.append('file', file);
+
+            console.log('Sending request to /api/predict...');
+
+            // Make API request
+            const response = await fetch('/api/predict', {
+                method: 'POST',
+                body: formData
+            });
+
+            console.log('Response received:', {
+                status: response.status,
+                statusText: response.statusText,
+                ok: response.ok
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server error:', errorText);
+                throw new Error(`Prediction failed: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            console.log('Prediction data:', data);
+
+            if (data.success) {
+                displayResults(data);
+                showToast('Analysis complete!', 'success');
+            } else {
+                throw new Error(data.error || 'Unknown error');
+            }
+
+        } catch (error) {
+            console.error('Analysis error:', error);
+            showToast('Error analyzing image. Please try again.', 'error');
+            loadingState.classList.add('hidden');
+            previewArea.classList.remove('hidden');
+        }
+    }
+
+    function displayResults(data) {
+        const prediction = data.prediction;
+        const diseaseInfo = data.disease_info;
+
+        // Hide loading, show results
+        loadingState.classList.add('hidden');
+        resultsSection.classList.remove('hidden');
+        resultsSection.scrollIntoView({ behavior: 'smooth' });
+
+        // Update severity badge
+        const severityBadge = document.getElementById('severityBadge');
+        const severityText = document.getElementById('severityText');
+        const severity = diseaseInfo.severity || 'Unknown';
+        
+        severityText.textContent = `${severity} Severity`;
+        severityBadge.className = 'result-badge';
+        
+        if (severity === 'High' || severity === 'Very High') {
+            severityBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+        } else if (severity === 'Medium') {
+            severityBadge.style.background = 'rgba(245, 158, 11, 0.2)';
+        } else if (severity === 'None') {
+            severityBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+        }
+
+        // Update disease name
+        document.getElementById('diseaseName').textContent = prediction.predicted_class;
+
+        // Update confidence
+        const confidence = prediction.confidence;
+        document.getElementById('confidenceFill').style.width = `${confidence}%`;
+        document.getElementById('confidenceValue').textContent = `${confidence.toFixed(2)}%`;
+
+        // Update description
+        document.getElementById('diseaseDescription').textContent = diseaseInfo.description || 'No description available';
+
+        // Update symptoms
+        updateList('symptomsList', diseaseInfo.symptoms || []);
+
+        // Update treatment
+        updateList('treatmentList', diseaseInfo.treatment || []);
+
+        // Update prevention
+        updateList('preventionList', diseaseInfo.prevention || []);
+
+        // Update organic solutions
+        updateList('organicList', diseaseInfo.organic_solutions || []);
+
+        // Update probability chart
+        updateProbabilityChart(prediction.all_probabilities);
+
+        // Add animation
+        resultsSection.classList.add('fade-in');
+    }
+
+    function updateList(elementId, items) {
+        const list = document.getElementById(elementId);
+        list.innerHTML = '';
+        
+        if (items.length === 0) {
+            list.innerHTML = '<li>No information available</li>';
+            return;
+        }
+
+        items.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            list.appendChild(li);
+        });
+    }
+
+    function updateProbabilityChart(probabilities) {
+        const chartContainer = document.getElementById('probabilityChart');
+        chartContainer.innerHTML = '';
+
+        // Sort probabilities
+        const sortedProbs = Object.entries(probabilities).sort((a, b) => b[1] - a[1]);
+
+        sortedProbs.forEach(([disease, probability]) => {
+            const item = document.createElement('div');
+            item.className = 'probability-item';
+            
+            item.innerHTML = `
+                <div class="probability-label">${disease}</div>
+                <div class="probability-bar">
+                    <div class="probability-fill" style="width: ${probability}%"></div>
+                </div>
+                <div class="probability-value">${probability.toFixed(2)}%</div>
+            `;
+            
+            chartContainer.appendChild(item);
+        });
+    }
+
+    // ============================================
+    // Toast Notifications
+    // ============================================
+    
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        const toastIcon = toast.querySelector('i');
+
+        toastMessage.textContent = message;
+
+        // Update icon based on type
+        if (type === 'error') {
+            toastIcon.className = 'fas fa-exclamation-circle';
+            toastIcon.style.color = '#ef4444';
+        } else if (type === 'warning') {
+            toastIcon.className = 'fas fa-exclamation-triangle';
+            toastIcon.style.color = '#f59e0b';
+        } else {
+            toastIcon.className = 'fas fa-check-circle';
+            toastIcon.style.color = '#10b981';
+        }
+
+        // Show toast
+        toast.classList.remove('hidden');
+        toast.classList.add('show');
+
+        // Hide after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 300);
+        }, 3000);
+    }
+
+    // ============================================
+    // Export Functions
+    // ============================================
+
+    // Download PDF (placeholder - requires jsPDF library)
+    const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+    if (downloadPdfBtn) {
+        downloadPdfBtn.addEventListener('click', function() {
+            showToast('PDF download feature coming soon!', 'warning');
+            // TODO: Implement PDF generation with jsPDF
+        });
+    }
+
+    // Share results
+    const shareResultBtn = document.getElementById('shareResultBtn');
+    if (shareResultBtn) {
+        shareResultBtn.addEventListener('click', async function() {
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'Chilli Disease Detection Results',
+                        text: 'Check out my plant disease diagnosis from ChilliDoc AI',
+                        url: window.location.href
+                    });
+                    showToast('Shared successfully!', 'success');
+                } catch (error) {
+                    console.error('Share failed:', error);
+                }
+            } else {
+                // Fallback: Copy to clipboard
+                const url = window.location.href;
+                navigator.clipboard.writeText(url).then(() => {
+                    showToast('Link copied to clipboard!', 'success');
+                }).catch(() => {
+                    showToast('Could not copy link', 'error');
+                });
+            }
+        });
+    }
+
+    // ============================================
+    // Smooth Scrolling
+    // ============================================
+    
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // ============================================
+    // Intersection Observer for Animations
+    // ============================================
+    
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    // Observe feature cards
+    document.querySelectorAll('.feature-card').forEach(card => {
+        observer.observe(card);
+    });
+
+    // ============================================
+    // Performance Monitoring
+    // ============================================
+    
+    // Log performance metrics
+    window.addEventListener('load', () => {
+        const perfData = performance.timing;
+        const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
+        console.log(`Page Load Time: ${pageLoadTime}ms`);
+    });
+
+    // ============================================
+    // Service Worker Registration (PWA)
+    // ============================================
+    
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                    console.log('ServiceWorker registered:', registration);
+                })
+                .catch(error => {
+                    console.log('ServiceWorker registration failed:', error);
+                });
+        });
+    }
+
+    // ============================================
+    // Keyboard Shortcuts
+    // ============================================
+    
+    document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + U: Upload new image
+        if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+            e.preventDefault();
+            fileInput.click();
+        }
+        
+        // Escape: Reset upload
+        if (e.key === 'Escape') {
+            if (!resultsSection.classList.contains('hidden')) {
+                resetUpload();
+                resultsSection.classList.add('hidden');
+            }
+        }
+    });
+
+    console.log('ChilliDoc AI initialized successfully! 🌶️');
+});
+
+// ============================================
+// Utility Functions
+// ============================================
+
+// Format file size
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+// Debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Check if device is mobile
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+// Get user's location (for future features)
+async function getUserLocation() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new Error('Geolocation not supported'));
+        } else {
+            navigator.geolocation.getCurrentPosition(
+                position => resolve({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                }),
+                error => reject(error)
+            );
+        }
+    });
+}
+
+// ============================================
+// Chatbot Functionality
+// ============================================
+
+// Chatbot knowledge base
+const chatbotKnowledge = {
+    greetings: ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'],
+    
+    responses: {
+        // Disease Prevention
+        'prevent|prevention|stop|avoid': {
+            keywords: ['disease', 'problem', 'infection'],
+            answer: `🛡️ **Disease Prevention Tips:**
+
+• Use disease-free seeds and seedlings
+• Maintain proper spacing between plants
+• Ensure good air circulation
+• Avoid overhead watering
+• Remove infected plant parts immediately
+• Practice crop rotation
+• Apply organic fungicides preventively
+• Keep the field clean and weed-free`
+        },
+        
+        // Fertilizer
+        'fertilizer|fertiliser|nutrients|feeding': {
+            keywords: ['best', 'good', 'recommended', 'use', 'apply'],
+            answer: `🌱 **Fertilizer Recommendations:**
+
+• **NPK Ratio:** Use 19:19:19 during vegetative stage
+• **Flowering Stage:** Switch to 13:0:45
+• **Organic Options:** Compost, vermicompost, neem cake
+• **Micronutrients:** Zinc, Boron, Magnesium
+• **Application:** Apply every 15-20 days
+• **Foliar Spray:** Weekly with micronutrients
+
+💡 Avoid over-fertilization to prevent disease susceptibility`
+        },
+        
+        // Watering
+        'water|watering|irrigation': {
+            keywords: ['schedule', 'how often', 'frequency', 'much', 'amount'],
+            answer: `💧 **Watering Guide:**
+
+• **Frequency:** Water every 3-4 days in summer
+• **Winter:** Reduce to once a week
+• **Best Time:** Early morning or evening
+• **Amount:** Keep soil moist, not waterlogged
+• **Method:** Drip irrigation is best
+• **Mulching:** Apply to retain moisture
+
+⚠️ Over-watering causes root rot and fungal diseases`
+        },
+        
+        // Pest Control
+        'pest|insect|bug': {
+            keywords: ['control', 'identify', 'problem', 'attack', 'damage'],
+            answer: `🐛 **Pest Management:**
+
+• **Common Pests:** Aphids, Thrips, Whitefly, Mites
+• **Signs:** Curled leaves, sticky residue, tiny insects
+• **Organic Control:** Neem oil, garlic spray
+• **Chemical:** Use only when necessary
+• **Natural Predators:** Ladybugs, lacewings
+• **Prevention:** Yellow sticky traps, companion planting
+
+🔍 Upload an image for accurate pest identification!`
+        },
+        
+        // Anthracnose
+        'anthracnose|anthracnosis': {
+            keywords: ['treatment', 'cure', 'control', 'manage'],
+            answer: `🍂 **Anthracnose Treatment:**
+
+• Remove and destroy infected fruits/leaves
+• Apply copper-based fungicides
+• Use Mancozeb or Chlorothalonil
+• Improve air circulation
+• Avoid overhead irrigation
+• Harvest mature fruits promptly
+• Practice crop rotation
+
+📝 This disease thrives in humid conditions`
+        },
+        
+        // Leaf Curl
+        'leaf curl|curl virus': {
+            keywords: ['treatment', 'cure', 'control', 'manage'],
+            answer: `🦠 **Leaf Curl Virus Management:**
+
+• Remove infected plants immediately
+• Control whitefly vectors with neem oil
+• Use yellow sticky traps
+• Apply imidacloprid if severe
+• Plant resistant varieties
+• Use virus-free seedlings
+• Maintain plant nutrition
+
+⚠️ Viral diseases cannot be cured, only managed`
+        },
+        
+        // Whitefly
+        'whitefly|white fly': {
+            keywords: ['control', 'remove', 'kill', 'get rid'],
+            answer: `🦟 **Whitefly Control:**
+
+• Spray neem oil (5ml/liter water)
+• Use yellow sticky traps
+• Apply insecticidal soap
+• Chemical: Imidacloprid or Thiamethoxam
+• Natural predators: Encarsia formosa
+• Remove heavily infested leaves
+• Avoid excess nitrogen fertilizer
+
+✅ Monitor plants twice weekly`
+        },
+        
+        // Healthy Plants
+        'healthy|no disease|normal': {
+            keywords: ['keep', 'maintain', 'grow', 'care'],
+            answer: `✨ **Maintaining Healthy Plants:**
+
+• Regular monitoring for early detection
+• Balanced nutrition and watering
+• Proper spacing and pruning
+• Mulching to suppress weeds
+• Organic matter for soil health
+• Beneficial insects for pest control
+• Remove dead/diseased plant parts
+• Clean tools to prevent spread
+
+🎯 Prevention is always better than cure!`
+        },
+        
+        // Yellowish
+        'yellow|yellowing': {
+            keywords: ['leaves', 'plant', 'problem', 'cause'],
+            answer: `🍃 **Yellowing Leaves:**
+
+**Causes:**
+• Nitrogen deficiency
+• Over-watering or poor drainage
+• Pest damage (mites, aphids)
+• Viral infection
+• pH imbalance
+
+**Solutions:**
+• Apply nitrogen-rich fertilizer
+• Improve drainage
+• Check for pests
+• Test and adjust soil pH (6.0-6.8)
+• Provide adequate sunlight`
+        },
+        
+        // Planting/Growing
+        'plant|grow|growing|cultivation': {
+            keywords: ['how', 'tips', 'guide', 'start', 'begin'],
+            answer: `🌿 **Chilli Growing Guide:**
+
+• **Climate:** 20-30°C temperature
+• **Soil:** Well-drained, pH 6.0-6.8
+• **Spacing:** 45cm between plants
+• **Sunlight:** 6-8 hours daily
+• **Germination:** 7-14 days
+• **Harvest:** 60-90 days after transplant
+
+📚 Start with healthy seeds or seedlings!`
+        },
+        
+        // Default farming advice
+        'default': {
+            answer: `I'm here to help with:
+
+🌱 Disease prevention & management
+💧 Watering and irrigation
+🧪 Fertilization schedules
+🐛 Pest identification & control
+🌾 Growing tips & best practices
+
+Please ask a specific question, or use the quick reply buttons below!
+
+📸 **Tip:** Upload a plant image for disease diagnosis using the main form.`
+        }
+    }
+};
+
+class FarmerChatbot {
+    constructor() {
+        this.chatbotToggle = document.getElementById('chatbotToggle');
+        this.chatbotModal = document.getElementById('chatbotModal');
+        this.chatbotClose = document.getElementById('chatbotClose');
+        this.chatbotMessages = document.getElementById('chatbotMessages');
+        this.chatbotInput = document.getElementById('chatbotInput');
+        this.chatbotSend = document.getElementById('chatbotSend');
+        this.quickReplies = document.querySelectorAll('.quick-reply-btn');
+        
+        this.init();
+    }
+    
+    init() {
+        // Toggle chatbot
+        if (this.chatbotToggle) {
+            this.chatbotToggle.addEventListener('click', () => this.toggleChat());
+        }
+        
+        if (this.chatbotClose) {
+            this.chatbotClose.addEventListener('click', () => this.closeChat());
+        }
+        
+        // Send message
+        if (this.chatbotSend) {
+            this.chatbotSend.addEventListener('click', () => this.sendMessage());
+        }
+        
+        if (this.chatbotInput) {
+            this.chatbotInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.sendMessage();
+                }
+            });
+        }
+        
+        // Quick replies
+        this.quickReplies.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const message = btn.getAttribute('data-message');
+                this.sendMessage(message);
+            });
+        });
+    }
+    
+    toggleChat() {
+        if (this.chatbotModal.classList.contains('hidden')) {
+            this.openChat();
+        } else {
+            this.closeChat();
+        }
+    }
+    
+    openChat() {
+        this.chatbotModal.classList.remove('hidden');
+        this.chatbotToggle.style.display = 'none';
+        this.chatbotInput.focus();
+    }
+    
+    closeChat() {
+        this.chatbotModal.classList.add('hidden');
+        this.chatbotToggle.style.display = 'flex';
+    }
+    
+    sendMessage(predefinedMessage = null) {
+        const message = predefinedMessage || this.chatbotInput.value.trim();
+        
+        if (!message) return;
+        
+        // Add user message
+        this.addMessage(message, 'user');
+        
+        // Clear input
+        if (!predefinedMessage) {
+            this.chatbotInput.value = '';
+        }
+        
+        // Show typing indicator
+        this.showTypingIndicator();
+        
+        // Get bot response after delay
+        setTimeout(() => {
+            this.removeTypingIndicator();
+            const response = this.generateResponse(message);
+            this.addMessage(response, 'bot');
+        }, 1000 + Math.random() * 1000);
+    }
+    
+    addMessage(text, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+        
+        const time = new Date().toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit',
+            hour12: true 
+        });
+        
+        messageDiv.innerHTML = `
+            <div class="message-avatar">
+                <i class="fas fa-${sender === 'user' ? 'user' : 'robot'}"></i>
+            </div>
+            <div class="message-content">
+                <p>${this.formatMessage(text)}</p>
+                <span class="message-time">${time}</span>
+            </div>
+        `;
+        
+        this.chatbotMessages.appendChild(messageDiv);
+        this.scrollToBottom();
+    }
+    
+    formatMessage(text) {
+        // Convert markdown-style formatting
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
+    }
+    
+    showTypingIndicator() {
+        const indicator = document.createElement('div');
+        indicator.className = 'message bot-message typing-message';
+        indicator.innerHTML = `
+            <div class="message-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-content">
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        `;
+        this.chatbotMessages.appendChild(indicator);
+        this.scrollToBottom();
+    }
+    
+    removeTypingIndicator() {
+        const indicator = this.chatbotMessages.querySelector('.typing-message');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+    
+    generateResponse(userMessage) {
+        const message = userMessage.toLowerCase();
+        
+        // Check for greetings
+        if (chatbotKnowledge.greetings.some(greeting => message.includes(greeting))) {
+            return `Hello! 👋 I'm your agricultural assistant. I can help you with chilli plant diseases, pest control, fertilizers, and growing tips. What would you like to know?`;
+        }
+        
+        // Check for thank you
+        if (message.includes('thank') || message.includes('thanks')) {
+            return `You're welcome! 😊 Feel free to ask if you have more questions. Happy farming! 🌱`;
+        }
+        
+        // Search knowledge base
+        for (const [pattern, data] of Object.entries(chatbotKnowledge.responses)) {
+            if (pattern === 'default') continue;
+            
+            const regex = new RegExp(pattern, 'i');
+            if (regex.test(message)) {
+                // Check if related keywords are present
+                if (!data.keywords || data.keywords.some(kw => message.includes(kw))) {
+                    return data.answer;
+                }
+            }
+        }
+        
+        // Default response
+        return chatbotKnowledge.responses.default.answer;
+    }
+    
+    scrollToBottom() {
+        this.chatbotMessages.scrollTop = this.chatbotMessages.scrollHeight;
+    }
+}
+
+// Initialize chatbot when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    new FarmerChatbot();
+});

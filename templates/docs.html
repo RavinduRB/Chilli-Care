@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation | ChilliDoc AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .code-block {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            margin: 1rem 0;
+        }
+        .method-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-right: 0.5rem;
+        }
+        .method-get { background: #10b981; color: white; }
+        .method-post { background: #3b82f6; color: white; }
+        .endpoint-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-md);
+            border-left: 4px solid var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <img src="{{ url_for('static', filename='images/chilli-care-logo.png') }}" alt="Chilli Care Logo" class="logo-image">
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/docs" class="active">API Docs</a></li>
+                    <li><a href="https://github.com" target="_blank"><i class="fab fa-github"></i> GitHub</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section style="padding: 6rem 0 4rem; background: var(--gradient-hero); color: white; text-align: center;">
+        <div class="container">
+            <h1 style="font-size: 3rem; font-weight: 700; margin-bottom: 1.5rem;">API Documentation</h1>
+            <p style="font-size: 1.25rem; max-width: 800px; margin: 0 auto; opacity: 0.9;">
+                Integrate ChilliDoc AI into your applications with our RESTful API
+            </p>
+        </div>
+    </section>
+
+    <section style="padding: 5rem 0; background: var(--gray-50);">
+        <div class="container" style="max-width: 1000px;">
+            
+            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 2rem; color: var(--gray-900);">Getting Started</h2>
+            <p style="font-size: 1.125rem; line-height: 1.8; color: var(--gray-700); margin-bottom: 2rem;">
+                The ChilliDoc AI API provides simple REST endpoints for plant disease detection. 
+                All API requests should be made to: <code style="background: var(--gray-200); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">https://api.chillidocai.com</code>
+            </p>
+
+            <h2 style="font-size: 2rem; font-weight: 700; margin: 3rem 0 2rem; color: var(--gray-900);">Authentication</h2>
+            <p style="font-size: 1.125rem; line-height: 1.8; color: var(--gray-700); margin-bottom: 2rem;">
+                Currently, the API is open and does not require authentication. For production use, API keys will be required.
+            </p>
+
+            <h2 style="font-size: 2rem; font-weight: 700; margin: 3rem 0 2rem; color: var(--gray-900);">Endpoints</h2>
+
+            <!-- Predict Endpoint -->
+            <div class="endpoint-card">
+                <h3 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; color: var(--gray-900);">
+                    <span class="method-badge method-post">POST</span>
+                    /api/predict
+                </h3>
+                <p style="color: var(--gray-600); margin-bottom: 1.5rem; line-height: 1.6;">
+                    Upload a chilli plant image and receive disease prediction with confidence scores and treatment recommendations.
+                </p>
+
+                <h4 style="font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--gray-900);">Request</h4>
+                <p style="color: var(--gray-600); margin-bottom: 0.75rem;">Content-Type: <code>multipart/form-data</code></p>
+                <p style="color: var(--gray-600); margin-bottom: 1rem;"><strong>Body Parameters:</strong></p>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 0.5rem 0; color: var(--gray-700);"><code>file</code> (required) - Image file (JPG, JPEG, PNG, max 16MB)</li>
+                </ul>
+
+                <h4 style="font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--gray-900);">Example Request (cURL)</h4>
+                <div class="code-block">curl -X POST https://api.chillidocai.com/api/predict \
+  -F "file=@chilli_leaf.jpg"</div>
+
+                <h4 style="font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--gray-900);">Example Request (Python)</h4>
+                <div class="code-block">import requests
+
+url = "http://localhost:5000/api/predict"
+files = {"file": open("chilli_leaf.jpg", "rb")}
+response = requests.post(url, files=files)
+result = response.json()
+print(result)</div>
+
+                <h4 style="font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--gray-900);">Example Request (JavaScript)</h4>
+                <div class="code-block">const formData = new FormData();
+formData.append('file', fileInput.files[0]);
+
+fetch('http://localhost:5000/api/predict', {
+  method: 'POST',
+  body: formData
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));</div>
+
+                <h4 style="font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--gray-900);">Response (Success)</h4>
+                <div class="code-block">{
+  "success": true,
+  "prediction": {
+    "predicted_class": "Chilli__Anthacnose",
+    "confidence": 96.84,
+    "all_probabilities": {
+      "Chilli__Anthacnose": 96.84,
+      "Chilli__Leaf_Curl_Virus": 2.15,
+      "Chilli __Whitefly": 0.68,
+      "Chilli __Yellowish": 0.22,
+      "Chilli___healthy": 0.11
+    },
+    "top_3_predictions": [
+      ["Chilli__Anthacnose", 96.84],
+      ["Chilli__Leaf_Curl_Virus", 2.15],
+      ["Chilli __Whitefly", 0.68]
+    ]
+  },
+  "disease_info": {
+    "severity": "High",
+    "description": "Anthracnose is a serious fungal disease...",
+    "symptoms": [...],
+    "treatment": [...],
+    "prevention": [...],
+    "organic_solutions": [...]
+  },
+  "timestamp": "2025-12-28T10:30:45.123456",
+  "model_version": "1.0.0"
+}</div>
+            </div>
+
+            <!-- Get All Diseases -->
+            <div class="endpoint-card">
+                <h3 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; color: var(--gray-900);">
+                    <span class="method-badge method-get">GET</span>
+                    /api/diseases
+                </h3>
+                <p style="color: var(--gray-600); margin-bottom: 1.5rem; line-height: 1.6;">
+                    Retrieve information about all detectable diseases.
+                </p>
+
+                <h4 style="font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--gray-900);">Example Request</h4>
+                <div class="code-block">curl http://localhost:5000/api/diseases</div>
+
+                <h4 style="font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--gray-900);">Response</h4>
+                <div class="code-block">{
+  "success": true,
+  "diseases": {
+    "Chilli__Anthacnose": { ... },
+    "Chilli__Leaf_Curl_Virus": { ... },
+    ...
+  },
+  "total_diseases": 5
+}</div>
+            </div>
+
+            <!-- Get Specific Disease -->
+            <div class="endpoint-card">
+                <h3 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; color: var(--gray-900);">
+                    <span class="method-badge method-get">GET</span>
+                    /api/disease/:disease_name
+                </h3>
+                <p style="color: var(--gray-600); margin-bottom: 1.5rem; line-height: 1.6;">
+                    Get detailed information about a specific disease.
+                </p>
+
+                <h4 style="font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--gray-900);">Example Request</h4>
+                <div class="code-block">curl http://localhost:5000/api/disease/Chilli__Anthacnose</div>
+            </div>
+
+            <!-- Health Check -->
+            <div class="endpoint-card">
+                <h3 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; color: var(--gray-900);">
+                    <span class="method-badge method-get">GET</span>
+                    /api/health
+                </h3>
+                <p style="color: var(--gray-600); margin-bottom: 1.5rem; line-height: 1.6;">
+                    Check API health status and model availability.
+                </p>
+
+                <h4 style="font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--gray-900);">Response</h4>
+                <div class="code-block">{
+  "status": "healthy",
+  "model_loaded": true,
+  "classes_loaded": true,
+  "num_classes": 5,
+  "timestamp": "2025-12-28T10:30:45.123456"
+}</div>
+            </div>
+
+            <h2 style="font-size: 2rem; font-weight: 700; margin: 3rem 0 2rem; color: var(--gray-900);">Error Handling</h2>
+            <div class="endpoint-card">
+                <h4 style="font-weight: 600; margin-bottom: 1rem; color: var(--gray-900);">Error Response Format</h4>
+                <div class="code-block">{
+  "success": false,
+  "error": "Error message description"
+}</div>
+
+                <h4 style="font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--gray-900);">HTTP Status Codes</h4>
+                <ul style="list-style: none; padding: 0; margin-top: 1rem;">
+                    <li style="padding: 0.5rem 0; color: var(--gray-700);"><code>200</code> - Success</li>
+                    <li style="padding: 0.5rem 0; color: var(--gray-700);"><code>400</code> - Bad Request (invalid file, missing parameters)</li>
+                    <li style="padding: 0.5rem 0; color: var(--gray-700);"><code>404</code> - Not Found</li>
+                    <li style="padding: 0.5rem 0; color: var(--gray-700);"><code>500</code> - Internal Server Error</li>
+                </ul>
+            </div>
+
+            <h2 style="font-size: 2rem; font-weight: 700; margin: 3rem 0 2rem; color: var(--gray-900);">Rate Limits</h2>
+            <p style="font-size: 1.125rem; line-height: 1.8; color: var(--gray-700); margin-bottom: 2rem;">
+                Current version has no rate limits. Production API will implement:
+            </p>
+            <ul style="list-style: none; padding: 0; background: white; border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-md);">
+                <li style="padding: 0.75rem 0; border-bottom: 1px solid var(--gray-200); color: var(--gray-700);">
+                    <strong>Free Tier:</strong> 100 requests/day
+                </li>
+                <li style="padding: 0.75rem 0; border-bottom: 1px solid var(--gray-200); color: var(--gray-700);">
+                    <strong>Basic:</strong> 1,000 requests/day
+                </li>
+                <li style="padding: 0.75rem 0; color: var(--gray-700);">
+                    <strong>Enterprise:</strong> Unlimited (custom pricing)
+                </li>
+            </ul>
+
+            <h2 style="font-size: 2rem; font-weight: 700; margin: 3rem 0 2rem; color: var(--gray-900);">SDKs & Libraries</h2>
+            <p style="font-size: 1.125rem; line-height: 1.8; color: var(--gray-700); margin-bottom: 2rem;">
+                Official SDKs coming soon for:
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div style="padding: 1.5rem; background: white; border-radius: var(--radius-lg); text-align: center; box-shadow: var(--shadow-md);">
+                    <i class="fab fa-python" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.5rem;"></i>
+                    <h4 style="font-weight: 600; color: var(--gray-900);">Python</h4>
+                </div>
+                <div style="padding: 1.5rem; background: white; border-radius: var(--radius-lg); text-align: center; box-shadow: var(--shadow-md);">
+                    <i class="fab fa-js" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.5rem;"></i>
+                    <h4 style="font-weight: 600; color: var(--gray-900);">JavaScript/Node.js</h4>
+                </div>
+                <div style="padding: 1.5rem; background: white; border-radius: var(--radius-lg); text-align: center; box-shadow: var(--shadow-md);">
+                    <i class="fab fa-java" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.5rem;"></i>
+                    <h4 style="font-weight: 600; color: var(--gray-900);">Java</h4>
+                </div>
+                <div style="padding: 1.5rem; background: white; border-radius: var(--radius-lg); text-align: center; box-shadow: var(--shadow-md);">
+                    <i class="fab fa-php" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.5rem;"></i>
+                    <h4 style="font-weight: 600; color: var(--gray-900);">PHP</h4>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 ChilliDoc AI. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

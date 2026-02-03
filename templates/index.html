@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-powered Chilli Disease Detection System for precision agriculture">
+    <title>Chilli Care</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌶️</text></svg>">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <img src="{{ url_for('static', filename='images/Chilli Care Logo.png') }}" alt="Chilli Care Logo" class="logo-image">
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="/" class="active">Home</a></li>
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/docs">API Docs</a></li>
+                    <li><a href="https://github.com/yourusername/chilli-disease-detection" target="_blank">
+                        <i class="fab fa-github"></i> GitHub
+                    </a></li>
+                </ul>
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-leaf"></i> Powered by Deep Learning
+                </div>
+                <h1 class="hero-title">
+                    Protect Your Chilli Crops with
+                    <span class="gradient-text">AI Intelligence</span>
+                </h1>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">5+</div>
+                        <div class="stat-label">Diseases Detected</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">95%</div>
+                        <div class="stat-label">Accuracy</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">&lt;3s</div>
+                        <div class="stat-label">Response Time</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upload Section -->
+    <section class="upload-section" id="uploadSection">
+        <div class="container">
+            <div class="upload-card">
+                <div class="upload-header">
+                    <h2>Analyze Your Chilli Plant</h2>
+                    <p>Upload a clear image of the affected leaf for instant diagnosis</p>
+                </div>
+
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                    <div class="upload-content">
+                        <div class="upload-icon">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <h3>Upload Chilli Leaf Image</h3>
+                        <p>Supports: JPG, JPEG, PNG (Max 16MB)</p>
+                        <button class="btn btn-primary" id="selectFileBtn">
+                            <i class="fas fa-image"></i> Choose Image
+                        </button>
+                        <p class="upload-hint">or drag & drop an image here</p>
+                    </div>
+                </div>
+
+                <div class="preview-area hidden" id="previewArea">
+                    <div class="preview-container">
+                        <img id="imagePreview" alt="Preview">
+                        <button class="remove-image" id="removeImageBtn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <button class="btn btn-success btn-large" id="analyzeBtn">
+                        <i class="fas fa-search"></i> Analyze Disease
+                    </button>
+                </div>
+
+                <!-- Loading State -->
+                <div class="loading-state hidden" id="loadingState">
+                    <div class="spinner"></div>
+                    <p>Analyzing your plant image...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    <section class="results-section hidden" id="resultsSection">
+        <div class="container">
+            <div class="results-header">
+                <h2>Diagnosis Results</h2>
+                <button class="btn btn-outline" id="newAnalysisBtn">
+                    <i class="fas fa-plus"></i> New Analysis
+                </button>
+            </div>
+
+            <div class="results-grid">
+                <!-- Main Result Card -->
+                <div class="result-card main-result">
+                    <div class="result-badge" id="severityBadge">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="severityText">Medium Severity</span>
+                    </div>
+                    <h3 class="disease-name" id="diseaseName">Loading...</h3>
+                    <div class="confidence-section">
+                        <div class="confidence-label">Confidence Score</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="confidenceFill"></div>
+                        </div>
+                        <div class="confidence-value" id="confidenceValue">0%</div>
+                    </div>
+                    <p class="disease-description" id="diseaseDescription">Loading description...</p>
+                </div>
+
+                <!-- Symptoms Card -->
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <i class="fas fa-stethoscope"></i>
+                        <h4>Symptoms</h4>
+                    </div>
+                    <ul class="info-list" id="symptomsList">
+                        <li>Loading...</li>
+                    </ul>
+                </div>
+
+                <!-- Treatment Card -->
+                <div class="info-card highlight">
+                    <div class="info-card-header">
+                        <i class="fas fa-prescription-bottle"></i>
+                        <h4>Treatment Recommendations</h4>
+                    </div>
+                    <ul class="info-list" id="treatmentList">
+                        <li>Loading...</li>
+                    </ul>
+                </div>
+
+                <!-- Prevention Card -->
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <i class="fas fa-shield-alt"></i>
+                        <h4>Prevention Tips</h4>
+                    </div>
+                    <ul class="info-list" id="preventionList">
+                        <li>Loading...</li>
+                    </ul>
+                </div>
+
+                <!-- Organic Solutions Card -->
+                <div class="info-card success">
+                    <div class="info-card-header">
+                        <i class="fas fa-leaf"></i>
+                        <h4>Organic Solutions</h4>
+                    </div>
+                    <ul class="info-list" id="organicList">
+                        <li>Loading...</li>
+                    </ul>
+                </div>
+
+                <!-- All Predictions Card -->
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <i class="fas fa-chart-bar"></i>
+                        <h4>Probability Analysis</h4>
+                    </div>
+                    <div class="probability-chart" id="probabilityChart">
+                        <p>Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Options -->
+            <div class="export-section">
+                <h4>Export Report</h4>
+                <div class="export-buttons">
+                    <button class="btn btn-outline" id="downloadPdfBtn">
+                        <i class="fas fa-file-pdf"></i> Download PDF
+                    </button>
+                    <button class="btn btn-outline" id="shareResultBtn">
+                        <i class="fas fa-share-alt"></i> Share Results
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Why Choose Chilli Care?</h2>
+                <p>Industry-leading technology for agricultural disease detection</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Lightning Fast</h3>
+                    <p>Get results in under 3 seconds with our optimized deep learning models</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <h3>Highly Accurate</h3>
+                    <p>95%+ accuracy rate validated on thousands of real-world images</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>Mobile Friendly</h3>
+                    <p>Works seamlessly on any device - desktop, tablet, or smartphone</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <h3>Organic Solutions</h3>
+                    <p>Get eco-friendly treatment options alongside conventional methods</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3>Comprehensive Data</h3>
+                    <p>Detailed disease information, symptoms, and prevention strategies</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3>API Access</h3>
+                    <p>Integrate our detection engine into your own applications</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to Protect Your Crops?</h2>
+                <p>Join thousands of farmers using AI-powered disease detection</p>
+                <button class="btn btn-white btn-large" onclick="document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' })">
+                    <i class="fas fa-arrow-up"></i> Start Diagnosis Now
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                            <img src="{{ url_for('static', filename='images/Chilli Care Logo.png') }}" alt="Chilli Care Logo" class="logo-image">
+                        <!--<span class="logo-text">ChilliDoc AI</span> -->
+                    </div>
+                    <p>AI-powered chilli disease detection for precision agriculture and sustainable farming.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/about.html">About</a></li>
+                        <li><a href="/docs.html">API Documentation</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="#">User Guide</a></li>
+                        <li><a href="#">Disease Database</a></li>
+                        <li><a href="#">Research Papers</a></li>
+                        <li><a href="#">FAQs</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Chilli Care. All rights reserved. Built with ❤️ for farmers worldwide.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Farmer Support Chatbot -->
+    <!--<button class="chatbot-toggle" id="chatbotToggle" title="Chat with Agricultural Expert">
+        <i class="fas fa-comments"></i>
+    </button>
+
+    <div class="chatbot-modal hidden" id="chatbotModal">
+        <div class="chatbot-container">
+            <div class="chatbot-header">
+                <div class="chatbot-header-info">
+                    <div class="chatbot-avatar">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div>
+                        <h3>Agricultural Expert</h3>
+                        <span class="chatbot-status"><i class="fas fa-circle"></i> Online</span>
+                    </div>
+                </div>
+                <button class="chatbot-close" id="chatbotClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="message bot-message">
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <p>Hello! I'm your agricultural support assistant. How can I help you today?</p>
+                        <span class="message-time">Just now</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chatbot-quick-replies" id="quickReplies">
+                <button class="quick-reply-btn" data-message="How to prevent chilli diseases?">
+                    <i class="fas fa-shield-alt"></i> Disease Prevention
+                </button>
+                <button class="quick-reply-btn" data-message="Best fertilizers for chilli plants">
+                    <i class="fas fa-seedling"></i> Fertilizer Tips
+                </button>
+                <button class="quick-reply-btn" data-message="Watering schedule for chilli plants">
+                    <i class="fas fa-tint"></i> Watering Guide
+                </button>
+                <button class="quick-reply-btn" data-message="How to identify pest problems?">
+                    <i class="fas fa-bug"></i> Pest Control
+                </button>
+            </div>
+            
+            <div class="chatbot-input-area">
+                <input 
+                    type="text" 
+                    id="chatbotInput" 
+                    class="chatbot-input" 
+                    placeholder="Type your question..."
+                    maxlength="500"
+                />
+                <button class="chatbot-send" id="chatbotSend" title="Send message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Toast Notification -->
+    <div class="toast hidden" id="toast">
+        <div class="toast-content">
+            <i class="fas fa-check-circle"></i>
+            <span id="toastMessage">Success!</span>
+        </div>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Chatbase Chatbot -->
+    <script>
+    (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="DOb0sMkIIPN7BnozeZbzc";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+    </script>
+</body>
+</html>

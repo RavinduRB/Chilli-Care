@@ -1,0 +1,40 @@
+
+================================================================================
+CHILLI LEAF DISEASE DETECTION SYSTEM - FINAL REPORT
+================================================================================
+
+Dataset Information:
+- Training Images: 3509
+- Validation Images: 84
+- Test Images: 74
+- Number of Classes: 5
+- Classes: Chilli __Whitefly, Chilli __Yellowish, Chilli__Anthacnose, Chilli__Leaf_Curl_Virus, Chilli___healthy
+
+Model Architecture:
+- Type: Custom Convolutional Neural Network (CNN)
+- Input Shape: (224, 224, 3)
+- Total Parameters: 27,002,405
+
+Training Configuration:
+- Optimizer: Adam
+- Learning Rate: 0.001
+- Batch Size: 32
+- Epochs: 10
+- Data Augmentation: Yes (rotation, flip, zoom, shift)
+
+Performance Metrics:
+- Test Accuracy: 81.08%
+- Test Precision: 81.94%
+- Test Recall: 79.73%
+- Test F1-Score: 0.8082
+
+Files Generated:
+- best_chilli_disease_model.h5
+- chilli_disease_detection_model_final.h5
+- class_names.json
+- training_history.png
+- confusion_matrix.png
+- correct_predictions.png
+- incorrect_predictions.png
+
+================================================================================

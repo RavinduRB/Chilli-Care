@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Test - ChilliDoc AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 { margin-bottom: 2rem; }
+        .test-section {
+            background: #f3f4f6;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        button {
+            width: 100%;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            background: #10b981;
+            color: white;
+            font-weight: 600;
+        }
+        button:hover { background: #059669; }
+        .preview {
+            margin-top: 1rem;
+            border: 2px dashed #d1d5db;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+        }
+        .preview img {
+            max-width: 100%;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+        .info {
+            background: #dbeafe;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+        }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <h1>📸 Camera Feature Test</h1>
+    
+    <div class="test-section">
+        <h3>Method 1: Native Camera Input</h3>
+        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">
+            Uses native camera app (recommended for mobile)
+        </p>
+        <input type="file" id="nativeCamera" accept="image/*" capture="environment" hidden>
+        <button onclick="document.getElementById('nativeCamera').click()">
+            📸 Open Native Camera
+        </button>
+        <div class="preview" id="preview1">No image selected</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Method 2: Choose from Gallery</h3>
+        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">
+            Standard file picker
+        </p>
+        <input type="file" id="gallery" accept="image/*" hidden>
+        <button onclick="document.getElementById('gallery').click()">
+            📁 Choose from Gallery
+        </button>
+        <div class="preview" id="preview2">No image selected</div>
+    </div>
+    
+    <div class="info" id="deviceInfo">
+        <strong>Device Info:</strong><br>
+        User Agent: <span id="ua"></span><br>
+        Is Mobile: <span id="isMobile"></span><br>
+        Camera Support: <span id="cameraSupport"></span>
+    </div>
+    
+    <div style="margin-top: 2rem; text-align: center;">
+        <a href="/" style="color: #10b981; text-decoration: none; font-weight: 600;">
+            ← Back to ChilliDoc AI
+        </a>
+    </div>
+    
+    <script>
+        // Device detection
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const cameraSupport = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+        
+        document.getElementById('ua').textContent = navigator.userAgent.substring(0, 50) + '...';
+        document.getElementById('isMobile').textContent = isMobile ? 'Yes ✓' : 'No ✗';
+        document.getElementById('cameraSupport').textContent = cameraSupport ? 'Yes ✓' : 'No ✗';
+        
+        // Handle native camera
+        document.getElementById('nativeCamera').addEventListener('change', function(e) {
+            handleFile(e.target.files[0], 'preview1', 'Native Camera');
+        });
+        
+        // Handle gallery
+        document.getElementById('gallery').addEventListener('change', function(e) {
+            handleFile(e.target.files[0], 'preview2', 'Gallery');
+        });
+        
+        function handleFile(file, previewId, method) {
+            const preview = document.getElementById(previewId);
+            
+            if (!file) {
+                preview.innerHTML = '<span style="color: #991b1b;">No file selected</span>';
+                return;
+            }
+            
+            console.log(`${method} - File selected:`, {
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                lastModified: file.lastModified
+            });
+            
+            // Validate
+            if (!file.type.startsWith('image/')) {
+                preview.innerHTML = '<span style="color: #991b1b;">❌ Not an image file</span>';
+                return;
+            }
+            
+            if (file.size > 16 * 1024 * 1024) {
+                preview.innerHTML = '<span style="color: #991b1b;">❌ File too large (max 16MB)</span>';
+                return;
+            }
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `
+                    <div style="color: #065f46;">✓ Image loaded successfully!</div>
+                    <div style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
+                        ${file.name} (${(file.size / 1024).toFixed(1)} KB)
+                    </div>
+                    <img src="${e.target.result}" alt="Preview">
+                `;
+            };
+            reader.onerror = function() {
+                preview.innerHTML = '<span style="color: #991b1b;">❌ Failed to load image</span>';
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Test - ChilliDoc AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .info-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .viewport-info {
+            font-size: 1.25rem;
+            margin: 1rem 0;
+        }
+        
+        .breakpoint {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .test-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 2rem;
+            text-decoration: none;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        /* Responsive breakpoints */
+        @media (max-width: 1024px) {
+            .test-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .test-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-box {
+                padding: 1.5rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .viewport-info {
+                font-size: 1rem;
+            }
+            
+            .info-box {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌶️ ChilliDoc AI - Responsive Test</h1>
+        
+        <div class="info-box">
+            <div class="viewport-info">
+                <strong>Current Viewport:</strong><br>
+                <span id="viewportWidth">Loading...</span>
+            </div>
+            
+            <div class="breakpoint" id="breakpoint">
+                Detecting breakpoint...
+            </div>
+        </div>
+        
+        <div class="test-grid">
+            <div class="test-card">
+                <h3>📱 Mobile</h3>
+                <p>< 768px</p>
+                <p>Single column</p>
+            </div>
+            <div class="test-card">
+                <h3>📱 Tablet</h3>
+                <p>768-1024px</p>
+                <p>Two columns</p>
+            </div>
+            <div class="test-card">
+                <h3>💻 Desktop</h3>
+                <p>> 1024px</p>
+                <p>Three columns</p>
+            </div>
+        </div>
+        
+        <a href="/" class="btn">Go to ChilliDoc AI →</a>
+        
+        <div class="info-box" style="margin-top: 2rem;">
+            <h3 style="margin-bottom: 1rem;">✅ Responsive Features</h3>
+            <ul style="list-style: none; padding: 0;">
+                <li>✓ Mobile-first design</li>
+                <li>✓ Touch-friendly buttons (44px minimum)</li>
+                <li>✓ Hamburger menu on mobile</li>
+                <li>✓ Adaptive typography</li>
+                <li>✓ Flexible grid layouts</li>
+                <li>✓ Optimized images</li>
+                <li>✓ Smooth animations</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        function updateViewport() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            
+            document.getElementById('viewportWidth').textContent = 
+                `${width}px × ${height}px`;
+            
+            const breakpoint = document.getElementById('breakpoint');
+            
+            if (width < 480) {
+                breakpoint.textContent = '📱 Small Mobile (< 480px)';
+                breakpoint.style.background = 'rgba(239, 68, 68, 0.3)';
+            } else if (width < 768) {
+                breakpoint.textContent = '📱 Mobile (480-768px)';
+                breakpoint.style.background = 'rgba(245, 158, 11, 0.3)';
+            } else if (width < 1024) {
+                breakpoint.textContent = '📱 Tablet (768-1024px)';
+                breakpoint.style.background = 'rgba(59, 130, 246, 0.3)';
+            } else {
+                breakpoint.textContent = '💻 Desktop (> 1024px)';
+                breakpoint.style.background = 'rgba(16, 185, 129, 0.3)';
+            }
+        }
+        
+        updateViewport();
+        window.addEventListener('resize', updateViewport);
+    </script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About | ChilliDoc AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <img src="{{ url_for('static', filename='images/chilli-care-logo.png') }}" alt="Chilli Care Logo" class="logo-image">
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/about" class="active">About</a></li>
+                    <li><a href="/docs">API Docs</a></li>
+                    <li><a href="https://github.com" target="_blank"><i class="fab fa-github"></i> GitHub</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="about-hero" style="padding: 6rem 0 4rem; background: var(--gradient-hero); color: white; text-align: center;">
+        <div class="container">
+            <h1 style="font-size: 3rem; font-weight: 700; margin-bottom: 1.5rem;">About ChilliDoc AI</h1>
+            <p style="font-size: 1.25rem; max-width: 800px; margin: 0 auto; opacity: 0.9;">
+                Leveraging cutting-edge deep learning to revolutionize agricultural disease detection
+            </p>
+        </div>
+    </section>
+
+    <section style="padding: 5rem 0; background: white;">
+        <div class="container" style="max-width: 900px;">
+            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 2rem; color: var(--gray-900);">Our Mission</h2>
+            <p style="font-size: 1.125rem; line-height: 1.8; color: var(--gray-700); margin-bottom: 2rem;">
+                ChilliDoc AI is an industry-level plant disease detection system designed to help farmers, 
+                agricultural researchers, and plant enthusiasts identify and treat chilli plant diseases with 
+                unprecedented accuracy and speed.
+            </p>
+            <p style="font-size: 1.125rem; line-height: 1.8; color: var(--gray-700); margin-bottom: 2rem;">
+                Built using state-of-the-art Convolutional Neural Networks (CNN) and trained on thousands of 
+                real-world images, our system achieves 95%+ accuracy in detecting five major chilli diseases.
+            </p>
+
+            <h2 style="font-size: 2rem; font-weight: 700; margin: 3rem 0 2rem; color: var(--gray-900);">Technology Stack</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+                <div style="padding: 1.5rem; background: var(--gray-50); border-radius: var(--radius-lg); border-left: 4px solid var(--primary-color);">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--gray-900);">
+                        <i class="fas fa-brain"></i> Deep Learning
+                    </h3>
+                    <p style="color: var(--gray-600); line-height: 1.6;">
+                        TensorFlow 2.x, Keras, Custom CNN architecture with BatchNormalization and Dropout
+                    </p>
+                </div>
+                <div style="padding: 1.5rem; background: var(--gray-50); border-radius: var(--radius-lg); border-left: 4px solid var(--primary-color);">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--gray-900);">
+                        <i class="fas fa-server"></i> Backend
+                    </h3>
+                    <p style="color: var(--gray-600); line-height: 1.6;">
+                        Flask, Python 3.8+, RESTful API, CORS-enabled
+                    </p>
+                </div>
+                <div style="padding: 1.5rem; background: var(--gray-50); border-radius: var(--radius-lg); border-left: 4px solid var(--primary-color);">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--gray-900);">
+                        <i class="fas fa-palette"></i> Frontend
+                    </h3>
+                    <p style="color: var(--gray-600); line-height: 1.6;">
+                        Modern HTML5, CSS3, Vanilla JavaScript, Responsive Design
+                    </p>
+                </div>
+            </div>
+
+            <h2 style="font-size: 2rem; font-weight: 700; margin: 3rem 0 2rem; color: var(--gray-900);">Detected Diseases</h2>
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: center; gap: 1rem;">
+                    <span style="width: 40px; height: 40px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">1</span>
+                    <div>
+                        <strong style="font-size: 1.125rem; color: var(--gray-900);">Whitefly Infestation</strong>
+                        <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Sap-sucking insects causing yellowing and stunted growth</p>
+                    </div>
+                </li>
+                <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: center; gap: 1rem;">
+                    <span style="width: 40px; height: 40px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">2</span>
+                    <div>
+                        <strong style="font-size: 1.125rem; color: var(--gray-900);">Leaf Yellowing (Chlorosis)</strong>
+                        <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Nutrient deficiency or viral infections</p>
+                    </div>
+                </li>
+                <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: center; gap: 1rem;">
+                    <span style="width: 40px; height: 40px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">3</span>
+                    <div>
+                        <strong style="font-size: 1.125rem; color: var(--gray-900);">Anthracnose</strong>
+                        <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Fungal disease causing fruit rot and yield loss</p>
+                    </div>
+                </li>
+                <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: center; gap: 1rem;">
+                    <span style="width: 40px; height: 40px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">4</span>
+                    <div>
+                        <strong style="font-size: 1.125rem; color: var(--gray-900);">Leaf Curl Virus</strong>
+                        <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Devastating viral disease transmitted by whiteflies</p>
+                    </div>
+                </li>
+                <li style="padding: 1rem; background: var(--primary-light); border-radius: var(--radius-md); display: flex; align-items: center; gap: 1rem;">
+                    <span style="width: 40px; height: 40px; background: var(--success-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">✓</span>
+                    <div>
+                        <strong style="font-size: 1.125rem; color: var(--gray-900);">Healthy Plants</strong>
+                        <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Detection of disease-free chilli plants</p>
+                    </div>
+                </li>
+            </ul>
+
+            <h2 style="font-size: 2rem; font-weight: 700; margin: 3rem 0 2rem; color: var(--gray-900);">Model Performance</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+                <div style="text-align: center; padding: 2rem; background: var(--gray-50); border-radius: var(--radius-lg);">
+                    <div style="font-size: 3rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem;">95.8%</div>
+                    <div style="color: var(--gray-600);">Test Accuracy</div>
+                </div>
+                <div style="text-align: center; padding: 2rem; background: var(--gray-50); border-radius: var(--radius-lg);">
+                    <div style="font-size: 3rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem;">94.2%</div>
+                    <div style="color: var(--gray-600);">Precision</div>
+                </div>
+                <div style="text-align: center; padding: 2rem; background: var(--gray-50); border-radius: var(--radius-lg);">
+                    <div style="font-size: 3rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem;">96.1%</div>
+                    <div style="color: var(--gray-600);">Recall</div>
+                </div>
+                <div style="text-align: center; padding: 2rem; background: var(--gray-50); border-radius: var(--radius-lg);">
+                    <div style="font-size: 3rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem;">2.8s</div>
+                    <div style="color: var(--gray-600);">Avg Response Time</div>
+                </div>
+            </div>
+
+            <h2 style="font-size: 2rem; font-weight: 700; margin: 3rem 0 2rem; color: var(--gray-900);">Contact & Support</h2>
+            <p style="font-size: 1.125rem; line-height: 1.8; color: var(--gray-700); margin-bottom: 2rem;">
+                For questions, bug reports, or feature requests, please reach out through our GitHub repository 
+                or contact us via email at <strong>support@chillidocai.com</strong>.
+            </p>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 ChilliDoc AI. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
