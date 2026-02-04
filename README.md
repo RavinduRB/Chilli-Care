@@ -3,6 +3,9 @@
 ## 🌶️ Project Overview
 A Flask-based web application for detecting diseases in chilli leaves using a trained CNN model. This application provides an intuitive interface for farmers and agricultural professionals to identify chilli plant diseases through image upload.
 
+## 📚 Dataset
+Link :- https://www.kaggle.com/datasets/ravindubandara3002/preprocessed-chilli-disease-dataset
+
 ## 🎯 Features
 - **Real-time Disease Detection**: Upload chilli leaf images and get instant predictions
 - **5 Disease Classes**: Detects Whitefly, Yellowish, Healthy, Anthracnose, and Leaf Curl Virus
@@ -160,7 +163,6 @@ pip install --upgrade tensorflow keras flask
 3. **Chilli Healthy** - Normal plant
 4. **Chilli Anthracnose** - Fungal disease
 5. **Chilli Leaf Curl Virus** - Viral disease
-6. **Chilli Leaf Spot** - Fungal/bacterial spots
 
 ## 🛠️ Technology Stack
 
