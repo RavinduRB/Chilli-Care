@@ -1,3 +1,13 @@
+---
+title: Chilli Care - Disease Detection
+emoji: 🌶️
+colorFrom: red
+colorTo: green
+sdk: docker
+pinned: false
+license: mit
+---
+
 # Chilli Leaf Disease Detection Web Application
 
 ## 🌶️ Project Overview
