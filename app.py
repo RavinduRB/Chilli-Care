@@ -25,11 +25,13 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here-change-in-production'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-app.config['UPLOAD_FOLDER'] = 'uploads'
+# Use /tmp for uploads in serverless environment
+app.config['UPLOAD_FOLDER'] = '/tmp' if os.environ.get('VERCEL') else 'uploads'
 CORS(app)  # Enable CORS for API access
 
 # Ensure upload folder exists
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+if not os.environ.get('VERCEL'):
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Global variables for model and settings
 model = None
@@ -547,12 +549,12 @@ def internal_error(error):
     return jsonify({'error': 'Internal server error'}), 500
 
 
+# Load model when module is imported (for Vercel)
+logger.info("Starting Chilli Disease Detection System...")
+load_model_and_classes()
+
 if __name__ == '__main__':
-    # Load model at startup
-    logger.info("Starting Chilli Disease Detection System...")
-    load_model_and_classes()
-    
-    # Run the app
+    # Run the app locally
     app.run(
         host='0.0.0.0',
         port=5000,
