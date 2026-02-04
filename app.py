@@ -17,6 +17,19 @@ import io
 import base64
 import logging
 
+# Configure TensorFlow to use less memory
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Reduce TF logging
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Disable oneDNN optimizations
+
+# Limit TensorFlow memory growth
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+    except RuntimeError as e:
+        logger.info(f"GPU memory growth setting: {e}")
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -244,10 +257,11 @@ def load_model_and_classes():
     
     try:
         # Try loading different model formats with compatibility handling
+        # Use smallest model first for memory efficiency
         model_paths = [
-            'best_chilli_disease_model.h5',
-            'chilli_disease_detection_model_final.h5',
-            'chilli_disease_detection_model_final.keras',
+            'chilli_disease_detection_model_final.h5',  # 104MB - smallest
+            'chilli_disease_detection_model_final.keras',  # 104MB
+            'best_chilli_disease_model.h5',  # 310MB - largest
             'chilli_disease_model_saved'
         ]
         

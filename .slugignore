@@ -1,0 +1,17 @@
+# Reduce deployment size - exclude large unnecessary files
+best_chilli_disease_model.h5
+chilli_disease_model_saved/
+*.ipynb
+test/
+train/
+valid/
+uploads/
+README.md
+USER_GUIDE.md
+RENDER_DEPLOY.md
+MODEL_HOSTING.md
+*.bat
+*.sh
+save_logo.py
+quick_test.py
+test_api.py
