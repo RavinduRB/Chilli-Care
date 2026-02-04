@@ -1,0 +1,35 @@
+# Ignore dataset folders
+test/
+train/
+valid/
+uploads/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Development files
+*.ipynb
+.git/
+.gitignore
+README.md
+USER_GUIDE.md
+VERCEL_DEPLOY.md
+
+# Docker files (not needed for Vercel)
+Dockerfile
+docker-compose.yml
+
+# Test files
+test_api.py
+quick_test.py
+
+# OS files
+.DS_Store
+Thumbs.db
