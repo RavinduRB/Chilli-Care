@@ -327,10 +327,17 @@ def load_model_and_classes():
             ]
         
         logger.info(f"Loaded {len(class_names)} classes: {class_names}")
+        return True
         
     except Exception as e:
         logger.error(f"Error loading model: {str(e)}")
+        logger.error(f"Current working directory: {os.getcwd()}")
+        logger.error(f"Files in current directory: {os.listdir('.')}")
         raise
+
+
+# Load model at module level (for production servers like gunicorn)
+load_model_and_classes()
 
 
 def preprocess_image(image_file):
