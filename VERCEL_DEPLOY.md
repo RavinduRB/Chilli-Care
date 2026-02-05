@@ -23,7 +23,9 @@
    - Root Directory: ./
    - Build Command: (leave empty)
    - Output Directory: (leave empty)
-   - Install Command: `pip install -r requirements_vercel.txt`
+   - Install Command: (leave empty - Vercel will auto-detect)
+   
+   **Note**: The `runtime.txt` file specifies Python 3.11 for compatibility with TensorFlow
 
 4. **Environment Variables** (Optional)
    - Add any environment variables if needed
