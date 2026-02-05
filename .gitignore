@@ -4,6 +4,13 @@ train/
 valid/
 uploads/
 
+# Model files (too large for deployment)
+*.h5
+*.keras
+*.tflite
+*.pb
+chilli_disease_model_saved/
+
 # Virtual environment
 .venv/
 venv/
