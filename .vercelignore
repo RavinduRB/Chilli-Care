@@ -1,0 +1,44 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Dataset folders
+test/
+train/
+valid/
+uploads/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+
+# Git
+.git/
+.gitignore
+
+# Notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Other
+*.md
+!README.md
+*.bat
+*.sh
