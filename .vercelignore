@@ -9,6 +9,12 @@ train/
 valid/
 uploads/
 
+# Model files (too large for Vercel - host externally)
+*.h5
+*.keras
+*.tflite
+chilli_disease_model_saved/
+
 # Python cache
 __pycache__/
 *.py[cod]
@@ -37,8 +43,11 @@ Thumbs.db
 *.ipynb
 .ipynb_checkpoints/
 
-# Other
+# Development files
 *.md
 !README.md
 *.bat
 *.sh
+Procfile
+docker-compose.yml
+Dockerfile
