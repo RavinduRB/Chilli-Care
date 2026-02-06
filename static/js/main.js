@@ -22,68 +22,82 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     
     // Click to select file
-    selectFileBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        fileInput.click();
-    });
+    if (selectFileBtn) {
+        selectFileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.click();
+        });
+    }
 
     // Upload area click handler
-    uploadArea.addEventListener('click', (e) => {
-        // Trigger file input when clicking on upload area (but not on button)
-        if (e.target === uploadArea || e.target.closest('.upload-icon') || e.target.closest('.upload-content h3')) {
-            fileInput.click();
-        }
-    });
+    if (uploadArea) {
+        uploadArea.addEventListener('click', (e) => {
+            // Trigger file input when clicking on upload area (but not on button)
+            if (e.target === uploadArea || e.target.closest('.upload-icon') || e.target.closest('.upload-content h3')) {
+                fileInput.click();
+            }
+        });
+    }
 
     // File input change
-    fileInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            handleFileSelect(file);
-        }
-    });
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFileSelect(file);
+            }
+        });
+    }
 
     // Drag and drop
-    uploadArea.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        uploadArea.classList.add('dragover');
-    });
+    if (uploadArea) {
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
 
-    uploadArea.addEventListener('dragleave', function() {
-        uploadArea.classList.remove('dragover');
-    });
+        uploadArea.addEventListener('dragleave', function() {
+            uploadArea.classList.remove('dragover');
+        });
 
-    uploadArea.addEventListener('drop', function(e) {
-        e.preventDefault();
-        uploadArea.classList.remove('dragover');
-        
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) {
-            handleFileSelect(file);
-        } else {
-            showToast('Please upload a valid image file', 'error');
-        }
-    });
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFileSelect(file);
+            } else {
+                showToast('Please upload a valid image file', 'error');
+            }
+        });
+    }
 
     // Remove image
-    removeImageBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        resetUpload();
-    });
+    if (removeImageBtn) {
+        removeImageBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            resetUpload();
+        });
+    }
 
     // Analyze button
-    analyzeBtn.addEventListener('click', function() {
-        if (selectedFile) {
-            analyzeImage(selectedFile);
-        }
-    });
+    if (analyzeBtn) {
+        analyzeBtn.addEventListener('click', function() {
+            if (selectedFile) {
+                analyzeImage(selectedFile);
+            }
+        });
+    }
 
     // New analysis button
-    newAnalysisBtn.addEventListener('click', function() {
-        resetUpload();
-        resultsSection.classList.add('hidden');
-        document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
-    });
+    if (newAnalysisBtn) {
+        newAnalysisBtn.addEventListener('click', function() {
+            resetUpload();
+            resultsSection.classList.add('hidden');
+            document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
+        });
+    }
 
     // Mobile menu toggle
     if (mobileMenuToggle) {
