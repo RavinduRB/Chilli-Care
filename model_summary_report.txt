@@ -23,10 +23,10 @@ Training Configuration:
 - Data Augmentation: Yes (rotation, flip, zoom, shift)
 
 Performance Metrics:
-- Test Accuracy: 81.08%
-- Test Precision: 81.94%
-- Test Recall: 79.73%
-- Test F1-Score: 0.8082
+- Test Accuracy: 91.89%
+- Test Precision: 93.15%
+- Test Recall: 91.89%
+- Test F1-Score: 0.9252
 
 Files Generated:
 - best_chilli_disease_model.h5

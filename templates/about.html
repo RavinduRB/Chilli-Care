@@ -13,7 +13,7 @@
         <div class="container">
             <div class="nav-wrapper">
                 <div class="logo">
-                    <img src="{{ url_for('static', filename='images/chilli-care-logo.png') }}" alt="Chilli Care Logo" class="logo-image">
+                    <img src="{{ url_for('static', filename='images/Chilli Care Logo.png') }}" alt="Chilli Care Logo" class="logo-image">
                 </div>
                 <ul class="nav-menu">
                     <li><a href="/">Home</a></li>
@@ -21,6 +21,9 @@
                     <li><a href="/docs">API Docs</a></li>
                     <li><a href="https://github.com" target="_blank"><i class="fab fa-github"></i> GitHub</a></li>
                 </ul>
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
         </div>
     </nav>
@@ -149,5 +152,7 @@
             </div>
         </div>
     </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
