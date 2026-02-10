@@ -15,7 +15,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const newAnalysisBtn = document.getElementById('newAnalysisBtn');
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     
+    // Camera Elements
+    const openCameraBtn = document.getElementById('openCameraBtn');
+    const cameraModal = document.getElementById('cameraModal');
+    const cameraOverlay = document.getElementById('cameraOverlay');
+    const closeCameraBtn = document.getElementById('closeCameraBtn');
+    const cancelCameraBtn = document.getElementById('cancelCameraBtn');
+    const cameraVideo = document.getElementById('cameraVideo');
+    const cameraCanvas = document.getElementById('cameraCanvas');
+    const captureBtn = document.getElementById('captureBtn');
+    const switchCameraBtn = document.getElementById('switchCameraBtn');
+    
     let selectedFile = null;
+    let cameraStream = null;
+    let currentFacingMode = 'environment'; // 'user' for front camera, 'environment' for back camera
 
     // ============================================
     // File Upload Handlers
@@ -95,7 +108,54 @@ document.addEventListener('DOMContentLoaded', function() {
         newAnalysisBtn.addEventListener('click', function() {
             resetUpload();
             resultsSection.classList.add('hidden');
+            document.getElementById('uploadSection').classList.remove('hidden');
             document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+
+    // ============================================
+    // Camera Capture Handlers
+    // ============================================
+
+    // Open camera
+    if (openCameraBtn) {
+        openCameraBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openCamera();
+        });
+    }
+
+    // Close camera modal
+    if (closeCameraBtn) {
+        closeCameraBtn.addEventListener('click', function() {
+            closeCamera();
+        });
+    }
+
+    if (cancelCameraBtn) {
+        cancelCameraBtn.addEventListener('click', function() {
+            closeCamera();
+        });
+    }
+
+    // Close camera when clicking overlay
+    if (cameraOverlay) {
+        cameraOverlay.addEventListener('click', function() {
+            closeCamera();
+        });
+    }
+
+    // Capture photo
+    if (captureBtn) {
+        captureBtn.addEventListener('click', function() {
+            capturePhoto();
+        });
+    }
+
+    // Switch camera (front/back)
+    if (switchCameraBtn) {
+        switchCameraBtn.addEventListener('click', function() {
+            switchCamera();
         });
     }
 
@@ -295,6 +355,185 @@ document.addEventListener('DOMContentLoaded', function() {
         loadingState.classList.add('hidden');
     }
 
+    // ============================================
+    // Camera Functions
+    // ============================================
+
+    async function openCamera() {
+        try {
+            console.log('Opening camera...');
+            
+            // Check if getUserMedia is supported
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showToast('Camera not supported on this device', 'error');
+                return;
+            }
+
+            // Show camera modal
+            cameraModal.classList.remove('hidden');
+
+            // Request camera access
+            await startCameraStream();
+
+        } catch (error) {
+            console.error('Error opening camera:', error);
+            handleCameraError(error);
+        }
+    }
+
+    async function startCameraStream() {
+        try {
+            // Stop any existing stream
+            if (cameraStream) {
+                stopCameraStream();
+            }
+
+            // Request camera with specific facing mode
+            const constraints = {
+                video: {
+                    facingMode: currentFacingMode,
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                },
+                audio: false
+            };
+
+            console.log('Requesting camera with constraints:', constraints);
+
+            cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+            
+            // Set video source
+            cameraVideo.srcObject = cameraStream;
+            
+            // Wait for video to be ready
+            await new Promise((resolve) => {
+                cameraVideo.onloadedmetadata = () => {
+                    cameraVideo.play();
+                    resolve();
+                };
+            });
+
+            console.log('Camera stream started successfully');
+            showToast('Camera ready!', 'success');
+
+        } catch (error) {
+            console.error('Error starting camera stream:', error);
+            throw error;
+        }
+    }
+
+    function stopCameraStream() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => {
+                track.stop();
+            });
+            cameraStream = null;
+            cameraVideo.srcObject = null;
+            console.log('Camera stream stopped');
+        }
+    }
+
+    function closeCamera() {
+        stopCameraStream();
+        cameraModal.classList.add('hidden');
+        console.log('Camera modal closed');
+    }
+
+    async function switchCamera() {
+        try {
+            // Toggle facing mode
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            console.log('Switching to camera:', currentFacingMode);
+            
+            // Restart stream with new facing mode
+            await startCameraStream();
+            
+            showToast(`Switched to ${currentFacingMode === 'user' ? 'front' : 'back'} camera`, 'success');
+        } catch (error) {
+            console.error('Error switching camera:', error);
+            // Revert facing mode on error
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            showToast('Could not switch camera', 'error');
+        }
+    }
+
+    function capturePhoto() {
+        try {
+            console.log('Capturing photo...');
+
+            // Get video dimensions
+            const videoWidth = cameraVideo.videoWidth;
+            const videoHeight = cameraVideo.videoHeight;
+
+            if (!videoWidth || !videoHeight) {
+                showToast('Camera not ready. Please try again.', 'error');
+                return;
+            }
+
+            // Set canvas dimensions to match video
+            cameraCanvas.width = videoWidth;
+            cameraCanvas.height = videoHeight;
+
+            // Draw video frame to canvas
+            const ctx = cameraCanvas.getContext('2d');
+            ctx.drawImage(cameraVideo, 0, 0, videoWidth, videoHeight);
+
+            // Convert canvas to blob
+            cameraCanvas.toBlob(function(blob) {
+                if (!blob) {
+                    showToast('Failed to capture photo', 'error');
+                    return;
+                }
+
+                // Create file from blob
+                const timestamp = new Date().getTime();
+                const capturedFile = new File([blob], `chilli_capture_${timestamp}.jpg`, {
+                    type: 'image/jpeg',
+                    lastModified: timestamp
+                });
+
+                console.log('Photo captured:', {
+                    size: capturedFile.size,
+                    dimensions: `${videoWidth}x${videoHeight}`,
+                    type: capturedFile.type
+                });
+
+                // Close camera modal
+                closeCamera();
+
+                // Process the captured image
+                processAndPreviewImage(capturedFile);
+
+                showToast('Photo captured successfully!', 'success');
+
+            }, 'image/jpeg', 0.92);
+
+        } catch (error) {
+            console.error('Error capturing photo:', error);
+            showToast('Failed to capture photo. Please try again.', 'error');
+        }
+    }
+
+    function handleCameraError(error) {
+        let errorMessage = 'Camera access denied or unavailable';
+
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+            errorMessage = 'Camera permission denied. Please allow camera access.';
+        } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+            errorMessage = 'No camera found on this device.';
+        } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+            errorMessage = 'Camera is already in use by another application.';
+        } else if (error.name === 'OverconstrainedError') {
+            errorMessage = 'Camera does not meet requirements.';
+        } else if (error.name === 'SecurityError') {
+            errorMessage = 'Camera access blocked for security reasons.';
+        }
+
+        console.error('Camera error:', error.name, error.message);
+        showToast(errorMessage, 'error');
+        closeCamera();
+    }
+
     async function analyzeImage(file) {
         try {
             console.log('Starting analysis for:', {
@@ -326,9 +565,29 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Server error:', errorText);
-                throw new Error(`Prediction failed: ${response.statusText}`);
+                let errorData;
+                try {
+                    errorData = await response.json();
+                } catch (e) {
+                    const errorText = await response.text();
+                    console.error('Server error:', errorText);
+                    throw new Error(`Prediction failed: ${response.statusText}`);
+                }
+                
+                // Handle validation errors (invalid image)
+                if (errorData.error === 'Invalid Image') {
+                    console.warn('Image validation failed:', errorData.message);
+                    
+                    // Show detailed error message with suggestion
+                    showValidationError(errorData);
+                    
+                    loadingState.classList.add('hidden');
+                    previewArea.classList.remove('hidden');
+                    return;
+                }
+                
+                console.error('Server error:', errorData);
+                throw new Error(errorData.error || 'Prediction failed');
             }
 
             const data = await response.json();
@@ -353,8 +612,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const prediction = data.prediction;
         const diseaseInfo = data.disease_info;
 
-        // Hide loading, show results
+        // Hide loading, hide upload section, show results
         loadingState.classList.add('hidden');
+        document.getElementById('uploadSection').classList.add('hidden');
         resultsSection.classList.remove('hidden');
         resultsSection.scrollIntoView({ behavior: 'smooth' });
 
@@ -477,6 +737,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 toast.classList.add('hidden');
             }, 300);
         }, 3000);
+    }
+
+    function showValidationError(errorData) {
+        // Show detailed toast message
+        const message = errorData.message || 'This does not appear to be a chilli plant image.';
+        const suggestion = errorData.suggestion || 'Please upload a clear image of a chilli plant leaf.';
+        
+        // Show error toast with more detail
+        showToast(`❌ ${message} ${suggestion}`, 'error');
+        
+        // Automatically reset upload after showing error
+        setTimeout(() => {
+            resetUpload();
+        }, 3500);
     }
 
     // ============================================
@@ -602,7 +876,33 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!resultsSection.classList.contains('hidden')) {
                 resetUpload();
                 resultsSection.classList.add('hidden');
+                document.getElementById('uploadSection').classList.remove('hidden');
             }
+            // Close camera if open
+            if (!cameraModal.classList.contains('hidden')) {
+                closeCamera();
+            }
+        }
+        
+        // Ctrl/Cmd + C: Open camera
+        if ((e.ctrlKey || e.metaKey) && e.key === 'c' && openCameraBtn) {
+            e.preventDefault();
+            openCamera();
+        }
+    });
+
+    // Cleanup camera stream on page unload
+    window.addEventListener('beforeunload', () => {
+        if (cameraStream) {
+            stopCameraStream();
+        }
+    });
+
+    // Handle visibility change (tab switching)
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && cameraStream) {
+            console.log('Page hidden, stopping camera');
+            closeCamera();
         }
     });
 

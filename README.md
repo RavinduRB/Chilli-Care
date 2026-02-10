@@ -8,6 +8,8 @@ Link :- https://www.kaggle.com/datasets/ravindubandara3002/preprocessed-chilli-d
 
 ## 🎯 Features
 - **Real-time Disease Detection**: Upload chilli leaf images and get instant predictions
+- **Camera Capture**: Take photos directly from your device camera for analysis
+- **Smart Image Validation**: Uses Google Gemini AI to verify that uploaded images are chilli plants
 - **5 Disease Classes**: Detects Whitefly, Yellowish, Healthy, Anthracnose, and Leaf Curl Virus
 - **Confidence Scores**: Shows prediction confidence and probability distribution
 - **Treatment Recommendations**: Provides symptoms and treatment guidelines for each disease
@@ -67,12 +69,53 @@ Ensure you have trained the model using the Jupyter notebook and have either:
 - `chilli_disease_detection_model_final.h5`
 - `best_chilli_disease_model.h5`
 
-### 2. Start the Flask Server
+### 2. Set Up Gemini API Key (Required for Image Validation)
+The application uses Google's Gemini AI to validate that uploaded images are chilli plants.
+
+1. Get your free API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a `.env` file in the project root (or copy from `.env.example`):
+   ```bash
+   cp .env.example .env
+   ```
+3. Add your API key to the `.env` file:
+   ```
+   GEMINI_API_KEY=your_actual_api_key_here
+   ```
+
+**Note**: If you skip this step, the validation will be disabled and all images will be allowed through.
+
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+This will install all required packages including:
+- Flask (Web framework)
+- TensorFlow/Keras (Deep learning)
+- google-generativeai (Gemini API)
+- Pillow (Image processing)
+- And other dependencies
+
+### 4. Start the Flask Server
 ```bash
 python app.py
 ```
 
-### 3. Access the Application
+Or on Windows:
+```bash
+set FLASK_APP=app.py
+set GEMINI_API_KEY=your_api_key_here
+python app.py
+```
+
+On Linux/Mac:
+```bash
+export FLASK_APP=app.py
+export GEMINI_API_KEY=your_api_key_here
+python app.py
+```
+
+### 5. Access the Application
 Open your web browser and navigate to:
 ```
 http://127.0.0.1:5000
@@ -87,13 +130,19 @@ http://YOUR_IP_ADDRESS:5000
 
 1. **Upload Image**: 
    - Click "Choose Image" or drag and drop a chilli leaf image
+   - OR click "Open Camera" to capture a photo directly
    - Supported formats: PNG, JPG, JPEG
 
-2. **Analyze**: 
-   - Click "Analyze Image" button
+2. **Automatic Validation**:
+   - The system uses AI to verify the image contains a chilli plant
+   - If it's not a chilli plant, you'll receive a clear error message
+   - This prevents false diagnoses from wrong plant types
+
+3. **Analyze**: 
+   - Click "Analyze Disease" button
    - Wait for the AI model to process the image
 
-3. **View Results**:
+4. **View Results**:
    - See the detected disease name
    - Check the confidence score
    - Review probability distribution for all classes

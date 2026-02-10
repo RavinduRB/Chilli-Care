@@ -58,11 +58,11 @@
                         <div class="stat-label">Diseases Detected</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number">95%</div>
+                        <div class="stat-number">90%</div>
                         <div class="stat-label">Accuracy</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number">&lt;3s</div>
+                        <div class="stat-number">&lt;5s</div>
                         <div class="stat-label">Response Time</div>
                     </div>
                 </div>
@@ -87,9 +87,14 @@
                         </div>
                         <h3>Upload Chilli Leaf Image</h3>
                         <p>Supports: JPG, JPEG, PNG (Max 16MB)</p>
-                        <button class="btn btn-primary" id="selectFileBtn">
-                            <i class="fas fa-image"></i> Choose Image
-                        </button>
+                        <div class="button-group">
+                            <button class="btn btn-primary" id="selectFileBtn">
+                                <i class="fas fa-image"></i> Choose Image
+                            </button>
+                            <button class="btn btn-camera" id="openCameraBtn">
+                                <i class="fas fa-camera"></i> Open Camera
+                            </button>
+                        </div>
                         <p class="upload-hint">or drag & drop an image here</p>
                     </div>
                 </div>
@@ -393,6 +398,41 @@
             </div>
         </div>
     </div> -->
+
+    <!-- Camera Modal -->
+    <div class="camera-modal hidden" id="cameraModal">
+        <div class="camera-overlay" id="cameraOverlay"></div>
+        <div class="camera-container">
+            <div class="camera-header">
+                <h3><i class="fas fa-camera"></i> Capture Chilli Leaf</h3>
+                <button class="camera-close" id="closeCameraBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="camera-body">
+                <video id="cameraVideo" autoplay playsinline></video>
+                <canvas id="cameraCanvas" style="display: none;"></canvas>
+                <div class="camera-guide">
+                    <div class="guide-frame"></div>
+                    <p class="guide-text">Position the leaf within the frame</p>
+                </div>
+            </div>
+            <div class="camera-controls">
+                <button class="btn btn-outline" id="switchCameraBtn" title="Switch Camera">
+                    <i class="fas fa-sync-alt"></i> Switch
+                </button>
+                <button class="btn btn-success btn-large" id="captureBtn">
+                    <i class="fas fa-camera"></i> Capture Photo
+                </button>
+                <button class="btn btn-outline" id="cancelCameraBtn">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+            <div class="camera-info">
+                <p><i class="fas fa-info-circle"></i> Ensure good lighting and focus on the affected area</p>
+            </div>
+        </div>
+    </div>
 
     <!-- Toast Notification -->
     <div class="toast hidden" id="toast">

@@ -16,6 +16,13 @@ from PIL import Image
 import io
 import base64
 import logging
+from google import genai
+from google.genai import types
+from dotenv import load_dotenv
+import requests
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -30,6 +37,31 @@ CORS(app)  # Enable CORS for API access
 
 # Ensure upload folder exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure Multiple Gemini API Keys for Rotation
+GEMINI_API_KEYS = [
+    os.environ.get('GEMINI_API_KEY', ''),
+    os.environ.get('GEMINI_API_KEY_2', ''),
+    os.environ.get('GEMINI_API_KEY_3', ''),
+    os.environ.get('GEMINI_API_KEY_4', ''),
+    os.environ.get('GEMINI_API_KEY_5', ''),
+]
+# Remove empty keys
+GEMINI_API_KEYS = [key for key in GEMINI_API_KEYS if key]
+
+# Configure Hugging Face API as backup
+HUGGINGFACE_API_KEY = os.environ.get('HUGGINGFACE_API_KEY', '')
+
+if GEMINI_API_KEYS:
+    logger.info(f"✓ Configured {len(GEMINI_API_KEYS)} Gemini API key(s)")
+else:
+    logger.warning("⚠ No Gemini API keys set")
+
+if HUGGINGFACE_API_KEY:
+    logger.info("✓ Hugging Face API configured as backup")
+
+# Current API key index for rotation
+current_gemini_key_index = 0
 
 # Global variables for model and settings
 model = None
@@ -333,6 +365,217 @@ def load_model_and_classes():
         raise
 
 
+def validate_with_huggingface(image_bytes):
+    """
+    Use Hugging Face API as backup validation
+    Free tier with rate limiting
+    """
+    try:
+        if not HUGGINGFACE_API_KEY:
+            return None
+        
+        logger.info("🤗 Trying Hugging Face Vision API...")
+        
+        # Use Salesforce BLIP model for image captioning
+        API_URL = "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large"
+        headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
+        
+        response = requests.post(API_URL, headers=headers, data=image_bytes, timeout=10)
+        
+        if response.status_code == 200:
+            result = response.json()
+            caption = result[0]['generated_text'].lower() if isinstance(result, list) else result.get('generated_text', '').lower()
+            
+            logger.info(f"HuggingFace caption: {caption}")
+            
+            # Check if caption mentions plant, pepper, chilli, leaf, vegetable
+            plant_keywords = ['plant', 'pepper', 'chili', 'chilli', 'leaf', 'leaves', 'vegetable', 'capsicum', 'green', 'garden']
+            invalid_keywords = ['person', 'people', 'human', 'animal', 'dog', 'cat', 'car', 'building', 'furniture']
+            
+            has_plant = any(keyword in caption for keyword in plant_keywords)
+            has_invalid = any(keyword in caption for keyword in invalid_keywords)
+            
+            if has_invalid:
+                return False, f"Image appears to be: {caption}"
+            elif has_plant:
+                return True, "Image validated (HuggingFace backup)"
+            else:
+                return False, f"Unclear image content: {caption}"
+        else:
+            logger.warning(f"HuggingFace API error: {response.status_code}")
+            return None
+            
+    except Exception as e:
+        logger.warning(f"HuggingFace validation failed: {str(e)}")
+        return None
+
+
+def validate_with_local_rules(image_bytes):
+    """
+    Simple local validation using color analysis
+    Ultimate fallback when all APIs are exhausted
+    """
+    try:
+        logger.info("🔍 Using local color-based validation...")
+        
+        img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+        # Resize for faster processing
+        img.thumbnail((200, 200))
+        
+        pixels = list(img.getdata())
+        total_pixels = len(pixels)
+        
+        # Count green pixels (likely plant)
+        green_pixels = 0
+        for r, g, b in pixels:
+            # Green dominant or greenish
+            if g > r and g > b and g > 50:
+                green_pixels += 1
+        
+        green_ratio = green_pixels / total_pixels
+        
+        logger.info(f"Green pixel ratio: {green_ratio:.2%}")
+        
+        # If >15% green pixels, likely a plant
+        if green_ratio > 0.15:
+            return True, "Image contains plant-like colors (local validation)"
+        else:
+            return False, "Image doesn't appear to contain plant leaves"
+            
+    except Exception as e:
+        logger.error(f"Local validation failed: {str(e)}")
+        # When everything fails, allow through
+        return True, "Validation unavailable"
+
+
+def validate_chilli_image(image_file):
+    """
+    Multi-tier validation system with automatic fallback:
+    1. Try all Gemini API keys (rotate through multiple accounts)
+    2. Try Hugging Face API (free backup service)
+    3. Use local color-based validation (ultimate fallback)
+    
+    Returns: (is_valid, message)
+    """
+    global current_gemini_key_index
+    
+    try:
+        # Read and prepare image
+        image_file.seek(0)  # Reset file pointer
+        img = Image.open(image_file)
+        
+        # Convert image to bytes
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format='JPEG')
+        img_byte_arr.seek(0)
+        image_bytes = img_byte_arr.read()
+        
+        # === TIER 1: Try all Gemini API keys ===
+        if GEMINI_API_KEYS:
+            model_names = [
+                # Highest Accuracy - Try these first
+                'models/gemini-3-pro-image-preview',
+                'models/gemini-3-pro-preview',
+                'models/gemini-2.5-pro',
+                # Image-specialized models
+                'models/gemini-2.5-flash-image',
+                'models/gemini-pro-latest',
+                # Fast models
+                'models/gemini-2.5-flash',
+                'models/gemini-3-flash-preview',
+                'models/gemini-2.0-flash',
+                'models/gemini-flash-latest',
+                # Experimental
+                'models/gemini-exp-1206',
+                # Flash variants
+                'models/gemini-2.0-flash-001',
+                'models/gemini-2.0-flash-lite',
+                'models/gemini-2.5-flash-lite',
+                'models/gemini-2.0-flash-lite-001',
+                'models/gemini-flash-lite-latest',
+                # Preview models
+                'models/gemini-2.5-flash-preview-09-2025',
+                'models/gemini-2.5-flash-lite-preview-09-2025',
+            ]
+            
+            prompt = """Analyze this image carefully and determine if it shows a chilli pepper plant (also known as hot pepper, capsicum, or chile plant) or its leaves.
+
+Respond with ONLY ONE of these exact formats:
+- "VALID: This is a chilli plant" (if the image shows any part of a chilli/pepper plant including leaves, fruits, stems, or the whole plant)
+- "INVALID: [brief reason]" (if the image does NOT show a chilli plant)
+
+Important:
+- Chilli plants have distinctive elongated leaves and can show various conditions (healthy, diseased, damaged)
+- Accept images of chilli leaves with spots, yellowing, curling, or other disease symptoms
+- Accept images of chilli fruits (peppers)
+- Reject images of other vegetables, fruits, animals, people, objects, or non-chilli plants
+- Be strict but recognize that diseased chilli leaves may look different from healthy ones
+
+Your response:"""
+            
+            # Try each API key
+            for key_idx, api_key in enumerate(GEMINI_API_KEYS):
+                try:
+                    gemini_client = genai.Client(api_key=api_key)
+                    logger.info(f"🔑 Trying API Key #{key_idx + 1}/{len(GEMINI_API_KEYS)}")
+                    
+                    # Try each model with this API key
+                    for model_name in model_names:
+                        try:
+                            response = gemini_client.models.generate_content(
+                                model=model_name,
+                                contents=[
+                                    types.Part.from_bytes(data=image_bytes, mime_type='image/jpeg'),
+                                    prompt
+                                ]
+                            )
+                            
+                            response_text = response.text.strip()
+                            logger.info(f"✅ Success! Key #{key_idx + 1}, Model: {model_name}")
+                            
+                            # Update the key index for next time
+                            current_gemini_key_index = key_idx
+                            
+                            # Parse response
+                            if response_text.upper().startswith("VALID"):
+                                return True, "Image validated as chilli plant (Gemini API)"
+                            else:
+                                reason = response_text.split(":", 1)[1].strip() if ":" in response_text else "Not a chilli plant image"
+                                return False, reason
+                                
+                        except Exception as e:
+                            error_msg = str(e)
+                            if '429' in error_msg or 'RESOURCE_EXHAUSTED' in error_msg or 'quota' in error_msg.lower():
+                                logger.warning(f"⚠ Key #{key_idx + 1}, Model {model_name} quota exhausted")
+                                continue
+                            else:
+                                logger.warning(f"⚠ Key #{key_idx + 1}, Model {model_name} error: {error_msg[:50]}...")
+                                continue
+                    
+                    logger.warning(f"❌ All models exhausted for Key #{key_idx + 1}")
+                    
+                except Exception as e:
+                    logger.warning(f"❌ API Key #{key_idx + 1} failed: {str(e)[:50]}...")
+                    continue
+            
+            logger.warning("❌ All Gemini API keys exhausted - switching to backup methods")
+        
+        # === TIER 2: Try Hugging Face ===
+        hf_result = validate_with_huggingface(image_bytes)
+        if hf_result is not None:
+            logger.info("✅ HuggingFace validation succeeded")
+            return hf_result
+        
+        # === TIER 3: Local validation (ultimate fallback) ===
+        logger.info("📍 Using local color-based validation (final fallback)")
+        return validate_with_local_rules(image_bytes)
+        
+    except Exception as e:
+        logger.error(f"Critical validation error: {str(e)}")
+        # Absolute fallback - allow image through
+        return True, "Validation unavailable"
+
+
 def preprocess_image(image_file):
     """Preprocess the uploaded image for model prediction"""
     try:
@@ -443,6 +686,23 @@ def api_predict():
         if not ('.' in file.filename and 
                 file.filename.rsplit('.', 1)[1].lower() in allowed_extensions):
             return jsonify({'error': 'Invalid file type. Use PNG, JPG, or JPEG'}), 400
+        
+        # Validate that the image contains a chilli plant using Gemini API
+        is_valid, validation_message = validate_chilli_image(file)
+        
+        if not is_valid:
+            logger.warning(f"Image validation failed: {validation_message}")
+            return jsonify({
+                'success': False,
+                'error': 'Invalid Image',
+                'message': f'This does not appear to be a chilli plant image. {validation_message}',
+                'suggestion': 'Please upload a clear image of a chilli plant leaf or the whole plant.'
+            }), 400
+        
+        logger.info(f"Image validation passed: {validation_message}")
+        
+        # Reset file pointer after validation
+        file.seek(0)
         
         # Preprocess image
         img_array, original_img = preprocess_image(file)
