@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultsSection = document.getElementById('resultsSection');
     const newAnalysisBtn = document.getElementById('newAnalysisBtn');
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const ctaStartBtn = document.getElementById('ctaStartBtn');
     
     // Camera Elements
     const openCameraBtn = document.getElementById('openCameraBtn');
@@ -110,6 +111,20 @@ document.addEventListener('DOMContentLoaded', function() {
             resultsSection.classList.add('hidden');
             document.getElementById('uploadSection').classList.remove('hidden');
             document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+
+    // CTA Start Button - Smart scroll to results or upload section
+    if (ctaStartBtn) {
+        ctaStartBtn.addEventListener('click', function() {
+            // Check if results section is visible
+            if (resultsSection && !resultsSection.classList.contains('hidden')) {
+                // Scroll to the new analysis button at the top of results
+                newAnalysisBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                // No results yet, scroll to upload section
+                document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
+            }
         });
     }
 
