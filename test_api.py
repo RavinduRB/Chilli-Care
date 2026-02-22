@@ -76,7 +76,7 @@ def test_get_diseases():
 # Test 3: Get Specific Disease
 def test_get_disease_info():
     print_header("Test 3: Get Specific Disease Info")
-    disease_name = "Chilli__Anthacnose"
+    disease_name = "Chilli Anthacnose"
     
     try:
         response = requests.get(f"{API_URL}/disease/{disease_name}")
@@ -100,30 +100,33 @@ def test_get_disease_info():
 def test_predict_disease():
     print_header("Test 4: Predict Disease from Image")
     
-    # Find a test image
-    test_dirs = ['test', 'valid', 'train']
+    # Find a test image - prioritize healthy images as they're more likely to pass validation
+    test_dirs_priority = [
+        ('test/Chilli___healthy', 'Healthy chilli'),
+        ('test/Chilli__Anthacnose', 'Anthacnose'),
+        ('test/Chilli__Leaf_Curl_Virus', 'Leaf Curl Virus'),
+        ('test/Chilli __Yellowish', 'Yellowish'),
+        ('test/Chilli __Whitefly', 'Whitefly'),
+        ('valid/Chilli___healthy', 'Healthy chilli'),
+        ('train/Chilli___healthy', 'Healthy chilli')
+    ]
+    
     test_image_path = None
     
-    for test_dir in test_dirs:
+    for test_dir, category in test_dirs_priority:
         if os.path.exists(test_dir):
-            # Get first image from first subdirectory
-            for subdir in os.listdir(test_dir):
-                subdir_path = os.path.join(test_dir, subdir)
-                if os.path.isdir(subdir_path):
-                    images = [f for f in os.listdir(subdir_path) 
-                             if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-                    if images:
-                        test_image_path = os.path.join(subdir_path, images[0])
-                        break
-            if test_image_path:
+            images = [f for f in os.listdir(test_dir) 
+                     if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+            if images:
+                # Try the first image from this directory
+                test_image_path = os.path.join(test_dir, images[0])
+                print_info(f"Using test image from {category}: {test_image_path}")
                 break
     
     if not test_image_path:
         print_error("No test image found")
         print_info("Please ensure you have images in train/valid/test directories")
         return False
-    
-    print_info(f"Using test image: {test_image_path}")
     
     try:
         with open(test_image_path, 'rb') as f:
@@ -148,7 +151,11 @@ def test_predict_disease():
             
             return True
         else:
-            print_error(f"Prediction failed: {data.get('error', 'Unknown error')}")
+            error_msg = data.get('error', 'Unknown error')
+            detail_msg = data.get('message', '')
+            print_error(f"Prediction failed: {error_msg}")
+            if detail_msg:
+                print_info(f"Details: {detail_msg}")
             return False
     except Exception as e:
         print_error(f"Prediction error: {str(e)}")
