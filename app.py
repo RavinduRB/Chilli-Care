@@ -6,7 +6,7 @@ Modern Flask API with TensorFlow Model Integration
 import os
 import json
 import numpy as np
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -20,6 +20,8 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 import requests
+from sqlalchemy import func
+from sqlalchemy.exc import SQLAlchemyError
 
 # Load environment variables from .env file
 load_dotenv()
@@ -34,6 +36,33 @@ app.config['SECRET_KEY'] = 'your-secret-key-here-change-in-production'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['UPLOAD_FOLDER'] = 'uploads'
 CORS(app)  # Enable CORS for API access
+
+# Database configuration (NeonDB/PostgreSQL)
+DATABASE_URL = os.getenv('DATABASE_URL', '')
+if DATABASE_URL:
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_size': 10,
+        'pool_recycle': 3600,
+        'pool_pre_ping': True,
+    }
+    logger.info("✓ Database configured")
+else:
+    logger.warning("⚠ No DATABASE_URL found - running without database")
+
+# Initialize database
+try:
+    from models import db, Disease, Prediction, DailyStats
+    if DATABASE_URL:
+        db.init_app(app)
+        logger.info("✓ Database models loaded")
+except ImportError as e:
+    logger.warning(f"⚠ Database models not available: {e}")
+    db = None
+    Disease = None
+    Prediction = None
+    DailyStats = None
 
 # Ensure upload folder exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -661,6 +690,58 @@ def predict_disease(img_array):
         raise
 
 
+def get_disease_info_from_db(disease_name):
+    """Get disease information from database (with fallback to DISEASE_INFO dict)"""
+    if db and Disease:
+        try:
+            disease = Disease.query.filter_by(name=disease_name).first()
+            if disease:
+                return disease.to_dict()
+        except Exception as e:
+            logger.warning(f"Database query failed, using fallback: {e}")
+    
+    # Fallback to dictionary
+    return DISEASE_INFO.get(disease_name, {})
+
+
+def save_prediction_to_db(prediction_result, validation_method, validation_message, 
+                         image_filename=None, user_ip=None, user_agent=None):
+    """Save prediction to database for analytics"""
+    if not (db and Prediction):
+        return None
+    
+    try:
+        # Create prediction record
+        prediction = Prediction(
+            image_filename=image_filename,
+            predicted_disease=prediction_result['predicted_class'],
+            confidence=prediction_result['confidence'],
+            all_probabilities=prediction_result['all_probabilities'],
+            top_3_predictions=[[item[0], item[1]] for item in prediction_result['top_3_predictions']],
+            validation_method=validation_method,
+            validation_message=validation_message,
+            user_ip=user_ip,
+            user_agent=user_agent,
+            model_version='1.0.0'
+        )
+        
+        # Link to disease if exists
+        disease = Disease.query.filter_by(name=prediction_result['predicted_class']).first()
+        if disease:
+            prediction.disease_id = disease.id
+        
+        db.session.add(prediction)
+        db.session.commit()
+        
+        logger.info(f"✓ Saved prediction #{prediction.id} to database")
+        return prediction.id
+        
+    except Exception as e:
+        logger.error(f"Failed to save prediction: {e}")
+        db.session.rollback()
+        return None
+
+
 # Routes
 @app.route('/')
 def index():
@@ -710,9 +791,21 @@ def api_predict():
         # Make prediction
         prediction_result = predict_disease(img_array)
         
-        # Get disease information
+        # Get disease information (from database or fallback)
         disease_name = prediction_result['predicted_class']
-        disease_data = DISEASE_INFO.get(disease_name, {})
+        disease_data = get_disease_info_from_db(disease_name)
+        
+        # Save prediction to database
+        user_ip = request.remote_addr
+        user_agent = request.headers.get('User-Agent', '')[:500]
+        prediction_id = save_prediction_to_db(
+            prediction_result,
+            validation_message.split('(')[1].rstrip(')') if '(' in validation_message else 'unknown',
+            validation_message,
+            file.filename,
+            user_ip,
+            user_agent
+        )
         
         # Prepare response
         response = {
@@ -720,7 +813,8 @@ def api_predict():
             'prediction': prediction_result,
             'disease_info': disease_data,
             'timestamp': datetime.now().isoformat(),
-            'model_version': '1.0.0'
+            'model_version': '1.0.0',
+            'prediction_id': prediction_id
         }
         
         return jsonify(response)
@@ -736,17 +830,33 @@ def api_predict():
 @app.route('/api/diseases', methods=['GET'])
 def get_diseases():
     """Get all disease information"""
+    # Try to get from database first
+    if db and Disease:
+        try:
+            diseases = Disease.query.all()
+            disease_dict = {disease.name: disease.to_dict() for disease in diseases}
+            return jsonify({
+                'success': True,
+                'diseases': disease_dict,
+                'total_diseases': len(disease_dict),
+                'source': 'database'
+            })
+        except Exception as e:
+            logger.warning(f"Database query failed: {e}")
+    
+    # Fallback to dictionary
     return jsonify({
         'success': True,
         'diseases': DISEASE_INFO,
-        'total_diseases': len(DISEASE_INFO)
+        'total_diseases': len(DISEASE_INFO),
+        'source': 'fallback'
     })
 
 
 @app.route('/api/disease/<disease_name>', methods=['GET'])
 def get_disease_info(disease_name):
     """Get specific disease information"""
-    disease_data = DISEASE_INFO.get(disease_name)
+    disease_data = get_disease_info_from_db(disease_name)
     
     if disease_data:
         return jsonify({
@@ -764,11 +874,22 @@ def get_disease_info(disease_name):
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
+    db_status = 'not_configured'
+    if DATABASE_URL and db:
+        try:
+            # Test database connection
+            with app.app_context():
+                db.session.execute('SELECT 1')
+            db_status = 'connected'
+        except:
+            db_status = 'error'
+    
     return jsonify({
         'status': 'healthy',
         'model_loaded': model is not None,
         'classes_loaded': len(class_names) > 0,
         'num_classes': len(class_names),
+        'database': db_status,
         'timestamp': datetime.now().isoformat()
     })
 
@@ -795,6 +916,147 @@ def responsive_test():
 def camera_test():
     """Camera feature test page"""
     return render_template('camera-test.html')
+
+
+@app.route('/api/history', methods=['GET'])
+def get_prediction_history():
+    """Get prediction history with pagination"""
+    if not (db and Prediction):
+        return jsonify({
+            'success': False,
+            'error': 'Database not configured'
+        }), 503
+    
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        disease_filter = request.args.get('disease', None)
+        
+        # Build query
+        query = Prediction.query.order_by(Prediction.timestamp.desc())
+        
+        if disease_filter:
+            query = query.filter_by(predicted_disease=disease_filter)
+        
+        # Paginate
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+        
+        return jsonify({
+            'success': True,
+            'predictions': [p.to_dict() for p in pagination.items],
+            'total': pagination.total,
+            'page': page,
+            'per_page': per_page,
+            'pages': pagination.pages
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching history: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/analytics/summary', methods=['GET'])
+def get_analytics_summary():
+    """Get analytics summary"""
+    if not (db and Prediction):
+        return jsonify({
+            'success': False,
+            'error': 'Database not configured'
+        }), 503
+    
+    try:
+        # Total predictions
+        total_predictions = Prediction.query.count()
+        
+        # Predictions by disease
+        disease_counts = db.session.query(
+            Prediction.predicted_disease,
+            func.count(Prediction.id).label('count'),
+            func.avg(Prediction.confidence).label('avg_confidence')
+        ).group_by(Prediction.predicted_disease).all()
+        
+        # Recent predictions (last 7 days)
+        seven_days_ago = datetime.now().date() - timedelta(days=7)
+        recent_predictions = Prediction.query.filter(
+            Prediction.timestamp >= seven_days_ago
+        ).count()
+        
+        # Today's predictions
+        today = datetime.now().date()
+        today_predictions = Prediction.query.filter(
+            func.date(Prediction.timestamp) == today
+        ).count()
+        
+        return jsonify({
+            'success': True,
+            'summary': {
+                'total_predictions': total_predictions,
+                'today_predictions': today_predictions,
+                'last_7_days': recent_predictions,
+                'by_disease': [
+                    {
+                        'disease': row[0],
+                        'count': row[1],
+                        'avg_confidence': round(row[2], 2)
+                    }
+                    for row in disease_counts
+                ]
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching analytics: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/analytics/daily', methods=['GET'])
+def get_daily_analytics():
+    """Get daily analytics for the last 30 days"""
+    if not (db and Prediction):
+        return jsonify({
+            'success': False,
+            'error': 'Database not configured'
+        }), 503
+    
+    try:
+        from datetime import timedelta
+        
+        days = request.args.get('days', 30, type=int)
+        start_date = datetime.now().date() - timedelta(days=days)
+        
+        # Daily counts
+        daily_data = db.session.query(
+            func.date(Prediction.timestamp).label('date'),
+            func.count(Prediction.id).label('count')
+        ).filter(
+            Prediction.timestamp >= start_date
+        ).group_by(
+            func.date(Prediction.timestamp)
+        ).order_by('date').all()
+        
+        return jsonify({
+            'success': True,
+            'daily_stats': [
+                {
+                    'date': row[0].isoformat(),
+                    'count': row[1]
+                }
+                for row in daily_data
+            ]
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching daily analytics: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 
 @app.errorhandler(404)
