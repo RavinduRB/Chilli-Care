@@ -24,9 +24,18 @@ import requests
 # Load environment variables from .env file
 load_dotenv()
 
-# Configure logging
+# Configure logging (must be before MongoDB import that uses logger)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Import MongoDB database
+try:
+    from mongodb_database import get_db
+    mongodb = get_db()
+    logger.info(f"✓ MongoDB configured: {mongodb.connected}")
+except ImportError as e:
+    logger.warning(f"⚠ MongoDB not available: {e}")
+    mongodb = None
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -473,29 +482,24 @@ def validate_chilli_image(image_file):
         # === TIER 1: Try all Gemini API keys ===
         if GEMINI_API_KEYS:
             model_names = [
-                # Highest Accuracy - Try these first
-                'models/gemini-3-pro-image-preview',
-                'models/gemini-3-pro-preview',
-                'models/gemini-2.5-pro',
-                # Image-specialized models
-                'models/gemini-2.5-flash-image',
-                'models/gemini-pro-latest',
-                # Fast models
-                'models/gemini-2.5-flash',
-                'models/gemini-3-flash-preview',
-                'models/gemini-2.0-flash',
-                'models/gemini-flash-latest',
-                # Experimental
-                'models/gemini-exp-1206',
-                # Flash variants
-                'models/gemini-2.0-flash-001',
-                'models/gemini-2.0-flash-lite',
-                'models/gemini-2.5-flash-lite',
-                'models/gemini-2.0-flash-lite-001',
-                'models/gemini-flash-lite-latest',
-                # Preview models
-                'models/gemini-2.5-flash-preview-09-2025',
-                'models/gemini-2.5-flash-lite-preview-09-2025',
+                # TIER 1: Highest Accuracy (try these first)
+                'models/gemini-2.0-flash-exp',           # Best overall - experimental with image support
+                'models/gemini-2.5-pro',                 # Highest tier Pro model
+                'models/gemini-2.5-flash-image',         # Image specialist
+                
+                # TIER 2: Excellent Balance (accuracy + speed)
+                'models/gemini-2.0-flash-latest',        # Latest stable Flash
+                'models/gemini-pro-latest',              # Latest Pro model
+                'models/gemini-2.5-flash',               # Fast and accurate
+                
+                # TIER 3: Reliable Fallbacks
+                'models/gemini-2.0-flash',               # Stable version
+                'models/gemini-flash-latest',            # Generic latest
+                'models/gemini-2.0-flash-001',           # Specific stable version
+                
+                # TIER 4: Lite Models (only if others exhausted)
+                'models/gemini-2.0-flash-lite',          # Lightweight but still capable
+                'models/gemini-2.5-flash-lite',          # Lite with newer tech
             ]
             
             prompt = """Analyze this image carefully and determine if it shows a chilli pepper plant (also known as hot pepper, capsicum, or chile plant) or its leaves.
@@ -661,6 +665,54 @@ def predict_disease(img_array):
         raise
 
 
+def get_disease_info_from_db(disease_name):
+    """Get disease information from MongoDB (with fallback to DISEASE_INFO dict)"""
+    if mongodb and mongodb.connected:
+        try:
+            disease_doc = mongodb.get_disease(disease_name)
+            if disease_doc:
+                # Remove MongoDB _id field
+                disease_doc.pop('_id', None)
+                disease_doc.pop('name', None)
+                disease_doc.pop('created_at', None)
+                disease_doc.pop('updated_at', None)
+                return disease_doc
+        except Exception as e:
+            logger.warning(f"MongoDB query failed, using fallback: {e}")
+    
+    # Fallback to dictionary
+    return DISEASE_INFO.get(disease_name, {})
+
+
+def save_prediction_to_mongo(prediction_result, validation_method, validation_message,
+                            image_filename=None, user_ip=None, user_agent=None):
+    """Save prediction to MongoDB for analytics"""
+    if not (mongodb and mongodb.connected):
+        return None
+    
+    try:
+        prediction_data = {
+            'image_filename': image_filename,
+            'predicted_disease': prediction_result['predicted_class'],
+            'confidence': prediction_result['confidence'],
+            'all_probabilities': prediction_result['all_probabilities'],
+            'top_3_predictions': [[item[0], item[1]] for item in prediction_result['top_3_predictions']],
+            'validation_method': validation_method,
+            'validation_message': validation_message,
+            'user_ip': user_ip,
+            'user_agent': user_agent,
+            'model_version': '1.0.0',
+            'timestamp': datetime.utcnow()
+        }
+        
+        prediction_id = mongodb.save_prediction(prediction_data)
+        return prediction_id
+        
+    except Exception as e:
+        logger.error(f"Failed to save prediction to MongoDB: {e}")
+        return None
+
+
 # Routes
 @app.route('/')
 def index():
@@ -710,9 +762,21 @@ def api_predict():
         # Make prediction
         prediction_result = predict_disease(img_array)
         
-        # Get disease information
+        # Get disease information (from MongoDB or fallback)
         disease_name = prediction_result['predicted_class']
-        disease_data = DISEASE_INFO.get(disease_name, {})
+        disease_data = get_disease_info_from_db(disease_name)
+        
+        # Save prediction to MongoDB
+        user_ip = request.remote_addr
+        user_agent = request.headers.get('User-Agent', '')[:500]
+        prediction_id = save_prediction_to_mongo(
+            prediction_result,
+            validation_message.split('(')[1].rstrip(')') if '(' in validation_message else 'unknown',
+            validation_message,
+            file.filename,
+            user_ip,
+            user_agent
+        )
         
         # Prepare response
         response = {
@@ -720,7 +784,8 @@ def api_predict():
             'prediction': prediction_result,
             'disease_info': disease_data,
             'timestamp': datetime.now().isoformat(),
-            'model_version': '1.0.0'
+            'model_version': '1.0.0',
+            'prediction_id': prediction_id
         }
         
         return jsonify(response)
@@ -736,17 +801,40 @@ def api_predict():
 @app.route('/api/diseases', methods=['GET'])
 def get_diseases():
     """Get all disease information"""
+    # Try MongoDB first
+    if mongodb and mongodb.connected:
+        try:
+            diseases_list = mongodb.get_all_diseases()
+            diseases_dict = {}
+            for disease in diseases_list:
+                name = disease.pop('name')
+                disease.pop('_id', None)
+                disease.pop('created_at', None)
+                disease.pop('updated_at', None)
+                diseases_dict[name] = disease
+            
+            return jsonify({
+                'success': True,
+                'diseases': diseases_dict,
+                'total_diseases': len(diseases_dict),
+                'source': 'mongodb'
+            })
+        except Exception as e:
+            logger.warning(f"MongoDB query failed: {e}")
+    
+    # Fallback to dictionary
     return jsonify({
         'success': True,
         'diseases': DISEASE_INFO,
-        'total_diseases': len(DISEASE_INFO)
+        'total_diseases': len(DISEASE_INFO),
+        'source': 'fallback'
     })
 
 
 @app.route('/api/disease/<disease_name>', methods=['GET'])
 def get_disease_info(disease_name):
     """Get specific disease information"""
-    disease_data = DISEASE_INFO.get(disease_name)
+    disease_data = get_disease_info_from_db(disease_name)
     
     if disease_data:
         return jsonify({
@@ -764,11 +852,16 @@ def get_disease_info(disease_name):
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
+    mongodb_status = 'not_configured'
+    if mongodb:
+        mongodb_status = 'connected' if mongodb.connected else 'disconnected'
+    
     return jsonify({
         'status': 'healthy',
         'model_loaded': model is not None,
         'classes_loaded': len(class_names) > 0,
         'num_classes': len(class_names),
+        'mongodb': mongodb_status,
         'timestamp': datetime.now().isoformat()
     })
 
@@ -795,6 +888,129 @@ def responsive_test():
 def camera_test():
     """Camera feature test page"""
     return render_template('camera-test.html')
+
+
+@app.route('/api/history', methods=['GET'])
+def get_prediction_history():
+    """Get prediction history with pagination"""
+    if not (mongodb and mongodb.connected):
+        return jsonify({
+            'success': False,
+            'error': 'MongoDB not configured'
+        }), 503
+    
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        disease_filter = request.args.get('disease', None)
+        
+        # Calculate skip
+        skip = (page - 1) * per_page
+        
+        # Get predictions
+        predictions = mongodb.get_predictions(limit=per_page, skip=skip, disease_filter=disease_filter)
+        total = mongodb.count_predictions(disease_filter=disease_filter)
+        
+        # Convert ObjectId to string
+        for pred in predictions:
+            pred['_id'] = str(pred['_id'])
+            if 'timestamp' in pred:
+                pred['timestamp'] = pred['timestamp'].isoformat()
+        
+        return jsonify({
+            'success': True,
+            'predictions': predictions,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'pages': (total + per_page - 1) // per_page
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching history: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/analytics/summary', methods=['GET'])
+def get_analytics_summary():
+    """Get analytics summary"""
+    if not (mongodb and mongodb.connected):
+        return jsonify({
+            'success': False,
+            'error': 'MongoDB not configured'
+        }), 503
+    
+    try:
+        # Get statistics
+        total_predictions = mongodb.count_predictions()
+        disease_stats = mongodb.get_disease_statistics()
+        recent_count = mongodb.get_recent_predictions_count(days=7)
+        today_count = mongodb.get_recent_predictions_count(days=1)
+        
+        # Process disease stats
+        by_disease = []
+        for stat in disease_stats:
+            by_disease.append({
+                'disease': stat['_id'],
+                'count': stat['count'],
+                'avg_confidence': round(stat['avg_confidence'], 2)
+            })
+        
+        return jsonify({
+            'success': True,
+            'summary': {
+                'total_predictions': total_predictions,
+                'today_predictions': today_count,
+                'last_7_days': recent_count,
+                'by_disease': by_disease
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching analytics: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/analytics/daily', methods=['GET'])
+def get_daily_analytics():
+    """Get daily analytics"""
+    if not (mongodb and mongodb.connected):
+        return jsonify({
+            'success': False,
+            'error': 'MongoDB not configured'
+        }), 503
+    
+    try:
+        days = request.args.get('days', 30, type=int)
+        
+        # Get daily statistics
+        daily_data = mongodb.get_daily_statistics(days=days)
+        
+        # Format response
+        daily_stats = []
+        for stat in daily_data:
+            daily_stats.append({
+                'date': stat['_id'],
+                'count': stat['count']
+            })
+        
+        return jsonify({
+            'success': True,
+            'daily_stats': daily_stats
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching daily analytics: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 
 @app.errorhandler(404)

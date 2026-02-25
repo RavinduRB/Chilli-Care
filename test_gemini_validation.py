@@ -35,29 +35,24 @@ def test_gemini_connection():
         # Prioritizing accuracy for image validation
         # Auto-switches if quota is exhausted
         model_names = [
-            # Highest Accuracy models
-            'models/gemini-3-pro-image-preview',
-            'models/gemini-3-pro-preview',
-            'models/gemini-2.5-pro',
-            # Image-specialized
-            'models/gemini-2.5-flash-image',
-            'models/gemini-pro-latest',
-            # Fast models
-            'models/gemini-2.5-flash',
-            'models/gemini-3-flash-preview',
-            'models/gemini-2.0-flash',
-            'models/gemini-flash-latest',
-            # Experimental
-            'models/gemini-exp-1206',
-            # Flash variants
-            'models/gemini-2.0-flash-001',
-            'models/gemini-2.0-flash-lite',
-            'models/gemini-2.5-flash-lite',
-            'models/gemini-2.0-flash-lite-001',
-            'models/gemini-flash-lite-latest',
-            # Preview models
-            'models/gemini-2.5-flash-preview-09-2025',
-            'models/gemini-2.5-flash-lite-preview-09-2025',
+                # TIER 1: Highest Accuracy (try these first)
+                'models/gemini-2.0-flash-exp',           # Best overall - experimental with image support
+                'models/gemini-2.5-pro',                 # Highest tier Pro model
+                'models/gemini-2.5-flash-image',         # Image specialist
+                
+                # TIER 2: Excellent Balance (accuracy + speed)
+                'models/gemini-2.0-flash-latest',        # Latest stable Flash
+                'models/gemini-pro-latest',              # Latest Pro model
+                'models/gemini-2.5-flash',               # Fast and accurate
+                
+                # TIER 3: Reliable Fallbacks
+                'models/gemini-2.0-flash',               # Stable version
+                'models/gemini-flash-latest',            # Generic latest
+                'models/gemini-2.0-flash-001',           # Specific stable version
+                
+                # TIER 4: Lite Models (only if others exhausted)
+                'models/gemini-2.0-flash-lite',          # Lightweight but still capable
+                'models/gemini-2.5-flash-lite',          # Lightweight and fast
         ]
         
         working_model = None
