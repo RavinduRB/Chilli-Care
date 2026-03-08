@@ -605,30 +605,6 @@ button {
     color: var(--gray-700);
 }
 
-/* Export Section */
-.export-section {
-    margin-top: 2rem;
-    padding: 1.5rem;
-    background: white;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
-    text-align: center;
-}
-
-.export-section h4 {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--gray-900);
-    margin-bottom: 1rem;
-}
-
-.export-buttons {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
 /* ============================================
    6. Buttons
    ============================================ */
@@ -1074,16 +1050,6 @@ button {
         align-items: flex-start;
     }
     
-    .export-buttons {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .export-buttons .btn {
-        width: 100%;
-        justify-content: center;
-    }
-    
     /* Features */
     .features-grid {
         grid-template-columns: 1fr;
@@ -1444,8 +1410,7 @@ button {
 @media print {
     .navbar,
     .upload-section,
-    .mobile-menu-toggle,
-    .export-section {
+    .mobile-menu-toggle {
         display: none !important;
     }
     

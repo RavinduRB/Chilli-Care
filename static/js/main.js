@@ -769,46 +769,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================
-    // Export Functions
-    // ============================================
-
-    // Download PDF (placeholder - requires jsPDF library)
-    const downloadPdfBtn = document.getElementById('downloadPdfBtn');
-    if (downloadPdfBtn) {
-        downloadPdfBtn.addEventListener('click', function() {
-            showToast('PDF download feature coming soon!', 'warning');
-            // TODO: Implement PDF generation with jsPDF
-        });
-    }
-
-    // Share results
-    const shareResultBtn = document.getElementById('shareResultBtn');
-    if (shareResultBtn) {
-        shareResultBtn.addEventListener('click', async function() {
-            if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: 'Chilli Disease Detection Results',
-                        text: 'Check out my plant disease diagnosis from ChilliDoc AI',
-                        url: window.location.href
-                    });
-                    showToast('Shared successfully!', 'success');
-                } catch (error) {
-                    console.error('Share failed:', error);
-                }
-            } else {
-                // Fallback: Copy to clipboard
-                const url = window.location.href;
-                navigator.clipboard.writeText(url).then(() => {
-                    showToast('Link copied to clipboard!', 'success');
-                }).catch(() => {
-                    showToast('Could not copy link', 'error');
-                });
-            }
-        });
-    }
-
-    // ============================================
     // Smooth Scrolling
     // ============================================
     
