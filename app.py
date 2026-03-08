@@ -22,6 +22,7 @@ from google.genai import types
 from dotenv import load_dotenv
 import requests
 import bcrypt
+from huggingface_hub import InferenceClient
 
 # Load environment variables from .env file
 load_dotenv()
@@ -490,9 +491,69 @@ def validate_with_local_rules(image_bytes):
         return True, "Validation unavailable"
 
 
+def validate_nsfw_content(image_bytes):
+    """
+    Check for NSFW/inappropriate content using Hugging Face
+    Returns: (is_safe, message)
+    """
+    try:
+        if not HUGGINGFACE_API_KEY:
+            logger.warning("⚠ NSFW detection skipped: No API key")
+            return True, "NSFW check skipped"
+        
+        logger.info("🛡️ Checking for inappropriate content...")
+        
+        # Initialize Hugging Face Inference Client
+        client = InferenceClient(
+            api_key=HUGGINGFACE_API_KEY
+        )
+        
+        # Save image bytes to temporary file for classification
+        import tempfile
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
+            tmp_file.write(image_bytes)
+            tmp_path = tmp_file.name
+        
+        try:
+            # Use NSFW image detection model
+            result = client.image_classification(
+                tmp_path, 
+                model="Falconsai/nsfw_image_detection"
+            )
+            
+            # Parse results
+            # Result format: [{'label': 'nsfw', 'score': 0.99}, {'label': 'normal', 'score': 0.01}]
+            nsfw_score = 0
+            normal_score = 0
+            
+            for item in result:
+                if item['label'].lower() == 'nsfw':
+                    nsfw_score = item['score']
+                elif item['label'].lower() == 'normal':
+                    normal_score = item['score']
+            
+            logger.info(f"NSFW Detection - Normal: {normal_score:.2%}, NSFW: {nsfw_score:.2%}")
+            
+            # If NSFW score is high (>50%), reject the image
+            if nsfw_score > 0.5:
+                return False, f"Inappropriate content detected. This system is for plant disease detection only."
+            else:
+                return True, f"Content check passed"
+                
+        finally:
+            # Clean up temporary file
+            os.unlink(tmp_path)
+            
+    except Exception as e:
+        logger.warning(f"NSFW detection failed: {str(e)}")
+        # If detection fails, allow through (fail open for availability)
+        return True, "Content check unavailable"
+
+
 def validate_chilli_image(image_file):
     """
     Multi-tier validation system with automatic fallback:
+    0. Check for NSFW/inappropriate content (security layer)
     1. Try all Gemini API keys (rotate through multiple accounts)
     2. Try Hugging Face API (free backup service)
     3. Use local color-based validation (ultimate fallback)
@@ -511,6 +572,13 @@ def validate_chilli_image(image_file):
         img.save(img_byte_arr, format='JPEG')
         img_byte_arr.seek(0)
         image_bytes = img_byte_arr.read()
+        
+        # === TIER 0: NSFW Content Check (Security Layer) ===
+        is_safe, nsfw_message = validate_nsfw_content(image_bytes)
+        if not is_safe:
+            logger.warning(f"NSFW content detected: {nsfw_message}")
+            return False, nsfw_message
+        logger.info(f"✅ Content safety check: {nsfw_message}")
         
         # === TIER 1: Try all Gemini API keys ===
         if GEMINI_API_KEYS:
