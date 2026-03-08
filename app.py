@@ -22,7 +22,6 @@ from google.genai import types
 from dotenv import load_dotenv
 import requests
 import bcrypt
-from huggingface_hub import InferenceClient
 
 # Load environment variables from .env file
 load_dotenv()
@@ -455,105 +454,180 @@ def validate_with_huggingface(image_bytes):
 
 def validate_with_local_rules(image_bytes):
     """
-    Simple local validation using color analysis
+    Advanced local validation using multi-factor analysis
     Ultimate fallback when all APIs are exhausted
+    
+    Analyzes:
+    1. Color distribution (green/brown/yellow for plants)
+    2. Color variance (organic vs artificial)
+    3. Brightness distribution (natural lighting)
+    4. Edge patterns (organic shapes vs geometric)
     """
     try:
-        logger.info("🔍 Using local color-based validation...")
+        logger.info("🔍 Using advanced local validation...")
         
         img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
-        # Resize for faster processing
-        img.thumbnail((200, 200))
+        original_size = img.size
         
-        pixels = list(img.getdata())
-        total_pixels = len(pixels)
+        # Resize for faster processing but keep aspect ratio
+        img.thumbnail((300, 300))
         
-        # Count green pixels (likely plant)
+        pixels = np.array(img)
+        height, width, _ = pixels.shape
+        total_pixels = height * width
+        
+        # === ANALYSIS 1: Color Distribution ===
+        r_channel = pixels[:, :, 0].flatten()
+        g_channel = pixels[:, :, 1].flatten()
+        b_channel = pixels[:, :, 2].flatten()
+        
+        # Count plant-like colors (green, yellow-green, brown, yellow)
+        plant_colors = 0
         green_pixels = 0
-        for r, g, b in pixels:
-            # Green dominant or greenish
-            if g > r and g > b and g > 50:
-                green_pixels += 1
+        brown_yellow_pixels = 0
         
+        for i in range(len(r_channel)):
+            r, g, b = r_channel[i], g_channel[i], b_channel[i]
+            
+            # Strong green (healthy leaves)
+            if g > r and g > b and g > 40:
+                green_pixels += 1
+                plant_colors += 1
+            # Yellow-green (diseased/aging leaves)
+            elif g > b and (g > r * 0.8) and g > 60:
+                plant_colors += 1
+            # Brown/tan (diseased spots, stems)
+            elif 80 < r < 180 and 60 < g < 160 and 30 < b < 120 and abs(r - g) < 60:
+                brown_yellow_pixels += 1
+                plant_colors += 1
+            # Yellowish (chlorosis, disease)
+            elif g > 100 and r > 80 and abs(r - g) < 40 and b < 100:
+                plant_colors += 1
+        
+        plant_color_ratio = plant_colors / total_pixels
         green_ratio = green_pixels / total_pixels
         
-        logger.info(f"Green pixel ratio: {green_ratio:.2%}")
+        logger.info(f"Plant colors: {plant_color_ratio:.2%}, Green: {green_ratio:.2%}")
         
-        # If >15% green pixels, likely a plant
-        if green_ratio > 0.15:
-            return True, "Image contains plant-like colors (local validation)"
+        # === ANALYSIS 2: Color Variance (Organic vs Artificial) ===
+        # Natural images have more color variance
+        r_std = np.std(r_channel)
+        g_std = np.std(g_channel)
+        b_std = np.std(b_channel)
+        avg_variance = (r_std + g_std + b_std) / 3
+        
+        logger.info(f"Color variance: {avg_variance:.2f}")
+        
+        # === ANALYSIS 3: Brightness Distribution ===
+        brightness = (r_channel + g_channel + b_channel) / 3
+        avg_brightness = np.mean(brightness)
+        brightness_std = np.std(brightness)
+        
+        # Check if image is not too dark or too bright (valid lighting)
+        good_lighting = 30 < avg_brightness < 220 and brightness_std > 15
+        
+        logger.info(f"Brightness: {avg_brightness:.1f}, Std: {brightness_std:.1f}")
+        
+        # === ANALYSIS 4: Red/White Detection (likely non-plant) ===
+        red_pixels = 0
+        white_pixels = 0
+        black_pixels = 0
+        
+        for i in range(len(r_channel)):
+            r, g, b = r_channel[i], g_channel[i], b_channel[i]
+            
+            # Strong red (unlikely for chilli leaves)
+            if r > 150 and g < 100 and b < 100:
+                red_pixels += 1
+            # Very white (paper, wall, sky)
+            elif r > 200 and g > 200 and b > 200:
+                white_pixels += 1
+            # Very black (background)
+            elif r < 30 and g < 30 and b < 30:
+                black_pixels += 1
+        
+        red_ratio = red_pixels / total_pixels
+        white_ratio = white_pixels / total_pixels
+        black_ratio = black_pixels / total_pixels
+        
+        # === SCORING SYSTEM ===
+        score = 0
+        max_score = 100
+        reasons = []
+        
+        # Plant color analysis (40 points)
+        if plant_color_ratio > 0.30:
+            score += 40
+            reasons.append(f"Strong plant colors ({plant_color_ratio:.1%})")
+        elif plant_color_ratio > 0.20:
+            score += 30
+            reasons.append(f"Moderate plant colors ({plant_color_ratio:.1%})")
+        elif plant_color_ratio > 0.10:
+            score += 15
+            reasons.append(f"Some plant colors ({plant_color_ratio:.1%})")
+        
+        # Green specifically (25 points)
+        if green_ratio > 0.20:
+            score += 25
+            reasons.append("Good green content")
+        elif green_ratio > 0.10:
+            score += 15
+            reasons.append("Some green content")
+        elif green_ratio > 0.05:
+            score += 8
+        
+        # Color variance (15 points)
+        if avg_variance > 40:
+            score += 15
+            reasons.append("Natural color variation")
+        elif avg_variance > 25:
+            score += 10
+        elif avg_variance > 15:
+            score += 5
+        
+        # Lighting quality (10 points)
+        if good_lighting:
+            score += 10
+            reasons.append("Good lighting")
+        
+        # Penalty for non-plant indicators (10 points deduction each)
+        if red_ratio > 0.3:
+            score -= 10
+            reasons.append("⚠ High red content")
+        if white_ratio > 0.5:
+            score -= 10
+            reasons.append("⚠ Too much white/background")
+        if black_ratio > 0.5:
+            score -= 10
+            reasons.append("⚠ Too much black/dark")
+        
+        # Image size check (bonus)
+        if original_size[0] > 400 and original_size[1] > 400:
+            score += 10
+            reasons.append("Good image quality")
+        
+        logger.info(f"Validation score: {score}/{max_score}")
+        logger.info(f"Reasons: {', '.join(reasons)}")
+        
+        # === DECISION ===
+        # Threshold: 45 points to pass
+        if score >= 45:
+            return True, f"Valid plant image (score: {score}/100, {', '.join(reasons[:2])})"
+        elif score >= 25:
+            # Borderline - accept with warning
+            return True, f"Possible plant image (score: {score}/100, please use clear leaf photos)"
         else:
-            return False, "Image doesn't appear to contain plant leaves"
+            return False, f"Image doesn't appear to be a chilli plant (score: {score}/100)"
             
     except Exception as e:
         logger.error(f"Local validation failed: {str(e)}")
-        # When everything fails, allow through
-        return True, "Validation unavailable"
-
-
-def validate_nsfw_content(image_bytes):
-    """
-    Check for NSFW/inappropriate content using Hugging Face
-    Returns: (is_safe, message)
-    """
-    try:
-        if not HUGGINGFACE_API_KEY:
-            logger.warning("⚠ NSFW detection skipped: No API key")
-            return True, "NSFW check skipped"
-        
-        logger.info("🛡️ Checking for inappropriate content...")
-        
-        # Initialize Hugging Face Inference Client
-        client = InferenceClient(
-            api_key=HUGGINGFACE_API_KEY
-        )
-        
-        # Save image bytes to temporary file for classification
-        import tempfile
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
-            tmp_file.write(image_bytes)
-            tmp_path = tmp_file.name
-        
-        try:
-            # Use NSFW image detection model
-            result = client.image_classification(
-                tmp_path, 
-                model="Falconsai/nsfw_image_detection"
-            )
-            
-            # Parse results
-            # Result format: [{'label': 'nsfw', 'score': 0.99}, {'label': 'normal', 'score': 0.01}]
-            nsfw_score = 0
-            normal_score = 0
-            
-            for item in result:
-                if item['label'].lower() == 'nsfw':
-                    nsfw_score = item['score']
-                elif item['label'].lower() == 'normal':
-                    normal_score = item['score']
-            
-            logger.info(f"NSFW Detection - Normal: {normal_score:.2%}, NSFW: {nsfw_score:.2%}")
-            
-            # If NSFW score is high (>50%), reject the image
-            if nsfw_score > 0.5:
-                return False, f"Inappropriate content detected. This system is for plant disease detection only."
-            else:
-                return True, f"Content check passed"
-                
-        finally:
-            # Clean up temporary file
-            os.unlink(tmp_path)
-            
-    except Exception as e:
-        logger.warning(f"NSFW detection failed: {str(e)}")
-        # If detection fails, allow through (fail open for availability)
-        return True, "Content check unavailable"
+        # When everything fails, allow through with warning
+        return True, "Validation unavailable - proceeding with analysis"
 
 
 def validate_chilli_image(image_file):
     """
     Multi-tier validation system with automatic fallback:
-    0. Check for NSFW/inappropriate content (security layer)
     1. Try all Gemini API keys (rotate through multiple accounts)
     2. Try Hugging Face API (free backup service)
     3. Use local color-based validation (ultimate fallback)
@@ -572,13 +646,6 @@ def validate_chilli_image(image_file):
         img.save(img_byte_arr, format='JPEG')
         img_byte_arr.seek(0)
         image_bytes = img_byte_arr.read()
-        
-        # === TIER 0: NSFW Content Check (Security Layer) ===
-        is_safe, nsfw_message = validate_nsfw_content(image_bytes)
-        if not is_safe:
-            logger.warning(f"NSFW content detected: {nsfw_message}")
-            return False, nsfw_message
-        logger.info(f"✅ Content safety check: {nsfw_message}")
         
         # === TIER 1: Try all Gemini API keys ===
         if GEMINI_API_KEYS:
