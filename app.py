@@ -6,7 +6,7 @@ Modern Flask API with TensorFlow Model Integration
 import os
 import json
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify, send_from_directory, session
 from flask_cors import CORS
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -44,6 +44,13 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-here-change-in-production')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['UPLOAD_FOLDER'] = 'uploads'
+
+# Session configuration for persistent login
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Session lasts 7 days
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
 CORS(app)  # Enable CORS for API access
 
 # Initialize Flask-Login
@@ -920,7 +927,8 @@ def signup():
         if user_id:
             # Create user object and login
             user = User(user_id, email, 'farmer')
-            login_user(user)
+            session.permanent = True
+            login_user(user, remember=True)
             
             return jsonify({
                 'success': True,
@@ -956,7 +964,8 @@ def login():
             if password == ADMIN_PASSWORD:
                 # Create admin user (not stored in DB)
                 admin_user = User('admin', ADMIN_EMAIL, 'admin')
-                login_user(admin_user)
+                session.permanent = True
+                login_user(admin_user, remember=True)
                 
                 return jsonify({
                     'success': True,
@@ -986,7 +995,8 @@ def login():
             
             # Create user object and login
             user = User(str(user_data['_id']), user_data['email'], user_data['user_type'])
-            login_user(user)
+            session.permanent = True
+            login_user(user, remember=True)
             
             return jsonify({
                 'success': True,
