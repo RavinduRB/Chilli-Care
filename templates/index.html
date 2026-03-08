@@ -26,28 +26,35 @@
                 <div class="logo">
                     <img src="{{ url_for('static', filename='images/Chilli Care Logo.png') }}" alt="Chilli Care Logo" class="logo-image">
                 </div>
-                <ul class="nav-menu">
+                
+                <!-- Desktop Navigation -->
+                <ul class="nav-menu desktop-menu">
                     <li><a href="/" class="active">Home</a></li>
                     <li><a href="/about">About</a></li>
                 </ul>
                 
-                <!-- Authentication Section -->
-                <div class="auth-section">
-                    <!-- Not logged in buttons -->
-                    <div class="auth-buttons" id="authButtons">
-                        <button class="btn btn-secondary" id="loginBtn">
-                            <i class="fas fa-sign-in-alt"></i> Log In
+                <!-- Desktop Authentication Section -->
+                <div class="auth-section desktop-auth">
+                    <!-- Guest profile (not logged in) -->
+                    <div class="profile-section" id="guestProfileSection">
+                        <button class="profile-btn" id="guestProfileBtn">
+                            <i class="fas fa-user-circle"></i>
                         </button>
-                        <button class="btn btn-primary" id="signupBtn">
-                            <i class="fas fa-user-plus"></i> Sign Up
-                        </button>
+                        <div class="profile-dropdown hidden" id="guestProfileDropdown">
+                            <button class="dropdown-item" id="dropdownLoginBtn">
+                                <i class="fas fa-sign-in-alt"></i> Log In
+                            </button>
+                            <button class="dropdown-item" id="dropdownSignupBtn">
+                                <i class="fas fa-user-plus"></i> Sign Up
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- Logged in profile -->
                     <div class="profile-section hidden" id="profileSection">
                         <button class="profile-btn" id="profileBtn">
                             <i class="fas fa-user-circle"></i>
-                            <span id="userEmail"></span>
+                            <span class="user-email-text" id="userEmail"></span>
                         </button>
                         <div class="profile-dropdown hidden" id="profileDropdown">
                             <div class="profile-info">
@@ -65,9 +72,46 @@
                     </div>
                 </div>
                 
+                <!-- Hamburger Menu Button -->
                 <button class="mobile-menu-toggle" id="mobileMenuToggle">
                     <i class="fas fa-bars"></i>
                 </button>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div class="mobile-menu" id="mobileMenu">
+                <ul class="mobile-nav-list">
+                    <li><a href="/" class="mobile-nav-item"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="/about" class="mobile-nav-item"><i class="fas fa-info-circle"></i> About</a></li>
+                    <li class="mobile-divider"></li>
+                    
+                    <!-- Mobile Authentication -->
+                    <div class="mobile-auth-section">
+                        <!-- Not logged in buttons -->
+                        <div class="mobile-auth-buttons" id="mobileAuthButtons">
+                            <li><button class="mobile-auth-btn btn-login" id="mobileLoginBtn">
+                                <i class="fas fa-sign-in-alt"></i> Log In
+                            </button></li>
+                            <li><button class="mobile-auth-btn btn-signup" id="mobileSignupBtn">
+                                <i class="fas fa-user-plus"></i> Sign Up
+                            </button></li>
+                        </div>
+                        
+                        <!-- Logged in profile -->
+                        <div class="mobile-profile-section hidden" id="mobileProfileSection">
+                            <li class="mobile-profile-info">
+                                <i class="fas fa-user-circle"></i>
+                                <span id="mobileUserEmail"></span>
+                            </li>
+                            <li><button class="mobile-nav-item" id="mobileLogoutBtn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button></li>
+                            <li><button class="mobile-nav-item danger" id="mobileDeleteAccountBtn">
+                                <i class="fas fa-trash"></i> Delete Account
+                            </button></li>
+                        </div>
+                    </div>
+                </ul>
             </div>
         </div>
     </nav>

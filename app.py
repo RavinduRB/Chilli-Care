@@ -416,7 +416,7 @@ def validate_with_huggingface(image_bytes):
         logger.info("🤗 Trying Hugging Face Vision API...")
         
         # Use Salesforce BLIP model for image captioning
-        API_URL = "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large"
+        API_URL = "https://router.huggingface.co/models/Salesforce/blip-image-captioning-large"
         headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
         
         response = requests.post(API_URL, headers=headers, data=image_bytes, timeout=10)

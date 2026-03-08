@@ -28,16 +28,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const switchCameraBtn = document.getElementById('switchCameraBtn');
     
     // Authentication Elements
-    const authButtons = document.getElementById('authButtons');
+    const guestProfileSection = document.getElementById('guestProfileSection');
+    const guestProfileBtn = document.getElementById('guestProfileBtn');
+    const guestProfileDropdown = document.getElementById('guestProfileDropdown');
+    const dropdownLoginBtn = document.getElementById('dropdownLoginBtn');
+    const dropdownSignupBtn = document.getElementById('dropdownSignupBtn');
     const profileSection = document.getElementById('profileSection');
     const profileBtn = document.getElementById('profileBtn');
     const profileDropdown = document.getElementById('profileDropdown');
     const userEmail = document.getElementById('userEmail');
     const userEmailDropdown = document.getElementById('userEmailDropdown');
-    const loginBtn = document.getElementById('loginBtn');
-    const signupBtn = document.getElementById('signupBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    
+    // Mobile Menu Elements
+    const mobileMenu = document.getElementById('mobileMenu');
+    const mobileAuthButtons = document.getElementById('mobileAuthButtons');
+    const mobileProfileSection = document.getElementById('mobileProfileSection');
+    const mobileLoginBtn = document.getElementById('mobileLoginBtn');
+    const mobileSignupBtn = document.getElementById('mobileSignupBtn');
+    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+    const mobileDeleteAccountBtn = document.getElementById('mobileDeleteAccountBtn');
+    const mobileUserEmail = document.getElementById('mobileUserEmail');
     
     // Modal Elements
     const loginModal = document.getElementById('loginModal');
@@ -86,13 +98,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update UI based on authentication status
     function updateAuthUI(authenticated) {
         if (authenticated && currentUser) {
-            authButtons.classList.add('hidden');
-            profileSection.classList.remove('hidden');
-            userEmail.textContent = currentUser.email;
-            userEmailDropdown.textContent = currentUser.email;
+            // Desktop UI
+            if (guestProfileSection) guestProfileSection.classList.add('hidden');
+            if (profileSection) profileSection.classList.remove('hidden');
+            if (userEmail) userEmail.textContent = currentUser.email;
+            if (userEmailDropdown) userEmailDropdown.textContent = currentUser.email;
+            
+            // Mobile UI
+            if (mobileAuthButtons) mobileAuthButtons.classList.add('hidden');
+            if (mobileProfileSection) mobileProfileSection.classList.remove('hidden');
+            if (mobileUserEmail) mobileUserEmail.textContent = currentUser.email;
         } else {
-            authButtons.classList.remove('hidden');
-            profileSection.classList.add('hidden');
+            // Desktop UI
+            if (guestProfileSection) guestProfileSection.classList.remove('hidden');
+            if (profileSection) profileSection.classList.add('hidden');
+            
+            // Mobile UI
+            if (mobileAuthButtons) mobileAuthButtons.classList.remove('hidden');
+            if (mobileProfileSection) mobileProfileSection.classList.add('hidden');
         }
     }
     
@@ -254,13 +277,113 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Modal event listeners
-    if (loginBtn) {
-        loginBtn.addEventListener('click', showLoginModal);
+    // Mobile logout handler
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', async function() {
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    isAuthenticated = false;
+                    currentUser = null;
+                    updateAuthUI(false);
+                    // Close mobile menu
+                    if (mobileMenu) mobileMenu.classList.remove('active');
+                    if (mobileMenuToggle) {
+                        const icon = mobileMenuToggle.querySelector('i');
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                    showToast('Logged out successfully', 'success');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                showToast('Logout failed. Please try again.', 'error');
+            }
+        });
     }
     
-    if (signupBtn) {
-        signupBtn.addEventListener('click', showSignupModal);
+    // Mobile delete account handler
+    if (mobileDeleteAccountBtn) {
+        mobileDeleteAccountBtn.addEventListener('click', async function() {
+            if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/delete-account', {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    isAuthenticated = false;
+                    currentUser = null;
+                    updateAuthUI(false);
+                    // Close mobile menu
+                    if (mobileMenu) mobileMenu.classList.remove('active');
+                    if (mobileMenuToggle) {
+                        const icon = mobileMenuToggle.querySelector('i');
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                    showToast('Account deleted successfully', 'success');
+                } else {
+                    showToast(data.error || 'Failed to delete account', 'error');
+                }
+            } catch (error) {
+                console.error('Delete account error:', error);
+                showToast('Failed to delete account. Please try again.', 'error');
+            }
+        });
+    }
+    
+    // Modal event listeners
+    // Guest profile dropdown buttons
+    if (dropdownLoginBtn) {
+        dropdownLoginBtn.addEventListener('click', function() {
+            showLoginModal();
+            if (guestProfileDropdown) guestProfileDropdown.classList.add('hidden');
+        });
+    }
+    
+    if (dropdownSignupBtn) {
+        dropdownSignupBtn.addEventListener('click', function() {
+            showSignupModal();
+            if (guestProfileDropdown) guestProfileDropdown.classList.add('hidden');
+        });
+    }
+    
+    // Mobile authentication buttons
+    if (mobileLoginBtn) {
+        mobileLoginBtn.addEventListener('click', function() {
+            showLoginModal();
+            // Close mobile menu
+            if (mobileMenu) {
+                mobileMenu.classList.remove('active');
+                const icon = mobileMenuToggle.querySelector('i');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+    }
+    
+    if (mobileSignupBtn) {
+        mobileSignupBtn.addEventListener('click', function() {
+            showSignupModal();
+            // Close mobile menu
+            if (mobileMenu) {
+                mobileMenu.classList.remove('active');
+                const icon = mobileMenuToggle.querySelector('i');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
     }
     
     if (closeLoginModal) {
@@ -287,8 +410,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Profile dropdown toggle
     if (profileBtn) {
-        profileBtn.addEventListener('click', function() {
+        profileBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
             profileDropdown.classList.toggle('hidden');
+        });
+    }
+    
+    // Guest profile dropdown toggle
+    if (guestProfileBtn) {
+        guestProfileBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            guestProfileDropdown.classList.toggle('hidden');
         });
     }
     
@@ -296,6 +428,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
         if (profileBtn && !profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
             profileDropdown.classList.add('hidden');
+        }
+        if (guestProfileBtn && !guestProfileBtn.contains(e.target) && !guestProfileDropdown.contains(e.target)) {
+            guestProfileDropdown.classList.add('hidden');
         }
     });
     
@@ -470,15 +605,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Mobile menu toggle
-    if (mobileMenuToggle) {
+    if (mobileMenuToggle && mobileMenu) {
         mobileMenuToggle.addEventListener('click', function(e) {
             e.stopPropagation();
-            const navMenu = document.querySelector('.nav-menu');
-            navMenu.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
             
             // Change icon
             const icon = mobileMenuToggle.querySelector('i');
-            if (navMenu.classList.contains('active')) {
+            if (mobileMenu.classList.contains('active')) {
                 icon.classList.remove('fa-bars');
                 icon.classList.add('fa-times');
             } else {
@@ -489,10 +623,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Close menu when clicking outside
         document.addEventListener('click', function(e) {
-            const navMenu = document.querySelector('.nav-menu');
-            if (navMenu && navMenu.classList.contains('active')) {
-                if (!e.target.closest('.nav-wrapper')) {
-                    navMenu.classList.remove('active');
+            if (mobileMenu && mobileMenu.classList.contains('active')) {
+                if (!e.target.closest('.nav-wrapper') && !e.target.closest('.mobile-menu')) {
+                    mobileMenu.classList.remove('active');
                     const icon = mobileMenuToggle.querySelector('i');
                     icon.classList.remove('fa-times');
                     icon.classList.add('fa-bars');
@@ -501,10 +634,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Close menu when clicking a nav link
-        document.querySelectorAll('.nav-menu a').forEach(link => {
-            link.addEventListener('click', function() {
-                const navMenu = document.querySelector('.nav-menu');
-                navMenu.classList.remove('active');
+        document.querySelectorAll('.mobile-nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                mobileMenu.classList.remove('active');
                 const icon = mobileMenuToggle.querySelector('i');
                 icon.classList.remove('fa-times');
                 icon.classList.add('fa-bars');
