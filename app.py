@@ -7,8 +7,9 @@ import os
 import json
 import numpy as np
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, session
 from flask_cors import CORS
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 import tensorflow as tf
 from tensorflow import keras
@@ -20,6 +21,7 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 import requests
+import bcrypt
 
 # Load environment variables from .env file
 load_dotenv()
@@ -39,13 +41,44 @@ except ImportError as e:
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here-change-in-production'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-here-change-in-production')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['UPLOAD_FOLDER'] = 'uploads'
 CORS(app)  # Enable CORS for API access
 
+# Initialize Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'index'  # Redirect to index if not logged in
+
 # Ensure upload folder exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# User class for Flask-Login
+class User(UserMixin):
+    def __init__(self, user_id, email, user_type):
+        self.id = user_id
+        self.email = email
+        self.user_type = user_type
+    
+    def get_id(self):
+        return str(self.id)
+
+# Admin credentials (all admins share the same credentials)
+ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin@chillicare.com')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
+
+@login_manager.user_loader
+def load_user(user_id):
+    """Load user by ID for Flask-Login"""
+    try:
+        if mongodb and mongodb.connected:
+            user_data = mongodb.get_user_by_id(user_id)
+            if user_data:
+                return User(str(user_data['_id']), user_data['email'], user_data['user_type'])
+    except Exception as e:
+        logger.error(f"Error loading user: {e}")
+    return None
 
 # Configure Multiple Gemini API Keys for Rotation
 GEMINI_API_KEYS = [
@@ -713,6 +746,199 @@ def save_prediction_to_mongo(prediction_result, validation_method, validation_me
         return None
 
 
+# ============================================
+# AUTHENTICATION ROUTES
+# ============================================
+
+@app.route('/api/auth/signup', methods=['POST'])
+def signup():
+    """User registration endpoint"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'email' not in data or 'password' not in data:
+            return jsonify({'success': False, 'error': 'Email and password required'}), 400
+        
+        email = data['email'].lower().strip()
+        password = data['password']
+        
+        # Validate email format
+        if '@' not in email or '.' not in email:
+            return jsonify({'success': False, 'error': 'Invalid email format'}), 400
+        
+        # Validate password length
+        if len(password) < 6:
+            return jsonify({'success': False, 'error': 'Password must be at least 6 characters'}), 400
+        
+        # Check if MongoDB is available
+        if not mongodb or not mongodb.connected:
+            return jsonify({'success': False, 'error': 'Database not available'}), 500
+        
+        # Check if user already exists
+        existing_user = mongodb.get_user_by_email(email)
+        if existing_user:
+            return jsonify({'success': False, 'error': 'Email already registered'}), 409
+        
+        # Hash password
+        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        # Create user
+        user_id = mongodb.create_user(email, password_hash, 'farmer')
+        
+        if user_id:
+            # Create user object and login
+            user = User(user_id, email, 'farmer')
+            login_user(user)
+            
+            return jsonify({
+                'success': True,
+                'message': 'Account created successfully',
+                'user': {
+                    'email': email,
+                    'user_type': 'farmer'
+                }
+            }), 201
+        else:
+            return jsonify({'success': False, 'error': 'Failed to create account'}), 500
+    
+    except Exception as e:
+        logger.error(f"Error in signup: {str(e)}")
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
+
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    """User login endpoint"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'email' not in data or 'password' not in data:
+            return jsonify({'success': False, 'error': 'Email and password required'}), 400
+        
+        email = data['email'].lower().strip()
+        password = data['password']
+        
+        # Check for admin login
+        if email == ADMIN_EMAIL:
+            # Verify admin password (direct comparison for simplicity)
+            if password == ADMIN_PASSWORD:
+                # Create admin user (not stored in DB)
+                admin_user = User('admin', ADMIN_EMAIL, 'admin')
+                login_user(admin_user)
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'Admin login successful',
+                    'user': {
+                        'email': ADMIN_EMAIL,
+                        'user_type': 'admin'
+                    }
+                }), 200
+            else:
+                return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
+        
+        # Check if MongoDB is available for farmer login
+        if not mongodb or not mongodb.connected:
+            return jsonify({'success': False, 'error': 'Database not available'}), 500
+        
+        # Get user from database
+        user_data = mongodb.get_user_by_email(email)
+        
+        if not user_data:
+            return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
+        
+        # Verify password
+        if bcrypt.checkpw(password.encode('utf-8'), user_data['password'].encode('utf-8')):
+            # Update last login
+            mongodb.update_last_login(email)
+            
+            # Create user object and login
+            user = User(str(user_data['_id']), user_data['email'], user_data['user_type'])
+            login_user(user)
+            
+            return jsonify({
+                'success': True,
+                'message': 'Login successful',
+                'user': {
+                    'email': user_data['email'],
+                    'user_type': user_data['user_type']
+                }
+            }), 200
+        else:
+            return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
+    
+    except Exception as e:
+        logger.error(f"Error in login: {str(e)}")
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
+
+@app.route('/api/auth/logout', methods=['POST'])
+@login_required
+def logout():
+    """User logout endpoint"""
+    try:
+        logout_user()
+        return jsonify({
+            'success': True,
+            'message': 'Logged out successfully'
+        }), 200
+    except Exception as e:
+        logger.error(f"Error in logout: {str(e)}")
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
+
+@app.route('/api/auth/delete-account', methods=['DELETE'])
+@login_required
+def delete_account():
+    """Delete user account endpoint"""
+    try:
+        # Admins cannot delete their account
+        if current_user.user_type == 'admin':
+            return jsonify({'success': False, 'error': 'Admin accounts cannot be deleted'}), 403
+        
+        # Check if MongoDB is available
+        if not mongodb or not mongodb.connected:
+            return jsonify({'success': False, 'error': 'Database not available'}), 500
+        
+        # Delete user from database
+        email = current_user.email
+        if mongodb.delete_user(email):
+            logout_user()
+            return jsonify({
+                'success': True,
+                'message': 'Account deleted successfully'
+            }), 200
+        else:
+            return jsonify({'success': False, 'error': 'Failed to delete account'}), 500
+    
+    except Exception as e:
+        logger.error(f"Error in delete account: {str(e)}")
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
+
+@app.route('/api/auth/status', methods=['GET'])
+def auth_status():
+    """Check authentication status"""
+    try:
+        if current_user.is_authenticated:
+            return jsonify({
+                'authenticated': True,
+                'user': {
+                    'email': current_user.email,
+                    'user_type': current_user.user_type
+                }
+            }), 200
+        else:
+            return jsonify({'authenticated': False}), 200
+    except Exception as e:
+        logger.error(f"Error checking auth status: {str(e)}")
+        return jsonify({'authenticated': False}), 200
+
+
+# ============================================
+# MAIN ROUTES
+# ============================================
+
 # Routes
 @app.route('/')
 def index():
@@ -721,6 +947,7 @@ def index():
 
 
 @app.route('/api/predict', methods=['POST'])
+@login_required
 def api_predict():
     """API endpoint for disease prediction"""
     try:

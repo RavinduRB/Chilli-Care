@@ -29,8 +29,42 @@
                 <ul class="nav-menu">
                     <li><a href="/" class="active">Home</a></li>
                     <li><a href="/about">About</a></li>
-                    <li><a href="/docs">API Docs</a></li>
                 </ul>
+                
+                <!-- Authentication Section -->
+                <div class="auth-section">
+                    <!-- Not logged in buttons -->
+                    <div class="auth-buttons" id="authButtons">
+                        <button class="btn btn-secondary" id="loginBtn">
+                            <i class="fas fa-sign-in-alt"></i> Log In
+                        </button>
+                        <button class="btn btn-primary" id="signupBtn">
+                            <i class="fas fa-user-plus"></i> Sign Up
+                        </button>
+                    </div>
+                    
+                    <!-- Logged in profile -->
+                    <div class="profile-section hidden" id="profileSection">
+                        <button class="profile-btn" id="profileBtn">
+                            <i class="fas fa-user-circle"></i>
+                            <span id="userEmail"></span>
+                        </button>
+                        <div class="profile-dropdown hidden" id="profileDropdown">
+                            <div class="profile-info">
+                                <i class="fas fa-user"></i>
+                                <span id="userEmailDropdown"></span>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                            <button class="dropdown-item danger" id="deleteAccountBtn">
+                                <i class="fas fa-trash"></i> Delete Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
                 <button class="mobile-menu-toggle" id="mobileMenuToggle">
                     <i class="fas fa-bars"></i>
                 </button>
@@ -422,6 +456,78 @@
         <div class="toast-content">
             <i class="fas fa-check-circle"></i>
             <span id="toastMessage">Success!</span>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal-overlay hidden" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Welcome Back</h2>
+                <button class="modal-close" id="closeLoginModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="loginEmail">
+                        <i class="fas fa-envelope"></i> Email Address
+                    </label>
+                    <input type="email" id="loginEmail" name="email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="loginPassword" name="password" required placeholder="Enter your password">
+                </div>
+                <div class="form-error hidden" id="loginError"></div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class="fas fa-sign-in-alt"></i> Log In
+                </button>
+                <p class="auth-switch">
+                    Don't have an account? <a href="#" id="switchToSignup">Sign up</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal-overlay hidden" id="signupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Account</h2>
+                <button class="modal-close" id="closeSignupModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="signupForm" class="auth-form">
+                <div class="form-group">
+                    <label for="signupEmail">
+                        <i class="fas fa-envelope"></i> Email Address
+                    </label>
+                    <input type="email" id="signupEmail" name="email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="signupPassword" name="password" required placeholder="At least 6 characters">
+                </div>
+                <div class="form-group">
+                    <label for="signupPasswordConfirm">
+                        <i class="fas fa-lock"></i> Confirm Password
+                    </label>
+                    <input type="password" id="signupPasswordConfirm" name="passwordConfirm" required placeholder="Re-enter password">
+                </div>
+                <div class="form-error hidden" id="signupError"></div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+                <p class="auth-switch">
+                    Already have an account? <a href="#" id="switchToLogin">Log in</a>
+                </p>
+            </form>
         </div>
     </div>
 

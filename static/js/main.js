@@ -27,9 +27,297 @@ document.addEventListener('DOMContentLoaded', function() {
     const captureBtn = document.getElementById('captureBtn');
     const switchCameraBtn = document.getElementById('switchCameraBtn');
     
+    // Authentication Elements
+    const authButtons = document.getElementById('authButtons');
+    const profileSection = document.getElementById('profileSection');
+    const profileBtn = document.getElementById('profileBtn');
+    const profileDropdown = document.getElementById('profileDropdown');
+    const userEmail = document.getElementById('userEmail');
+    const userEmailDropdown = document.getElementById('userEmailDropdown');
+    const loginBtn = document.getElementById('loginBtn');
+    const signupBtn = document.getElementById('signupBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    
+    // Modal Elements
+    const loginModal = document.getElementById('loginModal');
+    const signupModal = document.getElementById('signupModal');
+    const closeLoginModal = document.getElementById('closeLoginModal');
+    const closeSignupModal = document.getElementById('closeSignupModal');
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const loginError = document.getElementById('loginError');
+    const signupError = document.getElementById('signupError');
+    const switchToSignup = document.getElementById('switchToSignup');
+    const switchToLogin = document.getElementById('switchToLogin');
+    
     let selectedFile = null;
+    let isAuthenticated = false;
+    let currentUser = null;
     let cameraStream = null;
     let currentFacingMode = 'environment'; // 'user' for front camera, 'environment' for back camera
+
+    // ============================================
+    // Authentication Functions
+    // ============================================
+    
+    // Check authentication status on page load
+    async function checkAuthStatus() {
+        try {
+            const response = await fetch('/api/auth/status');
+            const data = await response.json();
+            
+            if (data.authenticated) {
+                isAuthenticated = true;
+                currentUser = data.user;
+                updateAuthUI(true);
+            } else {
+                isAuthenticated = false;
+                currentUser = null;
+                updateAuthUI(false);
+            }
+        } catch (error) {
+            console.error('Error checking auth status:', error);
+            isAuthenticated = false;
+            updateAuthUI(false);
+        }
+    }
+    
+    // Update UI based on authentication status
+    function updateAuthUI(authenticated) {
+        if (authenticated && currentUser) {
+            authButtons.classList.add('hidden');
+            profileSection.classList.remove('hidden');
+            userEmail.textContent = currentUser.email;
+            userEmailDropdown.textContent = currentUser.email;
+        } else {
+            authButtons.classList.remove('hidden');
+            profileSection.classList.add('hidden');
+        }
+    }
+    
+    // Show login modal
+    function showLoginModal() {
+        loginModal.classList.remove('hidden');
+        signupModal.classList.add('hidden');
+        loginError.classList.add('hidden');
+        loginForm.reset();
+    }
+    
+    // Show signup modal
+    function showSignupModal() {
+        signupModal.classList.remove('hidden');
+        loginModal.classList.add('hidden');
+        signupError.classList.add('hidden');
+        signupForm.reset();
+    }
+    
+    // Hide all modals
+    function hideAuthModals() {
+        loginModal.classList.add('hidden');
+        signupModal.classList.add('hidden');
+    }
+    
+    // Login form submission
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    isAuthenticated = true;
+                    currentUser = data.user;
+                    updateAuthUI(true);
+                    hideAuthModals();
+                    showToast('Login successful! Welcome back.', 'success');
+                } else {
+                    loginError.textContent = data.error || 'Login failed';
+                    loginError.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                loginError.textContent = 'An error occurred. Please try again.';
+                loginError.classList.remove('hidden');
+            }
+        });
+    }
+    
+    // Signup form submission
+    if (signupForm) {
+        signupForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const passwordConfirm = document.getElementById('signupPasswordConfirm').value;
+            
+            // Validate passwords match
+            if (password !== passwordConfirm) {
+                signupError.textContent = 'Passwords do not match';
+                signupError.classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    isAuthenticated = true;
+                    currentUser = data.user;
+                    updateAuthUI(true);
+                    hideAuthModals();
+                    showToast('Account created successfully! Welcome.', 'success');
+                } else {
+                    signupError.textContent = data.error || 'Signup failed';
+                    signupError.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                signupError.textContent = 'An error occurred. Please try again.';
+                signupError.classList.remove('hidden');
+            }
+        });
+    }
+    
+    // Logout handler
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async function() {
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    isAuthenticated = false;
+                    currentUser = null;
+                    updateAuthUI(false);
+                    profileDropdown.classList.add('hidden');
+                    showToast('Logged out successfully', 'success');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                showToast('Logout failed. Please try again.', 'error');
+            }
+        });
+    }
+    
+    // Delete account handler
+    if (deleteAccountBtn) {
+        deleteAccountBtn.addEventListener('click', async function() {
+            if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/delete-account', {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    isAuthenticated = false;
+                    currentUser = null;
+                    updateAuthUI(false);
+                    profileDropdown.classList.add('hidden');
+                    showToast('Account deleted successfully', 'success');
+                } else {
+                    showToast(data.error || 'Failed to delete account', 'error');
+                }
+            } catch (error) {
+                console.error('Delete account error:', error);
+                showToast('Failed to delete account. Please try again.', 'error');
+            }
+        });
+    }
+    
+    // Modal event listeners
+    if (loginBtn) {
+        loginBtn.addEventListener('click', showLoginModal);
+    }
+    
+    if (signupBtn) {
+        signupBtn.addEventListener('click', showSignupModal);
+    }
+    
+    if (closeLoginModal) {
+        closeLoginModal.addEventListener('click', hideAuthModals);
+    }
+    
+    if (closeSignupModal) {
+        closeSignupModal.addEventListener('click', hideAuthModals);
+    }
+    
+    if (switchToSignup) {
+        switchToSignup.addEventListener('click', function(e) {
+            e.preventDefault();
+            showSignupModal();
+        });
+    }
+    
+    if (switchToLogin) {
+        switchToLogin.addEventListener('click', function(e) {
+            e.preventDefault();
+            showLoginModal();
+        });
+    }
+    
+    // Profile dropdown toggle
+    if (profileBtn) {
+        profileBtn.addEventListener('click', function() {
+            profileDropdown.classList.toggle('hidden');
+        });
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (profileBtn && !profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
+            profileDropdown.classList.add('hidden');
+        }
+    });
+    
+    // Close modals when clicking overlay
+    if (loginModal) {
+        loginModal.addEventListener('click', function(e) {
+            if (e.target === loginModal) {
+                hideAuthModals();
+            }
+        });
+    }
+    
+    if (signupModal) {
+        signupModal.addEventListener('click', function(e) {
+            if (e.target === signupModal) {
+                hideAuthModals();
+            }
+        });
+    }
+    
+    // Initialize authentication check
+    checkAuthStatus();
 
     // ============================================
     // File Upload Handlers
@@ -98,6 +386,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Analyze button
     if (analyzeBtn) {
         analyzeBtn.addEventListener('click', function() {
+            // Check authentication before allowing analysis
+            if (!isAuthenticated) {
+                showToast('Please log in to analyze images', 'error');
+                showLoginModal();
+                return;
+            }
+            
             if (selectedFile) {
                 analyzeImage(selectedFile);
             }

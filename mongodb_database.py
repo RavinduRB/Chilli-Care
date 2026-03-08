@@ -75,6 +75,10 @@ class MongoDB:
             # Diseases collection indexes
             self.db.diseases.create_index([("name", ASCENDING)], unique=True)
             
+            # Users collection indexes
+            self.db.users.create_index([("email", ASCENDING)], unique=True)
+            self.db.users.create_index([("user_type", ASCENDING)])
+            
             logger.info("✓ Database indexes created")
         except Exception as e:
             logger.warning(f"Failed to create indexes: {e}")
@@ -332,6 +336,153 @@ class MongoDB:
             })
         except Exception as e:
             logger.error(f"Error counting recent predictions: {e}")
+            return 0
+    
+    # ==================== USER OPERATIONS ====================
+    
+    def create_user(self, email, password_hash, user_type='farmer'):
+        """
+        Create a new user
+        
+        Args:
+            email: User email address
+            password_hash: Hashed password
+            user_type: Type of user ('farmer' or 'admin')
+            
+        Returns:
+            Inserted user ID or None
+        """
+        if not self.connected:
+            return None
+        
+        try:
+            # Check if user already exists
+            existing_user = self.db.users.find_one({"email": email})
+            if existing_user:
+                return None
+            
+            user_data = {
+                "email": email,
+                "password": password_hash,
+                "user_type": user_type,
+                "created_at": datetime.utcnow(),
+                "last_login": None
+            }
+            
+            result = self.db.users.insert_one(user_data)
+            logger.info(f"✓ Created new user: {email}")
+            return str(result.inserted_id)
+        except Exception as e:
+            logger.error(f"Error creating user: {e}")
+            return None
+    
+    def get_user_by_email(self, email):
+        """
+        Get user by email
+        
+        Args:
+            email: User email address
+            
+        Returns:
+            User document or None
+        """
+        if not self.connected:
+            return None
+        
+        try:
+            return self.db.users.find_one({"email": email})
+        except Exception as e:
+            logger.error(f"Error fetching user: {e}")
+            return None
+    
+    def get_user_by_id(self, user_id):
+        """
+        Get user by ID
+        
+        Args:
+            user_id: User ID (string or ObjectId)
+            
+        Returns:
+            User document or None
+        """
+        if not self.connected:
+            return None
+        
+        try:
+            from bson import ObjectId
+            if isinstance(user_id, str):
+                user_id = ObjectId(user_id)
+            return self.db.users.find_one({"_id": user_id})
+        except Exception as e:
+            logger.error(f"Error fetching user by ID: {e}")
+            return None
+    
+    def update_last_login(self, email):
+        """
+        Update user's last login timestamp
+        
+        Args:
+            email: User email address
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.connected:
+            return False
+        
+        try:
+            result = self.db.users.update_one(
+                {"email": email},
+                {"$set": {"last_login": datetime.utcnow()}}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            logger.error(f"Error updating last login: {e}")
+            return False
+    
+    def delete_user(self, email):
+        """
+        Delete a user account
+        
+        Args:
+            email: User email address
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.connected:
+            return False
+        
+        try:
+            result = self.db.users.delete_one({"email": email})
+            if result.deleted_count > 0:
+                logger.info(f"✓ Deleted user: {email}")
+                return True
+            return False
+        except Exception as e:
+            logger.error(f"Error deleting user: {e}")
+            return False
+    
+    def count_users(self, user_type=None):
+        """
+        Count total users
+        
+        Args:
+            user_type: Filter by user type ('farmer' or 'admin')
+            
+        Returns:
+            Count of users
+        """
+        if not self.connected:
+            return 0
+        
+        try:
+            query = {}
+            if user_type:
+                query['user_type'] = user_type
+            return self.db.users.count_documents(query)
+        except Exception as e:
+            logger.error(f"Error counting users: {e}")
             return 0
 
 
