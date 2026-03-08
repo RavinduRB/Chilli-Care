@@ -84,9 +84,6 @@ def load_user(user_id):
 GEMINI_API_KEYS = [
     os.environ.get('GEMINI_API_KEY', ''),
     os.environ.get('GEMINI_API_KEY_2', ''),
-    os.environ.get('GEMINI_API_KEY_3', ''),
-    os.environ.get('GEMINI_API_KEY_4', ''),
-    os.environ.get('GEMINI_API_KEY_5', ''),
 ]
 # Remove empty keys
 GEMINI_API_KEYS = [key for key in GEMINI_API_KEYS if key]
