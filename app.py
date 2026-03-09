@@ -1728,6 +1728,245 @@ def get_admin_users():
         }), 500
 
 
+@app.route('/api/admin/diseases', methods=['GET'])
+@login_required
+def get_admin_diseases():
+    """Get all diseases for admin dashboard (admin only)"""
+    if current_user.user_type != 'admin':
+        return jsonify({
+            'success': False,
+            'error': 'Unauthorized - Admin access required'
+        }), 403
+    
+    try:
+        # First, check if diseases exist in MongoDB
+        if mongodb and mongodb.connected:
+            diseases_from_db = mongodb.get_all_diseases()
+            
+            # If diseases exist in DB, return them
+            if diseases_from_db:
+                formatted_diseases = []
+                for disease in diseases_from_db:
+                    disease_dict = {
+                        '_id': str(disease['_id']),
+                        'name': disease.get('name'),
+                        'severity': disease.get('severity'),
+                        'description': disease.get('description'),
+                        'symptoms': disease.get('symptoms', []),
+                        'causes': disease.get('causes', []),
+                        'treatment': disease.get('treatment', []),
+                        'prevention': disease.get('prevention', []),
+                        'organic_solutions': disease.get('organic_solutions', []),
+                        'created_at': disease['created_at'].isoformat() if disease.get('created_at') else None,
+                        'updated_at': disease['updated_at'].isoformat() if disease.get('updated_at') else None
+                    }
+                    formatted_diseases.append(disease_dict)
+                
+                return jsonify({
+                    'success': True,
+                    'diseases': formatted_diseases,
+                    'source': 'database'
+                })
+            else:
+                # If no diseases in DB, initialize from DISEASE_INFO
+                logger.info("Initializing diseases in database from DISEASE_INFO")
+                for disease_name, disease_data in DISEASE_INFO.items():
+                    disease_doc = {
+                        'name': disease_name,
+                        **disease_data
+                    }
+                    mongodb.insert_disease(disease_doc)
+                
+                # Fetch again from DB
+                diseases_from_db = mongodb.get_all_diseases()
+                formatted_diseases = []
+                for disease in diseases_from_db:
+                    disease_dict = {
+                        '_id': str(disease['_id']),
+                        'name': disease.get('name'),
+                        'severity': disease.get('severity'),
+                        'description': disease.get('description'),
+                        'symptoms': disease.get('symptoms', []),
+                        'causes': disease.get('causes', []),
+                        'treatment': disease.get('treatment', []),
+                        'prevention': disease.get('prevention', []),
+                        'organic_solutions': disease.get('organic_solutions', []),
+                        'created_at': disease['created_at'].isoformat() if disease.get('created_at') else None,
+                        'updated_at': disease['updated_at'].isoformat() if disease.get('updated_at') else None
+                    }
+                    formatted_diseases.append(disease_dict)
+                
+                return jsonify({
+                    'success': True,
+                    'diseases': formatted_diseases,
+                    'source': 'database'
+                })
+        else:
+            # MongoDB not available, return from DISEASE_INFO
+            formatted_diseases = []
+            for disease_name, disease_data in DISEASE_INFO.items():
+                formatted_diseases.append({
+                    'name': disease_name,
+                    **disease_data
+                })
+            
+            return jsonify({
+                'success': True,
+                'diseases': formatted_diseases,
+                'source': 'memory'
+            })
+        
+    except Exception as e:
+        logger.error(f"Error fetching diseases: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/admin/diseases/<disease_name>', methods=['GET'])
+@login_required
+def get_admin_disease(disease_name):
+    """Get specific disease details (admin only)"""
+    if current_user.user_type != 'admin':
+        return jsonify({
+            'success': False,
+            'error': 'Unauthorized - Admin access required'
+        }), 403
+    
+    try:
+        # Try to get from database first
+        if mongodb and mongodb.connected:
+            disease = mongodb.get_disease(disease_name)
+            
+            if disease:
+                disease_dict = {
+                    '_id': str(disease['_id']),
+                    'name': disease.get('name'),
+                    'severity': disease.get('severity'),
+                    'description': disease.get('description'),
+                    'symptoms': disease.get('symptoms', []),
+                    'causes': disease.get('causes', []),
+                    'treatment': disease.get('treatment', []),
+                    'prevention': disease.get('prevention', []),
+                    'organic_solutions': disease.get('organic_solutions', []),
+                    'created_at': disease['created_at'].isoformat() if disease.get('created_at') else None,
+                    'updated_at': disease['updated_at'].isoformat() if disease.get('updated_at') else None
+                }
+                
+                return jsonify({
+                    'success': True,
+                    'disease': disease_dict,
+                    'source': 'database'
+                })
+        
+        # Fallback to DISEASE_INFO
+        if disease_name in DISEASE_INFO:
+            return jsonify({
+                'success': True,
+                'disease': {
+                    'name': disease_name,
+                    **DISEASE_INFO[disease_name]
+                },
+                'source': 'memory'
+            })
+        
+        return jsonify({
+            'success': False,
+            'error': 'Disease not found'
+        }), 404
+        
+    except Exception as e:
+        logger.error(f"Error fetching disease: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/admin/diseases/<disease_name>', methods=['PUT'])
+@login_required
+def update_admin_disease(disease_name):
+    """Update disease information (admin only)"""
+    if current_user.user_type != 'admin':
+        return jsonify({
+            'success': False,
+            'error': 'Unauthorized - Admin access required'
+        }), 403
+    
+    if not (mongodb and mongodb.connected):
+        return jsonify({
+            'success': False,
+            'error': 'MongoDB not configured - cannot save changes'
+        }), 503
+    
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'No data provided'
+            }), 400
+        
+        # Validate required fields
+        required_fields = ['severity', 'description', 'symptoms', 'causes', 'treatment', 'organic_solutions']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    'success': False,
+                    'error': f'Missing required field: {field}'
+                }), 400
+        
+        # Prepare disease data
+        disease_data = {
+            'name': disease_name,
+            'severity': data['severity'],
+            'description': data['description'],
+            'symptoms': data['symptoms'] if isinstance(data['symptoms'], list) else [],
+            'causes': data['causes'] if isinstance(data['causes'], list) else [],
+            'treatment': data['treatment'] if isinstance(data['treatment'], list) else [],
+            'prevention': data.get('prevention', []),
+            'organic_solutions': data['organic_solutions'] if isinstance(data['organic_solutions'], list) else []
+        }
+        
+        # Update in database
+        success = mongodb.update_disease(disease_name, disease_data)
+        
+        if success:
+            # Get updated disease
+            updated_disease = mongodb.get_disease(disease_name)
+            
+            return jsonify({
+                'success': True,
+                'message': 'Disease updated successfully',
+                'disease': {
+                    '_id': str(updated_disease['_id']),
+                    'name': updated_disease.get('name'),
+                    'severity': updated_disease.get('severity'),
+                    'description': updated_disease.get('description'),
+                    'symptoms': updated_disease.get('symptoms', []),
+                    'causes': updated_disease.get('causes', []),
+                    'treatment': updated_disease.get('treatment', []),
+                    'prevention': updated_disease.get('prevention', []),
+                    'organic_solutions': updated_disease.get('organic_solutions', []),
+                    'updated_at': updated_disease['updated_at'].isoformat() if updated_disease.get('updated_at') else None
+                }
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to update disease'
+            }), 500
+        
+    except Exception as e:
+        logger.error(f"Error updating disease: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({'error': 'Not found'}), 404

@@ -749,5 +749,295 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 100);
         });
     }
+    
+    // ============================================
+    // DISEASE MODAL
+    // ============================================
+    
+    // Track current disease and edit mode
+    let currentDiseaseData = null;
+    let isEditMode = false;
+    
+    // Make functions global
+    window.openDiseaseModal = async function(diseaseType) {
+        const modal = document.getElementById('diseaseModal');
+        
+        // Map disease types to full names
+        const diseaseNameMap = {
+            'healthy': 'Chilli healthy',
+            'whitefly': 'Chilli Whitefly',
+            'anthacnose': 'Chilli Anthacnose',
+            'yellowish': 'Chilli Yellowish',
+            'leafcurl': 'Chilli Leaf Curl Virus'
+        };
+        
+        const diseaseName = diseaseNameMap[diseaseType];
+        
+        if (!diseaseName) {
+            console.error('Disease type not found:', diseaseType);
+            showToast('Disease not found', 'error');
+            return;
+        }
+        
+        try {
+            // Show loading
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Show loading state
+            document.getElementById('diseaseModalTitle').textContent = 'Loading...';
+            document.getElementById('diseaseModalName').textContent = 'Loading...';
+            
+            // Fetch disease data from API
+            const response = await fetch(`/api/admin/diseases/${encodeURIComponent(diseaseName)}`);
+            
+            // Log for debugging
+            console.log('Fetch status:', response.status, 'URL:', `/api/admin/diseases/${encodeURIComponent(diseaseName)}`);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error:', response.status, errorText);
+                showToast(`Failed to load disease data (${response.status})`, 'error');
+                closeDiseaseModal();
+                return;
+            }
+            
+            const result = await response.json();
+            
+            if (!result.success) {
+                showToast(result.error || 'Failed to load disease data', 'error');
+                closeDiseaseModal();
+                return;
+            }
+            
+            const data = result.disease;
+            currentDiseaseData = data;
+            isEditMode = false;
+            
+            // Update modal content
+            updateModalContent(data, false);
+            
+        } catch (error) {
+            console.error('Error fetching disease data:', error);
+            showToast('Failed to load disease data', 'error');
+            closeDiseaseModal();
+        }
+    };
+    
+    function updateModalContent(data, editMode) {
+        // Update title and name
+        document.getElementById('diseaseModalTitle').textContent = data.name;
+        document.getElementById('diseaseModalName').textContent = data.name;
+        
+        // Update image
+        const imageEl = document.getElementById('diseaseModalImage');
+        const imageMap = {
+            'Chilli healthy': '/static/images/Chilli___healthy.jpg',
+            'Chilli Whitefly': '/static/images/Chilli%20__Whitefly.jpg',
+            'Chilli Anthacnose': '/static/images/Chilli__Anthacnose.jpg',
+            'Chilli Yellowish': '/static/images/Chilli%20__Yellowish.jpg',
+            'Chilli Leaf Curl Virus': '/static/images/Chilli__Leaf_Curl_Virus.jpg'
+        };
+        imageEl.src = imageMap[data.name] || '';
+        imageEl.alt = data.name;
+        
+        if (editMode) {
+            // Make fields editable
+            document.getElementById('diseaseModalDescription').innerHTML = 
+                `<textarea class="edit-textarea" id="editDescription">${data.description || ''}</textarea>`;
+            
+            document.getElementById('diseaseModalSeverity').innerHTML = 
+                `<input type="text" class="edit-input" id="editSeverity" value="${data.severity || ''}">`;
+            
+            // Editable lists
+            document.getElementById('diseaseModalCauses').innerHTML = 
+                createEditableList(data.causes || [], 'editCauses');
+            
+            document.getElementById('diseaseModalSolutions').innerHTML = 
+                createEditableList(data.organic_solutions || [], 'editSolutions');
+            
+            document.getElementById('diseaseModalSymptoms').innerHTML = 
+                createEditableList(data.symptoms || [], 'editSymptoms');
+            
+            document.getElementById('diseaseModalTreatment').innerHTML = 
+                createEditableList(data.treatment || [], 'editTreatment');
+            
+            // Show save button, hide edit button
+            document.querySelector('.btn-modal-edit').style.display = 'none';
+            document.querySelector('.btn-modal-save').style.display = 'block';
+            
+        } else {
+            // Display mode (read-only)
+            document.getElementById('diseaseModalDescription').innerHTML = 
+                `<p>${data.description || '-'}</p>`;
+            
+            document.getElementById('diseaseModalSeverity').innerHTML = 
+                `<p>${data.severity || '-'}</p>`;
+            
+            // Display lists
+            document.getElementById('diseaseModalCauses').innerHTML = 
+                (data.causes || []).map(item => `<li>${item}</li>`).join('');
+            
+            document.getElementById('diseaseModalSolutions').innerHTML = 
+                (data.organic_solutions || []).map(item => `<li>${item}</li>`).join('');
+            
+            document.getElementById('diseaseModalSymptoms').innerHTML = 
+                (data.symptoms || []).map(item => `<li>${item}</li>`).join('');
+            
+            document.getElementById('diseaseModalTreatment').innerHTML = 
+                (data.treatment || []).map(item => `<li>${item}</li>`).join('');
+            
+            // Show edit button, hide save button
+            document.querySelector('.btn-modal-edit').style.display = 'flex';
+            document.querySelector('.btn-modal-save').style.display = 'none';
+        }
+    }
+    
+    function createEditableList(items, listId) {
+        let html = '';
+        items.forEach((item, index) => {
+            html += `<li><input type="text" class="edit-list-item" data-index="${index}" value="${item}"></li>`;
+        });
+        // Add button to add new item - use data attribute to find parent list
+        html += `<li><button class="btn-add-item" onclick="addListItemByButton(this)"><i class="fas fa-plus"></i> Add Item</button></li>`;
+        return html;
+    }
+    
+    window.addListItemByButton = function(button) {
+        // Find the parent list element
+        const listEl = button.closest('ol');
+        if (!listEl) return;
+        
+        const items = listEl.querySelectorAll('.edit-list-item');
+        const newIndex = items.length;
+        
+        // Insert before the add button
+        const addButton = button.parentElement;
+        const newLi = document.createElement('li');
+        newLi.innerHTML = `<input type="text" class="edit-list-item" data-index="${newIndex}" value="" placeholder="Enter new item">`;
+        listEl.insertBefore(newLi, addButton);
+        
+        // Focus on new input
+        newLi.querySelector('input').focus();
+    };
+    
+    // Toggle edit mode
+    window.toggleEditMode = function() {
+        if (!currentDiseaseData) return;
+        
+        isEditMode = !isEditMode;
+        updateModalContent(currentDiseaseData, isEditMode);
+    };
+    
+    // Save changes
+    window.saveDiseaseChanges = async function() {
+        if (!currentDiseaseData) return;
+        
+        try {
+            // Collect edited data
+            const editedData = {
+                description: document.getElementById('editDescription')?.value || '',
+                severity: document.getElementById('editSeverity')?.value || '',
+                causes: collectListData('diseaseModalCauses'),
+                organic_solutions: collectListData('diseaseModalSolutions'),
+                symptoms: collectListData('diseaseModalSymptoms'),
+                treatment: collectListData('diseaseModalTreatment')
+            };
+            
+            // Show loading
+            const saveBtn = document.querySelector('.btn-modal-save');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            saveBtn.disabled = true;
+            
+            // Send to API
+            const response = await fetch(`/api/admin/diseases/${encodeURIComponent(currentDiseaseData.name)}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(editedData)
+            });
+            
+            const result = await response.json();
+            
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+            
+            if (result.success) {
+                showToast('Disease updated successfully', 'success');
+                
+                // Update current data
+                currentDiseaseData = result.disease;
+                isEditMode = false;
+                
+                // Switch back to display mode
+                updateModalContent(currentDiseaseData, false);
+            } else {
+                showToast(result.error || 'Failed to save changes', 'error');
+            }
+            
+        } catch (error) {
+            console.error('Error saving disease:', error);
+            showToast('Failed to save changes', 'error');
+            
+            // Reset button
+            const saveBtn = document.querySelector('.btn-modal-save');
+            saveBtn.innerHTML = 'Save';
+            saveBtn.disabled = false;
+        }
+    };
+    
+    function collectListData(listId) {
+        const listEl = document.getElementById(listId);
+        
+        // Check if element exists
+        if (!listEl) {
+            console.error('List element not found:', listId);
+            return [];
+        }
+        
+        const items = listEl.querySelectorAll('.edit-list-item');
+        const data = [];
+        
+        items.forEach(item => {
+            const value = item.value.trim();
+            if (value) {
+                data.push(value);
+            }
+        });
+        
+        return data;
+    }
+    
+    window.closeDiseaseModal = function() {
+        const modal = document.getElementById('diseaseModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        
+        // Reset state
+        currentDiseaseData = null;
+        isEditMode = false;
+    };
+    
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeDiseaseModal();
+        }
+    });
+    
+    // Setup edit button
+    const editBtn = document.querySelector('.btn-modal-edit');
+    if (editBtn) {
+        editBtn.addEventListener('click', toggleEditMode);
+    }
+    
+    // Setup save button
+    const saveBtn = document.querySelector('.btn-modal-save');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveDiseaseChanges);
+        saveBtn.style.display = 'none'; // Hidden by default
+    }
 
 });

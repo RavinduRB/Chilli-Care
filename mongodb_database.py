@@ -157,6 +157,43 @@ class MongoDB:
             logger.error(f"Error inserting disease: {e}")
             return None
     
+    def update_disease(self, disease_name, disease_data):
+        """
+        Update disease information
+        
+        Args:
+            disease_name: Name of the disease to update
+            disease_data: Dictionary with updated disease information
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.connected:
+            return False
+        
+        try:
+            # Preserve the name, add updated timestamp
+            update_data = disease_data.copy()
+            update_data['updated_at'] = datetime.utcnow()
+            
+            # Remove _id if present (can't update _id)
+            update_data.pop('_id', None)
+            
+            result = self.db.diseases.update_one(
+                {"name": disease_name},
+                {"$set": update_data}
+            )
+            
+            if result.modified_count > 0 or result.matched_count > 0:
+                logger.info(f"✓ Updated disease: {disease_name}")
+                return True
+            else:
+                logger.warning(f"Disease not found: {disease_name}")
+                return False
+        except Exception as e:
+            logger.error(f"Error updating disease: {e}")
+            return False
+    
     # ==================== PREDICTION OPERATIONS ====================
     
     def save_prediction(self, prediction_data):

@@ -1145,6 +1145,457 @@
     }
 }
 
+/* ============================================
+   DISEASE MANAGEMENT SECTION
+   ============================================ */
+
+.disease-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.disease-card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    min-height: 200px;
+}
+
+.disease-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.disease-card-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(26, 77, 46, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: #1a4d2e;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.disease-card-icon:hover {
+    background: rgba(26, 77, 46, 0.15);
+    transform: scale(1.1);
+}
+
+.disease-card-badge {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+}
+
+.badge-green {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.badge-light-green {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+}
+
+.disease-card-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+    text-align: center;
+}
+
+/* Responsive adjustments for disease cards */
+@media (max-width: 768px) {
+    .disease-cards-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+    }
+    
+    .disease-card {
+        padding: 24px 20px;
+        min-height: 180px;
+    }
+    
+    .disease-card-icon {
+        width: 56px;
+        height: 56px;
+        font-size: 24px;
+    }
+    
+    .disease-card-title {
+        font-size: 18px;
+    }
+    
+    .disease-card-badge {
+        font-size: 13px;
+        padding: 5px 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .disease-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .disease-card {
+        padding: 20px 16px;
+        min-height: 160px;
+    }
+    
+    .disease-card-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+    }
+    
+    .disease-card-title {
+        font-size: 16px;
+    }
+}
+
+/* ============================================
+   DISEASE DETAIL MODAL
+   ============================================ */
+
+.disease-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.disease-modal.active {
+    display: flex;
+}
+
+.disease-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.disease-modal-content {
+    position: relative;
+    background: white;
+    border-radius: 20px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease;
+    z-index: 1;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.disease-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 28px;
+    border-bottom: 1px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+    background: white;
+    border-radius: 20px 20px 0 0;
+    z-index: 10;
+}
+
+.disease-modal-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.disease-modal-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-modal-edit,
+.btn-modal-close {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.btn-modal-edit {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.btn-modal-edit:hover {
+    background: #e5e7eb;
+    transform: scale(1.05);
+}
+
+.btn-modal-close {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.btn-modal-close:hover {
+    background: #fecaca;
+    transform: scale(1.05);
+}
+
+.disease-modal-body {
+    padding: 28px;
+}
+
+.disease-image-container {
+    width: 100%;
+    margin-bottom: 24px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f9fafb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.disease-modal-image {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.disease-info-section {
+    margin-bottom: 20px;
+}
+
+.disease-info-section h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 8px 0;
+}
+
+.disease-info-section p,
+.disease-info-section > div:not(.edit-textarea):not(.edit-input) {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.disease-info-section ol {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.8;
+}
+
+.disease-info-section li {
+    margin-bottom: 6px;
+}
+
+/* Edit Mode Styles */
+.edit-textarea,
+.edit-input,
+.edit-list-item {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    color: #1f2937;
+    transition: border-color 0.2s ease;
+}
+
+.edit-textarea {
+    min-height: 80px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.edit-input {
+    height: 40px;
+}
+
+.edit-list-item {
+    margin-bottom: 8px;
+}
+
+.edit-textarea:focus,
+.edit-input:focus,
+.edit-list-item:focus {
+    outline: none;
+    border-color: #10b981;
+}
+
+.btn-add-item {
+    padding: 6px 12px;
+    background: #f3f4f6;
+    border: 2px dashed #d1d5db;
+    border-radius: 6px;
+    color: #6b7280;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-add-item:hover {
+    background: #e5e7eb;
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.btn-add-item i {
+    font-size: 11px;
+}
+
+.disease-modal-footer {
+    padding: 20px 28px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    position: sticky;
+    bottom: 0;
+    background: white;
+    border-radius: 0 0 20px 20px;
+}
+
+.btn-modal-cancel,
+.btn-modal-save {
+    padding: 10px 24px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-modal-cancel {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.btn-modal-cancel:hover {
+    background: #e5e7eb;
+}
+
+.btn-modal-save {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.btn-modal-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Modal Responsive Design */
+@media (max-width: 768px) {
+    .disease-modal {
+        padding: 10px;
+    }
+    
+    .disease-modal-content {
+        max-height: 95vh;
+        border-radius: 16px;
+    }
+    
+    .disease-modal-header {
+        padding: 20px;
+        border-radius: 16px 16px 0 0;
+    }
+    
+    .disease-modal-header h2 {
+        font-size: 20px;
+    }
+    
+    .disease-modal-body {
+        padding: 20px;
+    }
+    
+    .disease-modal-footer {
+        padding: 16px 20px;
+        border-radius: 0 0 16px 16px;
+    }
+    
+    .btn-modal-edit,
+    .btn-modal-close {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .disease-modal-header h2 {
+        font-size: 18px;
+    }
+    
+    .disease-modal-body {
+        padding: 16px;
+    }
+    
+    .disease-info-section h3 {
+        font-size: 15px;
+    }
+    
+    .disease-info-section p,
+    .disease-info-section ol {
+        font-size: 13px;
+    }
+}
+
 /* Print Styles */
 @media print {
     .dashboard-sidebar,

@@ -228,8 +228,54 @@
                 
                 <!-- Disease Management Section -->
                 <section class="content-section" id="diseasesSection">
-                    <h2 class="section-title">Disease Management</h2>
-                    <p class="section-description">Coming soon - View and manage disease data</p>
+                                        
+                    <!-- Disease Cards Grid -->
+                    <div class="disease-cards-grid">
+                        <!-- Healthy Disease Card -->
+                        <div class="disease-card" data-disease="healthy">
+                            <div class="disease-card-icon" onclick="openDiseaseModal('healthy')">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="disease-card-badge badge-green">100%</div>
+                            <h3 class="disease-card-title">Healthy</h3>
+                        </div>
+                        
+                        <!-- Whitefly Disease Card -->
+                        <div class="disease-card" data-disease="whitefly">
+                            <div class="disease-card-icon" onclick="openDiseaseModal('whitefly')">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="disease-card-badge badge-green">100%</div>
+                            <h3 class="disease-card-title">Whitefly</h3>
+                        </div>
+                        
+                        <!-- Anthacnose Disease Card -->
+                        <div class="disease-card" data-disease="anthacnose">
+                            <div class="disease-card-icon" onclick="openDiseaseModal('anthacnose')">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="disease-card-badge badge-green">94%</div>
+                            <h3 class="disease-card-title">Anthacnose</h3>
+                        </div>
+                        
+                        <!-- Yellowish Disease Card -->
+                        <div class="disease-card" data-disease="yellowish">
+                            <div class="disease-card-icon" onclick="openDiseaseModal('yellowish')">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="disease-card-badge badge-light-green">+90%</div>
+                            <h3 class="disease-card-title">Yellowish</h3>
+                        </div>
+                        
+                        <!-- Leaf Curl Virus Disease Card -->
+                        <div class="disease-card" data-disease="leafcurl">
+                            <div class="disease-card-icon" onclick="openDiseaseModal('leafcurl')">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="disease-card-badge badge-light-green">+70%</div>
+                            <h3 class="disease-card-title">Leaf Curl Virus</h3>
+                        </div>
+                    </div>
                 </section>
                 
                 <!-- Prediction History Section -->
@@ -261,6 +307,78 @@
     
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
+    
+    <!-- Disease Detail Modal -->
+    <div class="disease-modal" id="diseaseModal">
+        <div class="disease-modal-overlay" onclick="closeDiseaseModal()"></div>
+        <div class="disease-modal-content">
+            <div class="disease-modal-header">
+                <h2 id="diseaseModalTitle">Disease Name</h2>
+                <div class="disease-modal-actions">
+                    <button class="btn-modal-edit" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-modal-close" onclick="closeDiseaseModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="disease-modal-body">
+                <div class="disease-image-container">
+                    <img id="diseaseModalImage" src="" alt="Disease Image" class="disease-modal-image">
+                </div>
+                
+                <div class="disease-info-section">
+                    <h3>Name:</h3>
+                    <div id="diseaseModalName">-</div>
+                </div>
+                
+                <div class="disease-info-section">
+                    <h3>Causes:</h3>
+                    <ol id="diseaseModalCauses">
+                        <li>Loading...</li>
+                    </ol>
+                </div>
+                
+                <div class="disease-info-section">
+                    <h3>Description:</h3>
+                    <div id="diseaseModalDescription">-</div>
+                </div>
+                
+                <div class="disease-info-section">
+                    <h3>Organic Solutions:</h3>
+                    <ol id="diseaseModalSolutions">
+                        <li>Loading...</li>
+                    </ol>
+                </div>
+                
+                <div class="disease-info-section">
+                    <h3>Severity:</h3>
+                    <div id="diseaseModalSeverity">-</div>
+                </div>
+                
+                <div class="disease-info-section">
+                    <h3>Symptoms:</h3>
+                    <ol id="diseaseModalSymptoms">
+                        <li>Loading...</li>
+                    </ol>
+                </div>
+                
+                <div class="disease-info-section">
+                    <h3>Treatment:</h3>
+                    <ol id="diseaseModalTreatment">
+                        <li>Loading...</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="disease-modal-footer">
+                <button class="btn-modal-cancel" onclick="closeDiseaseModal()">Cancel</button>
+                <button class="btn-modal-save">Save</button>
+            </div>
+        </div>
+    </div>
     
     <!-- JavaScript -->
     <script src="{{ url_for('static', filename='js/admin_dashboard.js') }}"></script>
