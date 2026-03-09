@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const contentSections = document.querySelectorAll('.content-section');
     const pageTitle = document.getElementById('pageTitle');
     const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+    const manualRefreshBtn = document.getElementById('manualRefreshBtn');
     
     // Stats Elements
     const totalFarmersEl = document.getElementById('totalFarmers');
@@ -20,12 +21,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Chart
     let aiUsageChart = null;
     
+    // Real-time update variables
+    let updateInterval = null;
+    let lastUpdateTime = null;
+    const UPDATE_INTERVAL = 30000; // 30 seconds
+    
     // ============================================
     // INITIALIZATION
     // ============================================
     
     // Check authentication on load
     checkAuthStatus();
+    
+    // Start real-time updates after initial load
+    startRealTimeUpdates();
     
     // ============================================
     // AUTHENTICATION
@@ -63,8 +72,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // DASHBOARD DATA
     // ============================================
     
-    async function loadDashboardData() {
+    async function loadDashboardData(silent = false) {
         try {
+            // Show loading only on initial load
+            if (!silent) {
+                showLoading();
+            } else {
+                updateLastRefreshTime();
+            }
+            
             const response = await fetch('/api/admin/dashboard');
             const data = await response.json();
             
@@ -81,16 +97,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Update recent activity
                 updateRecentActivity(data.recent_users);
                 
+                // Update last update time
+                lastUpdateTime = new Date();
+                updateLastRefreshTime();
+                
                 // Hide loading overlay
-                hideLoading();
+                if (!silent) {
+                    hideLoading();
+                }
             } else {
                 showToast(data.error || 'Failed to load dashboard', 'error');
-                hideLoading();
+                if (!silent) {
+                    hideLoading();
+                }
             }
         } catch (error) {
             console.error('Error loading dashboard:', error);
-            showToast('Failed to load dashboard data', 'error');
-            hideLoading();
+            if (!silent) {
+                showToast('Failed to load dashboard data', 'error');
+                hideLoading();
+            }
         }
     }
     
@@ -132,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
             aiUsageChart.destroy();
         }
         
-        // Create new chart
+        // Create new chart with responsive settings
         aiUsageChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -169,6 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
+                aspectRatio: window.innerWidth < 768 ? 1.5 : 2.5,
                 interaction: {
                     intersect: false,
                     mode: 'index'
@@ -197,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         ticks: {
                             color: '#6b7280',
                             font: {
-                                size: 12
+                                size: window.innerWidth < 768 ? 10 : 12
                             },
                             stepSize: 5
                         },
@@ -210,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         ticks: {
                             color: '#6b7280',
                             font: {
-                                size: 12
+                                size: window.innerWidth < 768 ? 10 : 12
                             }
                         },
                         grid: {
@@ -222,6 +249,21 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Handle window resize for responsive chart
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+            if (aiUsageChart) {
+                // Update chart aspect ratio based on screen size
+                aiUsageChart.options.aspectRatio = window.innerWidth < 768 ? 1.5 : 2.5;
+                aiUsageChart.options.scales.y.ticks.font.size = window.innerWidth < 768 ? 10 : 12;
+                aiUsageChart.options.scales.x.ticks.font.size = window.innerWidth < 768 ? 10 : 12;
+                aiUsageChart.update();
+            }
+        }, 250);
+    });
     
     function updateRecentActivity(recentUsers) {
         if (!activityListEl) return;
@@ -348,6 +390,76 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Manual refresh button handler
+    if (manualRefreshBtn) {
+        manualRefreshBtn.addEventListener('click', async function() {
+            // Add spinning animation
+            this.classList.add('spinning');
+            
+            // Refresh dashboard data
+            await loadDashboardData(true);
+            
+            // Remove spinning animation after a short delay
+            setTimeout(() => {
+                this.classList.remove('spinning');
+            }, 500);
+            
+            showToast('Dashboard refreshed', 'success');
+        });
+    }
+    
+    // ============================================
+    // REAL-TIME UPDATES
+    // ============================================
+    
+    function startRealTimeUpdates() {
+        // Clear any existing interval
+        if (updateInterval) {
+            clearInterval(updateInterval);
+        }
+        
+        // Set up interval for automatic updates
+        updateInterval = setInterval(() => {
+            loadDashboardData(true); // Silent update
+        }, UPDATE_INTERVAL);
+        
+        console.log('Real-time updates started (refreshing every 30 seconds)');
+    }
+    
+    function stopRealTimeUpdates() {
+        if (updateInterval) {
+            clearInterval(updateInterval);
+            updateInterval = null;
+            console.log('Real-time updates stopped');
+        }
+    }
+    
+    function updateLastRefreshTime() {
+        const updateIndicator = document.querySelector('.update-indicator');
+        if (updateIndicator && lastUpdateTime) {
+            const timeAgo = formatTimeAgo(lastUpdateTime.toISOString());
+            const timeText = updateIndicator.querySelector('.update-time');
+            if (timeText) {
+                timeText.textContent = `Updated ${timeAgo}`;
+            }
+        }
+    }
+    
+    // Update the "last updated" text every 10 seconds
+    setInterval(() => {
+        updateLastRefreshTime();
+    }, 10000);
+    
+    // Stop updates when page is not visible
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            stopRealTimeUpdates();
+        } else {
+            startRealTimeUpdates();
+            loadDashboardData(true); // Refresh immediately when page becomes visible
+        }
+    });
+    
     // ============================================
     // UTILITY FUNCTIONS
     // ============================================
@@ -412,4 +524,230 @@ document.addEventListener('DOMContentLoaded', function() {
             return 'Unknown';
         }
     }
+    
+    // ============================================
+    // USER MANAGEMENT FUNCTIONALITY
+    // ============================================
+    
+    let currentPage = 1;
+    let totalPages = 1;
+    let usersPerPage = 10;
+    let allUsers = [];
+    let filteredUsers = [];
+    
+    async function loadUsers() {
+        try {
+            const response = await fetch('/api/admin/users');
+            if (!response.ok) throw new Error('Failed to fetch users');
+            
+            const data = await response.json();
+            allUsers = data.users || [];
+            filteredUsers = [...allUsers];
+            
+            renderUserTable();
+        } catch (error) {
+            console.error('Error loading users:', error);
+            showUserError('Failed to load users. Please try again.');
+        }
+    }
+    
+    function renderUserTable() {
+        const tableBody = document.getElementById('userTableBody');
+        if (!tableBody) return;
+        
+        // Calculate pagination
+        totalPages = Math.ceil(filteredUsers.length / usersPerPage) || 1;
+        currentPage = Math.min(currentPage, totalPages);
+        
+        const startIndex = (currentPage - 1) * usersPerPage;
+        const endIndex = startIndex + usersPerPage;
+        const pageUsers = filteredUsers.slice(startIndex, endIndex);
+        
+        if (pageUsers.length === 0) {
+            tableBody.innerHTML = `
+                <tr class="empty-state">
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <h3>No Users Found</h3>
+                            <p>No users match your search criteria</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        } else {
+            tableBody.innerHTML = pageUsers.map((user, index) => {
+                const userId = `#USR-${String(startIndex + index + 1).padStart(3, '0')}`;
+                const userType = user.user_type || 'Farmer';
+                const email = user.email || 'N/A';
+                const lastLogin = user.last_login ? formatDate(user.last_login) : 'Never';
+                const isOnline = isUserOnline(user.last_login);
+                const statusClass = isOnline ? 'status-online' : 'status-offline';
+                const statusText = isOnline ? 'Log In' : 'Log Out';
+                
+                return `
+                    <tr>
+                        <td><span class="user-id">${userId}</span></td>
+                        <td><span class="user-type">${userType}</span></td>
+                        <td><span class="user-email">${email}</span></td>
+                        <td><span class="user-password">*******</span></td>
+                        <td><span class="user-date">${lastLogin}</span></td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        updatePaginationControls();
+    }
+    
+    function formatDate(timestamp) {
+        try {
+            const date = new Date(timestamp);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}/${month}/${day}`;
+        } catch (e) {
+            return 'N/A';
+        }
+    }
+    
+    function isUserOnline(lastLogin) {
+        if (!lastLogin) return false;
+        
+        const now = new Date();
+        const loginDate = new Date(lastLogin);
+        const diffHours = (now - loginDate) / (1000 * 60 * 60);
+        
+        // Consider user online if last login was within 24 hours
+        return diffHours < 24;
+    }
+    
+    function updatePaginationControls() {
+        const prevBtn = document.getElementById('prevPageBtn');
+        const nextBtn = document.getElementById('nextPageBtn');
+        const pageInfo = document.getElementById('pageInfo');
+        
+        if (prevBtn) {
+            prevBtn.disabled = currentPage <= 1;
+        }
+        
+        if (nextBtn) {
+            nextBtn.disabled = currentPage >= totalPages;
+        }
+        
+        if (pageInfo) {
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+        }
+    }
+    
+    function showUserError(message) {
+        const tableBody = document.getElementById('userTableBody');
+        if (tableBody) {
+            tableBody.innerHTML = `
+                <tr class="empty-state">
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <h3>Error</h3>
+                            <p>${message}</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+    
+    // Search and Filter
+    function setupUserFilters() {
+        const searchInput = document.getElementById('userSearchInput');
+        const statusFilter = document.getElementById('userStatusFilter');
+        
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                filterUsers();
+            });
+        }
+        
+        if (statusFilter) {
+            statusFilter.addEventListener('change', (e) => {
+                filterUsers();
+            });
+        }
+    }
+    
+    function filterUsers() {
+        const searchInput = document.getElementById('userSearchInput');
+        const statusFilter = document.getElementById('userStatusFilter');
+        
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+        const statusValue = statusFilter ? statusFilter.value : 'all';
+        
+        filteredUsers = allUsers.filter(user => {
+            // Search filter (search in date)
+            const lastLogin = user.last_login ? formatDate(user.last_login) : '';
+            const matchesSearch = lastLogin.includes(searchTerm) || 
+                                 user.email.toLowerCase().includes(searchTerm) ||
+                                 user.user_type.toLowerCase().includes(searchTerm);
+            
+            // Status filter
+            let matchesStatus = true;
+            if (statusValue === 'online') {
+                matchesStatus = isUserOnline(user.last_login);
+            } else if (statusValue === 'offline') {
+                matchesStatus = !isUserOnline(user.last_login);
+            }
+            
+            return matchesSearch && matchesStatus;
+        });
+        
+        currentPage = 1; // Reset to first page when filtering
+        renderUserTable();
+    }
+    
+    // Pagination handlers
+    function setupPagination() {
+        const prevBtn = document.getElementById('prevPageBtn');
+        const nextBtn = document.getElementById('nextPageBtn');
+        
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderUserTable();
+                }
+            });
+        }
+        
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderUserTable();
+                }
+            });
+        }
+    }
+    
+    // Initialize user management when section is shown
+    function initUserManagement() {
+        setupUserFilters();
+        setupPagination();
+        loadUsers();
+    }
+    
+    // Load users when user management tab is clicked
+    const userManagementNav = document.querySelector('[data-section="users"]');
+    if (userManagementNav) {
+        userManagementNav.addEventListener('click', () => {
+            // Small delay to ensure section is visible
+            setTimeout(() => {
+                if (allUsers.length === 0) {
+                    initUserManagement();
+                }
+            }, 100);
+        });
+    }
+
 });

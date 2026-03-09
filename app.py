@@ -1672,6 +1672,62 @@ def get_admin_dashboard():
         }), 500
 
 
+@app.route('/api/admin/users', methods=['GET'])
+@login_required
+def get_admin_users():
+    """Get all users for admin dashboard (admin only)"""
+    if current_user.user_type != 'admin':
+        return jsonify({
+            'success': False,
+            'error': 'Unauthorized - Admin access required'
+        }), 403
+    
+    if not (mongodb and mongodb.connected):
+        return jsonify({
+            'success': False,
+            'error': 'MongoDB not configured'
+        }), 503
+    
+    try:
+        # Get pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 100, type=int)
+        skip = (page - 1) * per_page
+        
+        # Get all users
+        all_users = mongodb.get_all_users(skip=skip, limit=per_page)
+        total_users = mongodb.count_users()
+        
+        # Format user data (remove password)
+        formatted_users = []
+        for user in all_users:
+            formatted_users.append({
+                '_id': str(user['_id']),
+                'email': user['email'],
+                'user_type': user['user_type'],
+                'created_at': user['created_at'].isoformat() if user.get('created_at') else None,
+                'last_login': user['last_login'].isoformat() if user.get('last_login') else None
+            })
+        
+        return jsonify({
+            'success': True,
+            'users': formatted_users,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': total_users,
+                'total_pages': (total_users + per_page - 1) // per_page
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching users: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({'error': 'Not found'}), 404

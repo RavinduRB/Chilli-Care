@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="description" content="Admin Dashboard - Chilli Care">
+    <meta name="theme-color" content="#1a4d2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Admin Dashboard - Chilli Care</title>
     
     <!-- Favicon -->
@@ -81,6 +84,13 @@
                     <h1 class="page-title" id="pageTitle">Welcome, Chilli Care!</h1>
                 </div>
                 <div class="header-right">
+                    <div class="update-indicator">
+                        <div class="update-dot"></div>
+                        <span class="update-time">Live</span>
+                        <button class="btn-refresh" id="manualRefreshBtn" title="Refresh dashboard">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
                     <a href="/" class="btn-back-home">
                         <i class="fas fa-home"></i>
                         <span>Back to Home</span>
@@ -128,7 +138,7 @@
                         </div>
                     </div>
                     
-                    <!-- Chart Section -->
+                    <!-- Chart Section
                     <div class="chart-container">
                         <div class="chart-header">
                             <h2 class="chart-title">AI Features Usage</h2>
@@ -144,7 +154,7 @@
                             </div>
                         </div>
                         <canvas id="aiUsageChart"></canvas>
-                    </div>
+                    </div>-->
                     
                     <!-- Recent Activity -->
                     <div class="recent-activity">
@@ -165,7 +175,56 @@
                 <!-- User Management Section -->
                 <section class="content-section" id="usersSection">
                     <h2 class="section-title">User Management</h2>
-                    <p class="section-description">Coming soon - Manage users and farmers</p>
+                    
+                    <!-- Filters and Search -->
+                    <div class="user-management-controls">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="userSearchInput" placeholder="Search Date..." class="search-input">
+                        </div>
+                        <div class="filter-group">
+                            <select id="userStatusFilter" class="filter-select">
+                                <option value="all">Status: All</option>
+                                <option value="online">Log In</option>
+                                <option value="offline">Log Out</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- User Table -->
+                    <div class="table-container">
+                        <table class="user-table">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>User</th>
+                                    <th>User Email</th>
+                                    <th>Password <i class="fas fa-lock"></i></th>
+                                    <th>Last Login</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userTableBody">
+                                <!-- User rows will be dynamically inserted here -->
+                                <tr class="loading-row">
+                                    <td colspan="6" class="text-center">
+                                        <i class="fas fa-spinner fa-spin"></i> Loading users...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="pagination-controls">
+                        <button class="btn-pagination" id="prevPageBtn" disabled>
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                        <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                        <button class="btn-pagination" id="nextPageBtn" disabled>
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
                 </section>
                 
                 <!-- Disease Management Section -->
