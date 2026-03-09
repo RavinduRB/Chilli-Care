@@ -484,6 +484,116 @@ class MongoDB:
         except Exception as e:
             logger.error(f"Error counting users: {e}")
             return 0
+    
+    def get_all_users(self, skip=0, limit=50):
+        """
+        Get all users with pagination
+        
+        Args:
+            skip: Number of users to skip
+            limit: Maximum number of users to return
+            
+        Returns:
+            List of user documents (without passwords)
+        """
+        if not self.connected:
+            return []
+        
+        try:
+            users = self.db.users.find(
+                {},
+                {'password': 0}  # Exclude password field
+            ).skip(skip).limit(limit).sort("created_at", DESCENDING)
+            
+            return list(users)
+        except Exception as e:
+            logger.error(f"Error fetching all users: {e}")
+            return []
+    
+    # ==================== USER PREDICTION ANALYTICS ====================
+    
+    def get_user_predictions(self, user_id, limit=20, skip=0):
+        """
+        Get predictions made by a specific user
+        
+        Args:
+            user_id: User ID
+            limit: Number of predictions to return
+            skip: Number of predictions to skip
+            
+        Returns:
+            List of prediction documents
+        """
+        if not self.connected:
+            return []
+        
+        try:
+            predictions = self.db.predictions.find({"user_id": str(user_id)})\
+                .sort("timestamp", DESCENDING)\
+                .skip(skip)\
+                .limit(limit)
+            
+            return list(predictions)
+        except Exception as e:
+            logger.error(f"Error fetching user predictions: {e}")
+            return []
+    
+    def count_user_predictions(self, user_id):
+        """
+        Count total predictions made by a user
+        
+        Args:
+            user_id: User ID
+            
+        Returns:
+            Count of predictions
+        """
+        if not self.connected:
+            return 0
+        
+        try:
+            return self.db.predictions.count_documents({"user_id": str(user_id)})
+        except Exception as e:
+            logger.error(f"Error counting user predictions: {e}")
+            return 0
+    
+    def get_user_disease_statistics(self, user_id):
+        """
+        Get disease prediction statistics for a specific user
+        
+        Args:
+            user_id: User ID
+            
+        Returns:
+            List of disease statistics for the user
+        """
+        if not self.connected:
+            return []
+        
+        try:
+            pipeline = [
+                {
+                    "$match": {"user_id": str(user_id)}
+                },
+                {
+                    "$group": {
+                        "_id": "$predicted_disease",
+                        "count": {"$sum": 1},
+                        "avg_confidence": {"$avg": "$confidence"},
+                        "max_confidence": {"$max": "$confidence"},
+                        "min_confidence": {"$min": "$confidence"},
+                        "last_prediction": {"$max": "$timestamp"}
+                    }
+                },
+                {
+                    "$sort": {"count": -1}
+                }
+            ]
+            
+            return list(self.db.predictions.aggregate(pipeline))
+        except Exception as e:
+            logger.error(f"Error fetching user disease statistics: {e}")
+            return []
 
 
 # Global database instance

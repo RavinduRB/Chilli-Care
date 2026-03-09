@@ -31,12 +31,20 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Import MongoDB database
+mongodb = None
 try:
     from mongodb_database import get_db
     mongodb = get_db()
-    logger.info(f"✓ MongoDB configured: {mongodb.connected}")
+    if mongodb and mongodb.connected:
+        logger.info(f"✓ MongoDB connected successfully")
+    else:
+        logger.warning("⚠ MongoDB not connected - check MONGODB_URI in .env")
+        mongodb = None
 except ImportError as e:
-    logger.warning(f"⚠ MongoDB not available: {e}")
+    logger.warning(f"⚠ MongoDB import failed: {e}")
+    mongodb = None
+except Exception as e:
+    logger.error(f"❌ MongoDB connection error: {e}")
     mongodb = None
 
 # Initialize Flask app
@@ -71,18 +79,17 @@ class User(UserMixin):
     def get_id(self):
         return str(self.id)
 
-# Admin credentials (all admins share the same credentials)
-ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin@chillicare.com')
-ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
-
 @login_manager.user_loader
 def load_user(user_id):
     """Load user by ID for Flask-Login"""
     try:
+        # Load all users from database (including admin)
         if mongodb and mongodb.connected:
             user_data = mongodb.get_user_by_id(user_id)
             if user_data:
                 return User(str(user_data['_id']), user_data['email'], user_data['user_type'])
+        else:
+            logger.warning("MongoDB not connected in load_user")
     except Exception as e:
         logger.error(f"Error loading user: {e}")
     return None
@@ -877,6 +884,16 @@ def save_prediction_to_mongo(prediction_result, validation_method, validation_me
             'timestamp': datetime.utcnow()
         }
         
+        # Add user information if logged in
+        if current_user.is_authenticated:
+            prediction_data['user_id'] = current_user.id
+            prediction_data['user_email'] = current_user.email
+            prediction_data['user_type'] = current_user.user_type
+        else:
+            prediction_data['user_id'] = None
+            prediction_data['user_email'] = 'anonymous'
+            prediction_data['user_type'] = 'guest'
+        
         prediction_id = mongodb.save_prediction(prediction_data)
         return prediction_id
         
@@ -911,38 +928,68 @@ def signup():
         
         # Check if MongoDB is available
         if not mongodb or not mongodb.connected:
-            return jsonify({'success': False, 'error': 'Database not available'}), 500
+            logger.error("MongoDB not available during signup")
+            return jsonify({'success': False, 'error': 'Database not available. Please try again later.'}), 503
         
         # Check if user already exists
-        existing_user = mongodb.get_user_by_email(email)
-        if existing_user:
-            return jsonify({'success': False, 'error': 'Email already registered'}), 409
+        try:
+            existing_user = mongodb.get_user_by_email(email)
+            if existing_user:
+                return jsonify({'success': False, 'error': 'Email already registered'}), 409
+        except Exception as db_error:
+            logger.error(f"Database error checking existing user: {db_error}")
+            return jsonify({'success': False, 'error': 'Database error. Please try again.'}), 500
         
         # Hash password
-        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        try:
+            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        except Exception as hash_error:
+            logger.error(f"Password hashing error: {hash_error}")
+            return jsonify({'success': False, 'error': 'Password processing error'}), 500
         
         # Create user
-        user_id = mongodb.create_user(email, password_hash, 'farmer')
+        try:
+            user_id = mongodb.create_user(email, password_hash, 'farmer')
+        except Exception as create_error:
+            logger.error(f"Database error creating user: {create_error}")
+            return jsonify({'success': False, 'error': 'Failed to create account. Please try again.'}), 500
         
         if user_id:
-            # Create user object and login
-            user = User(user_id, email, 'farmer')
-            session.permanent = True
-            login_user(user, remember=True)
-            
-            return jsonify({
-                'success': True,
-                'message': 'Account created successfully',
-                'user': {
-                    'email': email,
-                    'user_type': 'farmer'
-                }
-            }), 201
+            try:
+                # Create user object and login
+                user = User(user_id, email, 'farmer')
+                session.permanent = True
+                login_user(user, remember=True)
+                
+                logger.info(f"New user registered: {email}")
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'Account created successfully',
+                    'user': {
+                        'id': user_id,
+                        'email': email,
+                        'user_type': 'farmer'
+                    }
+                }), 201
+            except Exception as login_error:
+                logger.error(f"Error logging in new user: {login_error}")
+                # User created but login failed - still return success
+                return jsonify({
+                    'success': True,
+                    'message': 'Account created successfully. Please log in.',
+                    'user': {
+                        'email': email,
+                        'user_type': 'farmer'
+                    }
+                }), 201
         else:
             return jsonify({'success': False, 'error': 'Failed to create account'}), 500
     
     except Exception as e:
         logger.error(f"Error in signup: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': 'Internal server error'}), 500
 
 
@@ -958,72 +1005,83 @@ def login():
         email = data['email'].lower().strip()
         password = data['password']
         
-        # Check for admin login
-        if email == ADMIN_EMAIL:
-            # Verify admin password (direct comparison for simplicity)
-            if password == ADMIN_PASSWORD:
-                # Create admin user (not stored in DB)
-                admin_user = User('admin', ADMIN_EMAIL, 'admin')
-                session.permanent = True
-                login_user(admin_user, remember=True)
-                
-                return jsonify({
-                    'success': True,
-                    'message': 'Admin login successful',
-                    'user': {
-                        'email': ADMIN_EMAIL,
-                        'user_type': 'admin'
-                    }
-                }), 200
-            else:
-                return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
-        
-        # Check if MongoDB is available for farmer login
+        # Check if MongoDB is available
         if not mongodb or not mongodb.connected:
-            return jsonify({'success': False, 'error': 'Database not available'}), 500
+            logger.error("MongoDB not available during login")
+            return jsonify({'success': False, 'error': 'Database not available. Please try again later.'}), 503
         
         # Get user from database
-        user_data = mongodb.get_user_by_email(email)
+        try:
+            user_data = mongodb.get_user_by_email(email)
+        except Exception as db_error:
+            logger.error(f"Database error during login: {db_error}")
+            return jsonify({'success': False, 'error': 'Database error. Please try again.'}), 500
         
         if not user_data:
+            logger.warning(f"Login attempt for non-existent user: {email}")
             return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
         
         # Verify password
-        if bcrypt.checkpw(password.encode('utf-8'), user_data['password'].encode('utf-8')):
-            # Update last login
-            mongodb.update_last_login(email)
-            
-            # Create user object and login
-            user = User(str(user_data['_id']), user_data['email'], user_data['user_type'])
-            session.permanent = True
-            login_user(user, remember=True)
-            
-            return jsonify({
-                'success': True,
-                'message': 'Login successful',
-                'user': {
-                    'email': user_data['email'],
-                    'user_type': user_data['user_type']
-                }
-            }), 200
+        try:
+            password_match = bcrypt.checkpw(password.encode('utf-8'), user_data['password'].encode('utf-8'))
+        except Exception as verify_error:
+            logger.error(f"Password verification error: {verify_error}")
+            return jsonify({'success': False, 'error': 'Authentication error'}), 500
+        
+        if password_match:
+            try:
+                # Update last login
+                mongodb.update_last_login(email)
+                
+                # Create user object and login
+                user = User(str(user_data['_id']), user_data['email'], user_data['user_type'])
+                session.permanent = True
+                login_user(user, remember=True)
+                
+                # Log based on user type
+                if user_data['user_type'] == 'admin':
+                    logger.info(f"Admin user logged in successfully: {email}")
+                else:
+                    logger.info(f"User logged in successfully: {email}")
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'Login successful',
+                    'user': {
+                        'id': str(user_data['_id']),
+                        'email': user_data['email'],
+                        'user_type': user_data['user_type']
+                    }
+                }), 200
+            except Exception as login_error:
+                logger.error(f"Error during login process: {login_error}")
+                return jsonify({'success': False, 'error': 'Login failed'}), 500
         else:
+            logger.warning(f"Invalid password for user: {email}")
             return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
     
     except Exception as e:
         logger.error(f"Error in login: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': 'Internal server error'}), 500
 
 
-@app.route('/api/auth/logout', methods=['POST'])
-@login_required
+@app.route('/api/auth/logout', methods=['POST', 'GET'])
 def logout():
     """User logout endpoint"""
     try:
-        logout_user()
-        return jsonify({
-            'success': True,
-            'message': 'Logged out successfully'
-        }), 200
+        if current_user.is_authenticated:
+            logout_user()
+            return jsonify({
+                'success': True,
+                'message': 'Logged out successfully'
+            }), 200
+        else:
+            return jsonify({
+                'success': True,
+                'message': 'Already logged out'
+            }), 200
     except Exception as e:
         logger.error(f"Error in logout: {str(e)}")
         return jsonify({'success': False, 'error': 'Internal server error'}), 500
@@ -1040,21 +1098,37 @@ def delete_account():
         
         # Check if MongoDB is available
         if not mongodb or not mongodb.connected:
-            return jsonify({'success': False, 'error': 'Database not available'}), 500
+            logger.error("MongoDB not available during account deletion")
+            return jsonify({'success': False, 'error': 'Database not available. Please try again later.'}), 503
+        
+        # Get user email before logout
+        email = current_user.email
+        user_id = current_user.id
         
         # Delete user from database
-        email = current_user.email
-        if mongodb.delete_user(email):
-            logout_user()
-            return jsonify({
-                'success': True,
-                'message': 'Account deleted successfully'
-            }), 200
-        else:
-            return jsonify({'success': False, 'error': 'Failed to delete account'}), 500
+        try:
+            deleted = mongodb.delete_user(email)
+            if deleted:
+                # Logout user
+                logout_user()
+                
+                logger.info(f"User account deleted: {email}")
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'Account deleted successfully'
+                }), 200
+            else:
+                logger.error(f"Failed to delete user from database: {email}")
+                return jsonify({'success': False, 'error': 'Failed to delete account. User may not exist.'}), 500
+        except Exception as db_error:
+            logger.error(f"Database error during account deletion: {db_error}")
+            return jsonify({'success': False, 'error': 'Database error. Please try again.'}), 500
     
     except Exception as e:
         logger.error(f"Error in delete account: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': 'Internal server error'}), 500
 
 
@@ -1064,17 +1138,25 @@ def auth_status():
     try:
         if current_user.is_authenticated:
             return jsonify({
+                'success': True,
                 'authenticated': True,
                 'user': {
+                    'id': current_user.id,
                     'email': current_user.email,
                     'user_type': current_user.user_type
                 }
             }), 200
         else:
-            return jsonify({'authenticated': False}), 200
+            return jsonify({
+                'success': True,
+                'authenticated': False
+            }), 200
     except Exception as e:
         logger.error(f"Error checking auth status: {str(e)}")
-        return jsonify({'authenticated': False}), 200
+        return jsonify({
+            'success': True,
+            'authenticated': False
+        }), 200
 
 
 # ============================================
@@ -1222,17 +1304,40 @@ def get_disease_info(disease_name):
 def health_check():
     """Health check endpoint"""
     mongodb_status = 'not_configured'
+    mongodb_details = {}
+    
     if mongodb:
         mongodb_status = 'connected' if mongodb.connected else 'disconnected'
+        if mongodb.connected:
+            try:
+                # Get database stats
+                mongodb_details = {
+                    'database': mongodb.db.name,
+                    'collections': mongodb.db.list_collection_names(),
+                    'total_users': mongodb.count_users(),
+                    'total_diseases': mongodb.db.diseases.count_documents({}),
+                    'total_predictions': mongodb.count_predictions()
+                }
+            except Exception as e:
+                logger.warning(f"Could not fetch MongoDB details: {e}")
+                mongodb_details = {'error': 'Could not fetch details'}
     
-    return jsonify({
+    health_data = {
         'status': 'healthy',
         'model_loaded': model is not None,
         'classes_loaded': len(class_names) > 0,
         'num_classes': len(class_names),
-        'mongodb': mongodb_status,
+        'mongodb_status': mongodb_status,
+        'mongodb_details': mongodb_details,
+        'auth_system': {
+            'flask_login': 'enabled',
+            'session_lifetime': '7 days',
+            'admin_stored_in_db': True
+        },
         'timestamp': datetime.now().isoformat()
-    })
+    }
+    
+    return jsonify(health_data)
 
 
 @app.route('/about')
@@ -1376,6 +1481,173 @@ def get_daily_analytics():
         
     except Exception as e:
         logger.error(f"Error fetching daily analytics: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/user/predictions', methods=['GET'])
+@login_required
+def get_user_predictions():
+    """Get logged-in user's prediction history"""
+    if not (mongodb and mongodb.connected):
+        return jsonify({
+            'success': False,
+            'error': 'MongoDB not configured'
+        }), 503
+    
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        
+        # Calculate skip
+        skip = (page - 1) * per_page
+        
+        # Get user's predictions
+        predictions = mongodb.get_user_predictions(
+            user_id=current_user.id,
+            limit=per_page,
+            skip=skip
+        )
+        
+        total = mongodb.count_user_predictions(user_id=current_user.id)
+        
+        # Convert ObjectId to string and format timestamps
+        for pred in predictions:
+            pred['_id'] = str(pred['_id'])
+            if 'timestamp' in pred:
+                pred['timestamp'] = pred['timestamp'].isoformat()
+        
+        return jsonify({
+            'success': True,
+            'predictions': predictions,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': (total + per_page - 1) // per_page
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching user predictions: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/user/statistics', methods=['GET'])
+@login_required
+def get_user_statistics():
+    """Get logged-in user's prediction statistics"""
+    if not (mongodb and mongodb.connected):
+        return jsonify({
+            'success': False,
+            'error': 'MongoDB not configured'
+        }), 503
+    
+    try:
+        # Get user's disease statistics
+        disease_stats = mongodb.get_user_disease_statistics(user_id=current_user.id)
+        
+        # Get total predictions count
+        total_predictions = mongodb.count_user_predictions(user_id=current_user.id)
+        
+        # Format disease statistics
+        formatted_stats = []
+        for stat in disease_stats:
+            formatted_stats.append({
+                'disease': stat['_id'],
+                'count': stat['count'],
+                'avg_confidence': round(stat['avg_confidence'], 2),
+                'max_confidence': round(stat['max_confidence'], 2),
+                'min_confidence': round(stat['min_confidence'], 2),
+                'last_prediction': stat['last_prediction'].isoformat() if stat.get('last_prediction') else None
+            })
+        
+        return jsonify({
+            'success': True,
+            'total_predictions': total_predictions,
+            'disease_stats': formatted_stats,
+            'user': {
+                'email': current_user.email,
+                'user_type': current_user.user_type
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching user statistics: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/admin/dashboard', methods=['GET'])
+@login_required
+def get_admin_dashboard():
+    """Get admin dashboard data (admin only)"""
+    if current_user.user_type != 'admin':
+        return jsonify({
+            'success': False,
+            'error': 'Unauthorized - Admin access required'
+        }), 403
+    
+    if not (mongodb and mongodb.connected):
+        return jsonify({
+            'success': False,
+            'error': 'MongoDB not configured'
+        }), 503
+    
+    try:
+        # Get comprehensive statistics
+        total_users = mongodb.count_users()
+        total_farmers = mongodb.count_users(user_type='farmer')
+        total_predictions = mongodb.count_predictions()
+        recent_predictions = mongodb.get_recent_predictions_count(days=7)
+        
+        # Get disease statistics
+        disease_stats = mongodb.get_disease_statistics()
+        
+        # Format disease statistics
+        formatted_disease_stats = []
+        for stat in disease_stats:
+            formatted_disease_stats.append({
+                'disease': stat['_id'],
+                'count': stat['count'],
+                'avg_confidence': round(stat['avg_confidence'], 2),
+                'max_confidence': round(stat['max_confidence'], 2),
+                'min_confidence': round(stat['min_confidence'], 2)
+            })
+        
+        # Get recent users
+        recent_users = mongodb.get_all_users(skip=0, limit=5)
+        
+        # Format user data (remove sensitive info)
+        formatted_users = []
+        for user in recent_users:
+            formatted_users.append({
+                '_id': str(user['_id']),
+                'email': user['email'],
+                'user_type': user['user_type'],
+                'created_at': user['created_at'].isoformat() if user.get('created_at') else None,
+                'last_login': user['last_login'].isoformat() if user.get('last_login') else None
+            })
+        
+        return jsonify({
+            'success': True,
+            'statistics': {
+                'total_users': total_users,
+                'total_farmers': total_farmers,
+                'total_predictions': total_predictions,
+                'recent_predictions_7d': recent_predictions
+            },
+            'disease_stats': formatted_disease_stats,
+            'recent_users': formatted_users
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching admin dashboard: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
