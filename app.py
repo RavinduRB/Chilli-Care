@@ -7,7 +7,7 @@ import os
 import json
 import numpy as np
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, jsonify, send_from_directory, session
+from flask import Flask, render_template, request, jsonify, send_from_directory, session, redirect
 from flask_cors import CORS
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
@@ -65,6 +65,15 @@ CORS(app)  # Enable CORS for API access
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'index'  # Redirect to index if not logged in
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    """Handle unauthorized access"""
+    # For API endpoints, return JSON
+    if request.path.startswith('/api/'):
+        return jsonify({'success': False, 'error': 'Authentication required'}), 401
+    # For page routes, redirect to home
+    return redirect('/')
 
 # Ensure upload folder exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -1362,6 +1371,15 @@ def responsive_test():
 def camera_test():
     """Camera feature test page"""
     return render_template('camera-test.html')
+
+
+@app.route('/admin/dashboard')
+@login_required
+def admin_dashboard():
+    """Admin dashboard page (admin only)"""
+    if current_user.user_type != 'admin':
+        return redirect('/')
+    return render_template('admin_dashboard.html')
 
 
 @app.route('/api/history', methods=['GET'])

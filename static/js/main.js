@@ -97,12 +97,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Update UI based on authentication status
     function updateAuthUI(authenticated) {
+        const dashboardBtn = document.getElementById('dashboardBtn');
+        
         if (authenticated && currentUser) {
             // Desktop UI
             if (guestProfileSection) guestProfileSection.classList.add('hidden');
             if (profileSection) profileSection.classList.remove('hidden');
             if (userEmail) userEmail.textContent = currentUser.email;
             if (userEmailDropdown) userEmailDropdown.textContent = currentUser.email;
+            
+            // Show dashboard button only for admin users
+            if (dashboardBtn) {
+                if (currentUser.user_type === 'admin') {
+                    dashboardBtn.classList.remove('hidden');
+                } else {
+                    dashboardBtn.classList.add('hidden');
+                }
+            }
             
             // Mobile UI
             if (mobileAuthButtons) mobileAuthButtons.classList.add('hidden');
@@ -112,6 +123,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Desktop UI
             if (guestProfileSection) guestProfileSection.classList.remove('hidden');
             if (profileSection) profileSection.classList.add('hidden');
+            
+            // Hide dashboard button
+            if (dashboardBtn) dashboardBtn.classList.add('hidden');
             
             // Mobile UI
             if (mobileAuthButtons) mobileAuthButtons.classList.remove('hidden');

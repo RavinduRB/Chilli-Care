@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Admin Dashboard - Chilli Care">
+    <title>Admin Dashboard - Chilli Care</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='images/Site icon.png') }}" type="image/png">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard.css') }}">
+</head>
+<body class="admin-dashboard-page">
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='images/Chilli Care Logo.png') }}" alt="Chilli Care Logo" class="sidebar-logo">
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-section="dashboard">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-section="users">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="#" class="nav-item" data-section="diseases">
+                    <i class="fas fa-leaf"></i>
+                    <span>Disease Management</span>
+                </a>
+                <a href="#" class="nav-item" data-section="predictions">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Prediction History</span>
+                </a>
+                <a href="#" class="nav-item" data-section="mapping">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>District Mapping</span>
+                </a>
+                <a href="#" class="nav-item" data-section="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">Chilli Care</div>
+                        <div class="user-role">Admin</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Header -->
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn" id="mobileSidebarToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="page-title" id="pageTitle">Welcome, Chilli Care!</h1>
+                </div>
+                <div class="header-right">
+                    <a href="/" class="btn-back-home">
+                        <i class="fas fa-home"></i>
+                        <span>Back to Home</span>
+                    </a>
+                    <button class="btn-logout" id="adminLogoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <!-- Dashboard Section -->
+                <section class="content-section active" id="dashboardSection">
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 class="stat-label">Total Farmers</h3>
+                                <p class="stat-value" id="totalFarmers">0</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                <i class="fas fa-disease"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 class="stat-label">Total Diseases</h3>
+                                <p class="stat-value" id="totalDiseases">0</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 class="stat-label">Total Places</h3>
+                                <p class="stat-value" id="totalPlaces">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart Section -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h2 class="chart-title">AI Features Usage</h2>
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <span class="legend-dot validation"></span>
+                                    <span>Validation</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-dot chatbot"></span>
+                                    <span>Chatbot</span>
+                                </div>
+                            </div>
+                        </div>
+                        <canvas id="aiUsageChart"></canvas>
+                    </div>
+                    
+                    <!-- Recent Activity -->
+                    <div class="recent-activity">
+                        <h2 class="section-title">Recent Activity</h2>
+                        <div class="activity-list" id="activityList">
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                                <div class="activity-info">
+                                    <p class="activity-text">Loading recent activity...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- User Management Section -->
+                <section class="content-section" id="usersSection">
+                    <h2 class="section-title">User Management</h2>
+                    <p class="section-description">Coming soon - Manage users and farmers</p>
+                </section>
+                
+                <!-- Disease Management Section -->
+                <section class="content-section" id="diseasesSection">
+                    <h2 class="section-title">Disease Management</h2>
+                    <p class="section-description">Coming soon - View and manage disease data</p>
+                </section>
+                
+                <!-- Prediction History Section -->
+                <section class="content-section" id="predictionsSection">
+                    <h2 class="section-title">Prediction History</h2>
+                    <p class="section-description">Coming soon - View all predictions</p>
+                </section>
+                
+                <!-- District Mapping Section -->
+                <section class="content-section" id="mappingSection">
+                    <h2 class="section-title">District Mapping</h2>
+                    <p class="section-description">Coming soon - Geographic distribution</p>
+                </section>
+                
+                <!-- Analytics Section -->
+                <section class="content-section" id="analyticsSection">
+                    <h2 class="section-title">Analytics</h2>
+                    <p class="section-description">Coming soon - Detailed analytics</p>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <p>Loading dashboard...</p>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+    
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/admin_dashboard.js') }}"></script>
+</body>
+</html>
