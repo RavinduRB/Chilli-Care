@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Real-time update variables
     let updateInterval = null;
     let lastUpdateTime = null;
-    const UPDATE_INTERVAL = 60000; // 60 seconds
+    const UPDATE_INTERVAL = 30000; // 30 seconds
     
     // ============================================
     // INITIALIZATION

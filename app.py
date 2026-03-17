@@ -1355,6 +1355,12 @@ def about():
     return render_template('about.html')
 
 
+@app.route('/analytics')
+def analytics():
+    """Analytics page"""
+    return render_template('analytics.html')
+
+
 @app.route('/docs')
 def documentation():
     """API documentation page"""
