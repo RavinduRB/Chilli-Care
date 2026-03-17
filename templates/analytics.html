@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Your Personal Prediction Analytics - Chilli Care">
+    <title>Analytics - Chilli Care</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='images/Site icon.png') }}" type="image/png">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <img src="{{ url_for('static', filename='images/Chilli Care Logo.png') }}" alt="Chilli Care Logo" class="logo-image">
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <ul class="nav-menu desktop-menu">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/analytics" class="active">Analytics</a></li>
+                    <li><a href="/about">About</a></li>
+                </ul>
+                
+                <!-- Desktop Authentication Section -->
+                <div class="auth-section desktop-auth">
+                    <!-- Guest profile (not logged in) -->
+                    <div class="profile-section" id="guestProfileSection">
+                        <button class="profile-btn" id="guestProfileBtn">
+                            <i class="fas fa-user-circle"></i>
+                        </button>
+                        <div class="profile-dropdown hidden" id="guestProfileDropdown">
+                            <button class="dropdown-item" id="dropdownLoginBtn">
+                                <i class="fas fa-sign-in-alt"></i> Log In
+                            </button>
+                            <button class="dropdown-item" id="dropdownSignupBtn">
+                                <i class="fas fa-user-plus"></i> Sign Up
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Logged in profile -->
+                    <div class="profile-section hidden" id="profileSection">
+                        <button class="profile-btn" id="profileBtn">
+                            <i class="fas fa-user-circle"></i>
+                            <span class="user-email-text" id="userEmail"></span>
+                        </button>
+                        <div class="profile-dropdown hidden" id="profileDropdown">
+                            <div class="profile-info">
+                                <i class="fas fa-user"></i>
+                                <span id="userEmailDropdown"></span>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="/admin/dashboard" class="dropdown-item admin-only hidden" id="dashboardBtn">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                            <button class="dropdown-item" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                            <button class="dropdown-item danger" id="deleteAccountBtn">
+                                <i class="fas fa-trash"></i> Delete Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hamburger Menu Button -->
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div class="mobile-menu" id="mobileMenu">
+                <ul class="mobile-nav-list">
+                    <li><a href="/" class="mobile-nav-item"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="/analytics" class="mobile-nav-item"><i class="fas fa-chart-line"></i> Analytics</a></li>
+                    <li><a href="/about" class="mobile-nav-item"><i class="fas fa-info-circle"></i> About</a></li>
+                    <li class="mobile-divider"></li>
+                    
+                    <!-- Mobile Authentication -->
+                    <div class="mobile-auth-section">
+                        <!-- Not logged in buttons -->
+                        <div class="mobile-auth-buttons" id="mobileAuthButtons">
+                            <li><button class="mobile-auth-btn btn-login" id="mobileLoginBtn">
+                                <i class="fas fa-sign-in-alt"></i> Log In
+                            </button></li>
+                            <li><button class="mobile-auth-btn btn-signup" id="mobileSignupBtn">
+                                <i class="fas fa-user-plus"></i> Sign Up
+                            </button></li>
+                        </div>
+                        
+                        <!-- Logged in profile -->
+                        <div class="mobile-profile-section hidden" id="mobileProfileSection">
+                            <li class="mobile-profile-info">
+                                <i class="fas fa-user-circle"></i>
+                                <span id="mobileUserEmail"></span>
+                            </li>
+                            <li><button class="mobile-nav-item" id="mobileLogoutBtn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button></li>
+                            <li><button class="mobile-nav-item danger" id="mobileDeleteAccountBtn">
+                                <i class="fas fa-trash"></i> Delete Account
+                            </button></li>
+                        </div>
+                    </div>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Analytics Header -->
+    <section class="analytics-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="header-text">
+                    <h1>Your Analytics Dashboard</h1>
+                    <p>Track your prediction history and disease patterns</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Authentication Required Message -->
+    <section class="auth-required hidden" id="authRequired">
+        <div class="container">
+            <div class="auth-required-card">
+                <i class="fas fa-lock"></i>
+                <h2>Login Required</h2>
+                <p>Please log in to view your personal analytics</p>
+                <button class="btn btn-primary" id="authRequiredLoginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Log In
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics Content -->
+    <section class="analytics-content hidden" id="analyticsContent">
+        <div class="container">
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-primary">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="stat-details">
+                        <div class="stat-value" id="totalPredictions">0</div>
+                        <div class="stat-label">Total Predictions</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-success">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <div class="stat-details">
+                        <div class="stat-value" id="diseasesDetected">0</div>
+                        <div class="stat-label">Diseases Detected</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-details">
+                        <div class="stat-value" id="mostCommonDisease">-</div>
+                        <div class="stat-label">Most Common</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-info">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="stat-details">
+                        <div class="stat-value" id="avgConfidence">0%</div>
+                        <div class="stat-label">Avg Confidence</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <!-- Disease Distribution Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-pie"></i> Disease Distribution</h3>
+                        <p>Your detected diseases breakdown</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="diseaseDistributionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Confidence Levels Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-bar"></i> Confidence Levels</h3>
+                        <p>Average confidence by disease</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="confidenceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Predictions History -->
+            <div class="predictions-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-history"></i> Recent Predictions</h2>
+                    <p>Your last 10 predictions</p>
+                </div>
+                
+                <div class="predictions-table-container">
+                    <table class="predictions-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Disease</th>
+                                <th>Confidence</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="predictionsTableBody">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Load More Button -->
+                <div class="load-more-container hidden" id="loadMoreContainer">
+                    <button class="btn btn-secondary" id="loadMoreBtn">
+                        <i class="fas fa-plus"></i> Load More
+                    </button>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state hidden" id="emptyState">
+                    <i class="fas fa-inbox"></i>
+                    <h3>No Predictions Yet</h3>
+                    <p>Start by uploading a chilli leaf image on the home page</p>
+                    <a href="/" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Start Analyzing
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loading State -->
+    <section class="loading-section hidden" id="loadingSection">
+        <div class="container">
+            <div class="loading-card">
+                <div class="spinner"></div>
+                <p>Loading your analytics...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div class="modal hidden" id="loginModal">
+        <div class="modal-overlay" id="loginOverlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Welcome Back</h2>
+                <button class="modal-close" id="closeLoginModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form class="auth-form" id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+                <div class="form-error hidden" id="loginError"></div>
+                <button type="submit" class="btn btn-primary btn-block">Log In</button>
+                <p class="form-switch">
+                    Don't have an account? <a href="#" id="switchToSignup">Sign Up</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal hidden" id="signupModal">
+        <div class="modal-overlay" id="signupOverlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Account</h2>
+                <button class="modal-close" id="closeSignupModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form class="auth-form" id="signupForm">
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" placeholder="Create a password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="signupConfirmPassword">Confirm Password</label>
+                    <input type="password" id="signupConfirmPassword" placeholder="Confirm your password" required>
+                </div>
+                <div class="form-error hidden" id="signupError"></div>
+                <button type="submit" class="btn btn-primary btn-block">Sign Up</button>
+                <p class="form-switch">
+                    Already have an account? <a href="#" id="switchToLogin">Log In</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <p>&copy; 2024 Chilli Care. All rights reserved.</p>
+                </div>
+                <div class="footer-right">
+                    <a href="/about">About</a>
+                    <a href="/">Home</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+</body>
+</html>
