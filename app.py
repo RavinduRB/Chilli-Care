@@ -26,6 +26,18 @@ import bcrypt
 # Load environment variables from .env file
 load_dotenv()
 
+# Import Hugging Face Transformers for local BLIP model
+try:
+    from transformers import BlipProcessor, BlipForConditionalGeneration
+    import torch
+    TRANSFORMERS_AVAILABLE = True
+    logger = logging.getLogger(__name__)
+    logger.info("✓ Transformers library loaded successfully")
+except ImportError as e:
+    TRANSFORMERS_AVAILABLE = False
+    logger = logging.getLogger(__name__)
+    logger.warning(f"⚠ Transformers not available: {e}")
+
 # Configure logging (must be before MongoDB import that uses logger)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -111,16 +123,16 @@ GEMINI_API_KEYS = [
 # Remove empty keys
 GEMINI_API_KEYS = [key for key in GEMINI_API_KEYS if key]
 
-# Configure Hugging Face API as backup
-HUGGINGFACE_API_KEY = os.environ.get('HUGGINGFACE_API_KEY', '')
+# Hugging Face - No API key needed for local model
+HUGGINGFACE_API_KEY = os.environ.get('HUGGINGFACE_API_KEY', '')  # Deprecated - using local model now
 
 if GEMINI_API_KEYS:
     logger.info(f"✓ Configured {len(GEMINI_API_KEYS)} Gemini API key(s)")
 else:
     logger.warning("⚠ No Gemini API keys set")
 
-if HUGGINGFACE_API_KEY:
-    logger.info("✓ Hugging Face API configured as backup")
+# Note: Local BLIP model will be loaded on first use
+logger.info("✓ Local BLIP model configured for backup validation")
 
 # Current API key index for rotation
 current_gemini_key_index = 0
@@ -130,6 +142,43 @@ model = None
 class_names = []
 IMG_HEIGHT = 224
 IMG_WIDTH = 224
+
+# Initialize Local BLIP Model for Image Validation
+blip_processor = None
+blip_model = None
+
+def load_blip_model():
+    """
+    Load local BLIP model for image captioning and validation
+    Uses Salesforce BLIP model stored locally
+    """
+    global blip_processor, blip_model
+    
+    if not TRANSFORMERS_AVAILABLE:
+        logger.warning("⚠ Transformers not available - cannot load BLIP model")
+        return False
+    
+    try:
+        logger.info("📦 Loading local BLIP model...")
+        
+        # Use smaller BLIP model for faster inference
+        model_name = "Salesforce/blip-image-captioning-base"
+        
+        # Load processor and model
+        blip_processor = BlipProcessor.from_pretrained(model_name)
+        blip_model = BlipForConditionalGeneration.from_pretrained(model_name)
+        
+        # Move to CPU (or GPU if available)
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        blip_model.to(device)
+        blip_model.eval()  # Set to evaluation mode
+        
+        logger.info(f"✅ BLIP model loaded successfully on {device}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to load BLIP model: {e}")
+        return False
 
 # Disease information database
 DISEASE_INFO = {
@@ -429,46 +478,50 @@ def load_model_and_classes():
 
 def validate_with_huggingface(image_bytes):
     """
-    Use Hugging Face API as backup validation
-    Free tier with rate limiting
+    Use Local BLIP Model for image validation
+    Fast, offline validation without API calls
     """
+    global blip_processor, blip_model
+    
     try:
-        if not HUGGINGFACE_API_KEY:
-            return None
+        # Load BLIP model if not already loaded
+        if blip_processor is None or blip_model is None:
+            if not load_blip_model():
+                logger.warning("BLIP model not available")
+                return None
         
-        logger.info("🤗 Trying Hugging Face Vision API...")
+        logger.info("🤗 Using local BLIP model for validation...")
         
-        # Use Salesforce BLIP model for image captioning
-        API_URL = "https://router.huggingface.co/models/Salesforce/blip-image-captioning-large"
-        headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
+        # Convert bytes to PIL Image
+        image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
         
-        response = requests.post(API_URL, headers=headers, data=image_bytes, timeout=10)
+        # Prepare image for BLIP model
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        inputs = blip_processor(image, return_tensors="pt").to(device)
         
-        if response.status_code == 200:
-            result = response.json()
-            caption = result[0]['generated_text'].lower() if isinstance(result, list) else result.get('generated_text', '').lower()
-            
-            logger.info(f"HuggingFace caption: {caption}")
-            
-            # Check if caption mentions plant, pepper, chilli, leaf, vegetable
-            plant_keywords = ['plant', 'pepper', 'chili', 'chilli', 'leaf', 'leaves', 'vegetable', 'capsicum', 'green', 'garden']
-            invalid_keywords = ['person', 'people', 'human', 'animal', 'dog', 'cat', 'car', 'building', 'furniture']
-            
-            has_plant = any(keyword in caption for keyword in plant_keywords)
-            has_invalid = any(keyword in caption for keyword in invalid_keywords)
-            
-            if has_invalid:
-                return False, f"Image appears to be: {caption}"
-            elif has_plant:
-                return True, "Image validated (HuggingFace backup)"
-            else:
-                return False, f"Unclear image content: {caption}"
+        # Generate caption
+        with torch.no_grad():
+            out = blip_model.generate(**inputs, max_length=50)
+        
+        caption = blip_processor.decode(out[0], skip_special_tokens=True).lower()
+        logger.info(f"BLIP caption: {caption}")
+        
+        # Check if caption mentions plant, pepper, chilli, leaf, vegetable
+        plant_keywords = ['plant', 'pepper', 'chili', 'chilli', 'leaf', 'leaves', 'vegetable', 'capsicum', 'green', 'garden']
+        invalid_keywords = ['person', 'people', 'human', 'animal', 'dog', 'cat', 'car', 'building', 'furniture']
+        
+        has_plant = any(keyword in caption for keyword in plant_keywords)
+        has_invalid = any(keyword in caption for keyword in invalid_keywords)
+        
+        if has_invalid:
+            return False, f"Image appears to be: {caption}"
+        elif has_plant:
+            return True, "Image validated (Local BLIP model)"
         else:
-            logger.warning(f"HuggingFace API error: {response.status_code}")
-            return None
+            return False, f"Unclear image content: {caption}"
             
     except Exception as e:
-        logger.warning(f"HuggingFace validation failed: {str(e)}")
+        logger.warning(f"Local BLIP validation failed: {str(e)}")
         return None
 
 
@@ -649,7 +702,7 @@ def validate_chilli_image(image_file):
     """
     Multi-tier validation system with automatic fallback:
     1. Try all Gemini API keys (rotate through multiple accounts)
-    2. Try Hugging Face API (free backup service)
+    2. Try Local BLIP Model (fast, offline image validation)
     3. Use local color-based validation (ultimate fallback)
     
     Returns: (is_valid, message)
@@ -752,10 +805,10 @@ Your response:"""
             
             logger.warning("❌ All Gemini API keys exhausted - switching to backup methods")
         
-        # === TIER 2: Try Hugging Face ===
+        # === TIER 2: Try Local BLIP Model ===
         hf_result = validate_with_huggingface(image_bytes)
         if hf_result is not None:
-            logger.info("✅ HuggingFace validation succeeded")
+            logger.info("✅ Local BLIP validation succeeded")
             return hf_result
         
         # === TIER 3: Local validation (ultimate fallback) ===
@@ -890,7 +943,7 @@ def save_prediction_to_mongo(prediction_result, validation_method, validation_me
             'user_ip': user_ip,
             'user_agent': user_agent,
             'model_version': '1.0.0',
-            'timestamp': datetime.utcnow()
+            'timestamp': datetime.now()
         }
         
         # Add user information if logged in

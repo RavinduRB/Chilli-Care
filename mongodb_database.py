@@ -4,10 +4,16 @@ Handles connections, collections, and database operations
 """
 
 import os
+import ssl
 from datetime import datetime
 from pymongo import MongoClient, ASCENDING, DESCENDING
 from pymongo.errors import ConnectionFailure, OperationFailure
 import logging
+import certifi
+
+# OpenSSL 3.x compatibility workaround for Windows
+os.environ['OPENSSL_CONF'] = ''  # Disable OpenSSL config
+os.environ['SSL_CERT_FILE'] = certifi.where()
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +39,19 @@ class MongoDB:
     def connect(self):
         """Establish connection to MongoDB"""
         try:
+            # PyMongo 4.x connection parameters with TLS workaround for Windows
+            connection_params = {
+                'serverSelectionTimeoutMS': 15000,
+                'connectTimeoutMS': 30000,
+                'maxPoolSize': 50,
+                'tls': True,
+                'tlsInsecure': True  # Bypasses all TLS verification (Windows OpenSSL 3.x workaround)
+            }
+            
+            # Try to connect
             self.client = MongoClient(
                 self.connection_uri,
-                serverSelectionTimeoutMS=5000,
-                connectTimeoutMS=10000,
-                maxPoolSize=50
+                **connection_params
             )
             
             # Test connection
@@ -142,8 +156,8 @@ class MongoDB:
         
         try:
             # Add timestamps
-            disease_data['created_at'] = datetime.utcnow()
-            disease_data['updated_at'] = datetime.utcnow()
+            disease_data['created_at'] = datetime.now()
+            disease_data['updated_at'] = datetime.now()
             
             # Upsert (update if exists, insert if not)
             result = self.db.diseases.update_one(
@@ -174,7 +188,7 @@ class MongoDB:
         try:
             # Preserve the name, add updated timestamp
             update_data = disease_data.copy()
-            update_data['updated_at'] = datetime.utcnow()
+            update_data['updated_at'] = datetime.now()
             
             # Remove _id if present (can't update _id)
             update_data.pop('_id', None)
@@ -212,7 +226,7 @@ class MongoDB:
         try:
             # Add timestamp if not present
             if 'timestamp' not in prediction_data:
-                prediction_data['timestamp'] = datetime.utcnow()
+                prediction_data['timestamp'] = datetime.now()
             
             result = self.db.predictions.insert_one(prediction_data)
             logger.info(f"✓ Saved prediction {result.inserted_id}")
@@ -322,7 +336,7 @@ class MongoDB:
         
         try:
             from datetime import timedelta
-            start_date = datetime.utcnow() - timedelta(days=days)
+            start_date = datetime.now() - timedelta(days=days)
             
             pipeline = [
                 {
@@ -366,7 +380,7 @@ class MongoDB:
         
         try:
             from datetime import timedelta
-            start_date = datetime.utcnow() - timedelta(days=days)
+            start_date = datetime.now() - timedelta(days=days)
             
             return self.db.predictions.count_documents({
                 "timestamp": {"$gte": start_date}
@@ -402,7 +416,7 @@ class MongoDB:
                 "email": email,
                 "password": password_hash,
                 "user_type": user_type,
-                "created_at": datetime.utcnow(),
+                "created_at": datetime.now(),
                 "last_login": None
             }
             
@@ -470,7 +484,7 @@ class MongoDB:
         try:
             result = self.db.users.update_one(
                 {"email": email},
-                {"$set": {"last_login": datetime.utcnow()}}
+                {"$set": {"last_login": datetime.now()}}
             )
             return result.modified_count > 0
         except Exception as e:
