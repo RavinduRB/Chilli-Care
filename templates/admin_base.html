@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="{% block meta_description %}Admin Dashboard - Chilli Care{% endblock %}">
+    <meta name="theme-color" content="#1a4d2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>{% block title %}Admin Dashboard - Chilli Care{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='images/Site icon.png') }}" type="image/png">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="admin-dashboard-page">
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='images/Chilli Care Logo.png') }}" alt="Chilli Care Logo" class="sidebar-logo">
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item {% if active_section == 'dashboard' %}active{% endif %}" data-section="dashboard">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item {% if active_section == 'users' %}active{% endif %}" data-section="users">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="#" class="nav-item {% if active_section == 'diseases' %}active{% endif %}" data-section="diseases">
+                    <i class="fas fa-leaf"></i>
+                    <span>Disease Management</span>
+                </a>
+                <a href="#" class="nav-item {% if active_section == 'predictions' %}active{% endif %}" data-section="predictions">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Prediction History</span>
+                </a>
+                <a href="#" class="nav-item {% if active_section == 'mapping' %}active{% endif %}" data-section="mapping">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>District Mapping</span>
+                </a>
+                <a href="#" class="nav-item {% if active_section == 'analytics' %}active{% endif %}" data-section="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">{% block admin_name %}Chilli Care{% endblock %}</div>
+                        <div class="user-role">Admin</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

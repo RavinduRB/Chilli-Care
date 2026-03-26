@@ -1,125 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AI-powered Chilli Disease Detection System for precision agriculture">
-    <title>Chilli Care</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" href="{{ url_for('static', filename='images/Site icon.png') }}" type="image/png">
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-wrapper">
-                <div class="logo">
-                    <img src="{{ url_for('static', filename='images/Chilli Care Logo.png') }}" alt="Chilli Care Logo" class="logo-image">
-                </div>
-                
-                <!-- Desktop Navigation -->
-                <ul class="nav-menu desktop-menu">
-                    <li><a href="/" class="active">Home</a></li>
-                    <li><a href="/analytics">Analytics</a></li>
-                    <li><a href="/about">About</a></li>
-                </ul>
-                
-                <!-- Desktop Authentication Section -->
-                <div class="auth-section desktop-auth">
-                    <!-- Guest profile (not logged in) -->
-                    <div class="profile-section" id="guestProfileSection">
-                        <button class="profile-btn" id="guestProfileBtn">
-                            <i class="fas fa-user-circle"></i>
-                        </button>
-                        <div class="profile-dropdown hidden" id="guestProfileDropdown">
-                            <button class="dropdown-item" id="dropdownLoginBtn">
-                                <i class="fas fa-sign-in-alt"></i> Log In
-                            </button>
-                            <button class="dropdown-item" id="dropdownSignupBtn">
-                                <i class="fas fa-user-plus"></i> Sign Up
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Logged in profile -->
-                    <div class="profile-section hidden" id="profileSection">
-                        <button class="profile-btn" id="profileBtn">
-                            <i class="fas fa-user-circle"></i>
-                            <span class="user-email-text" id="userEmail"></span>
-                        </button>
-                        <div class="profile-dropdown hidden" id="profileDropdown">
-                            <div class="profile-info">
-                                <i class="fas fa-user"></i>
-                                <span id="userEmailDropdown"></span>
-                            </div>
-                            <div class="dropdown-divider"></div>
-                            <a href="/admin/dashboard" class="dropdown-item admin-only hidden" id="dashboardBtn">
-                                <i class="fas fa-tachometer-alt"></i> Dashboard
-                            </a>
-                            <button class="dropdown-item" id="logoutBtn">
-                                <i class="fas fa-sign-out-alt"></i> Logout
-                            </button>
-                            <button class="dropdown-item danger" id="deleteAccountBtn">
-                                <i class="fas fa-trash"></i> Delete Account
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Hamburger Menu Button -->
-                <button class="mobile-menu-toggle" id="mobileMenuToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </div>
-            
-            <!-- Mobile Menu -->
-            <div class="mobile-menu" id="mobileMenu">
-                <ul class="mobile-nav-list">
-                    <li><a href="/" class="mobile-nav-item"><i class="fas fa-home"></i> Home</a></li>
-                    <li><a href="/analytics" class="mobile-nav-item"><i class="fas fa-chart-line"></i> Analytics</a></li>
-                    <li><a href="/about" class="mobile-nav-item"><i class="fas fa-info-circle"></i> About</a></li>
-                    <li class="mobile-divider"></li>
-                    
-                    <!-- Mobile Authentication -->
-                    <div class="mobile-auth-section">
-                        <!-- Not logged in buttons -->
-                        <div class="mobile-auth-buttons" id="mobileAuthButtons">
-                            <li><button class="mobile-auth-btn btn-login" id="mobileLoginBtn">
-                                <i class="fas fa-sign-in-alt"></i> Log In
-                            </button></li>
-                            <li><button class="mobile-auth-btn btn-signup" id="mobileSignupBtn">
-                                <i class="fas fa-user-plus"></i> Sign Up
-                            </button></li>
-                        </div>
-                        
-                        <!-- Logged in profile -->
-                        <div class="mobile-profile-section hidden" id="mobileProfileSection">
-                            <li class="mobile-profile-info">
-                                <i class="fas fa-user-circle"></i>
-                                <span id="mobileUserEmail"></span>
-                            </li>
-                            <li><button class="mobile-nav-item" id="mobileLogoutBtn">
-                                <i class="fas fa-sign-out-alt"></i> Logout
-                            </button></li>
-                            <li><button class="mobile-nav-item danger" id="mobileDeleteAccountBtn">
-                                <i class="fas fa-trash"></i> Delete Account
-                            </button></li>
-                        </div>
-                    </div>
-                </ul>
-            </div>
-        </div>
-    </nav>
+{% extends "base.html" %}
+
+{% set active_page = 'home' %}
+
+{% block meta %}
+<meta name="description" content="AI-powered Chilli Disease Detection System for precision agriculture">
+{% endblock %}
+
+{% block title %}Chilli Care{% endblock %}
+
+{% block content %}
 
     <!-- Hero Section -->
     <section class="hero">
@@ -353,54 +242,6 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-col">
-                    <div class="footer-logo">
-                            <img src="{{ url_for('static', filename='images/Chilli Care Logo.png') }}" alt="Chilli Care Logo" class="logo-image">
-                        <!--<span class="logo-text">ChilliDoc AI</span> -->
-                    </div>
-                    <p>AI-powered chilli disease detection for precision agriculture and sustainable farming.</p>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-linkedin"></i></a>
-                        <a href="#"><i class="fab fa-github"></i></a>
-                    </div>
-                </div>
-                <div class="footer-col">
-                    <h4>Quick Links</h4>
-                    <ul>
-                        <li><a href="/">Home</a></li>
-                        <li><a href="/about.html">About</a></li>
-                        <li><a href="#">Contact</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Resources</h4>
-                    <ul>
-                        <li><a href="#">User Guide</a></li>
-                        <li><a href="#">Disease Database</a></li>
-                        <li><a href="#">Research Papers</a></li>
-                        <li><a href="#">FAQs</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Legal</h4>
-                    <ul>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Terms of Service</a></li>
-                        <li><a href="#">Cookie Policy</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 Chilli Care. All rights reserved. Built with for farmers worldwide.</p>
-            </div>
-        </div>
-    </footer>
-
     <!-- Farmer Support Chatbot -->
     <!--<button class="chatbot-toggle" id="chatbotToggle" title="Chat with Agricultural Expert">
         <i class="fas fa-comments"></i>
@@ -579,7 +420,9 @@
             </form>
         </div>
     </div>
+{% endblock %}
 
+{% block extra_js %}
     <!-- Custom JavaScript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     
@@ -587,5 +430,4 @@
     <script>
     (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="CgkmkFtifEpgT2NTn4BfP";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
     </script>
-</body>
-</html>
+{% endblock %}

@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% set active_page = 'contact' %}
+
+{% block title %}Contact Us | Chilli Care{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Get in touch with Chilli Care. We're here to help farmers with plant disease detection and agricultural support.">
+{% endblock %}
+
+{% block content %}
+    <!-- Contact Hero Section -->
+    <section class="contact-hero" style="padding: 6rem 0 4rem; background: var(--gradient-hero); color: white; text-align: center;">
+        <div class="container">
+            <h1 style="font-size: 3rem; font-weight: 700; margin-bottom: 1.5rem;">Get In Touch</h1>
+            <p style="font-size: 1.25rem; max-width: 800px; margin: 0 auto; opacity: 0.9;">
+                Have questions about our AI-powered disease detection system? We'd love to hear from you!
+            </p>
+        </div>
+    </section>
+
+    <!-- Contact Content Section -->
+    <section style="padding: 5rem 0; background: white;">
+        <div class="container" style="max-width: 1200px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;">
+                
+                <!-- Contact Information -->
+                <div>
+                    <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 2rem; color: var(--gray-900);">Contact Information</h2>
+                    <p style="font-size: 1.125rem; line-height: 1.8; color: var(--gray-700); margin-bottom: 3rem;">
+                        Our team is dedicated to helping farmers and agricultural professionals make the most of AI-powered disease detection. 
+                        Reach out to us for support, partnerships, or general inquiries.
+                    </p>
+
+                    <div style="display: flex; flex-direction: column; gap: 2rem;">
+                        <!-- Email -->
+                        <div style="display: flex; align-items: start; gap: 1.5rem;">
+                            <div style="width: 60px; height: 60px; background: var(--primary-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i class="fas fa-envelope" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--gray-900);">Email</h3>
+                                <p style="color: var(--gray-600); margin: 0;">support@chillicare.com</p>
+                                <p style="color: var(--gray-600); margin: 0;">info@chillicare.com</p>
+                            </div>
+                        </div>
+
+                        <!-- Phone -->
+                        <div style="display: flex; align-items: start; gap: 1.5rem;">
+                            <div style="width: 60px; height: 60px; background: var(--primary-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i class="fas fa-phone" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--gray-900);">Phone</h3>
+                                <p style="color: var(--gray-600); margin: 0;">Support: +1 (555) 123-4567</p>
+                                <p style="color: var(--gray-600); margin: 0;">Business: +1 (555) 987-6543</p>
+                            </div>
+                        </div>
+
+                        <!-- Location -->
+                        <div style="display: flex; align-items: start; gap: 1.5rem;">
+                            <div style="width: 60px; height: 60px; background: var(--primary-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i class="fas fa-map-marker-alt" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--gray-900);">Office</h3>
+                                <p style="color: var(--gray-600); margin: 0;">123 Agriculture Boulevard</p>
+                                <p style="color: var(--gray-600); margin: 0;">Tech City, TC 12345</p>
+                            </div>
+                        </div>
+
+                        <!-- Working Hours -->
+                        <div style="display: flex; align-items: start; gap: 1.5rem;">
+                            <div style="width: 60px; height: 60px; background: var(--primary-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i class="fas fa-clock" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--gray-900);">Working Hours</h3>
+                                <p style="color: var(--gray-600); margin: 0;">Monday - Friday: 9:00 AM - 6:00 PM</p>
+                                <p style="color: var(--gray-600); margin: 0;">Saturday: 10:00 AM - 4:00 PM</p>
+                                <p style="color: var(--gray-600); margin: 0;">Sunday: Closed</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Social Media -->
+                    <div style="margin-top: 3rem;">
+                        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--gray-900);">Follow Us</h3>
+                        <div style="display: flex; gap: 1rem;">
+                            <a href="#" style="width: 45px; height: 45px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.2s;">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="#" style="width: 45px; height: 45px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.2s;">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" style="width: 45px; height: 45px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.2s;">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                            <a href="#" style="width: 45px; height: 45px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.2s;">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Form -->
+                <div style="background: var(--gray-50); padding: 3rem; border-radius: var(--radius-xl); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+                    <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--gray-900);">Send us a Message</h2>
+                    <form id="contactForm" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        <!-- Name -->
+                        <div>
+                            <label for="contactName" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--gray-700);">
+                                <i class="fas fa-user" style="margin-right: 0.5rem;"></i>Your Name *
+                            </label>
+                            <input 
+                                type="text" 
+                                id="contactName" 
+                                name="name" 
+                                required 
+                                placeholder="John Doe"
+                                style="width: 100%; padding: 0.875rem 1rem; border: 2px solid var(--gray-200); border-radius: var(--radius-md); font-size: 1rem; transition: border-color 0.2s;"
+                            >
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label for="contactEmail" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--gray-700);">
+                                <i class="fas fa-envelope" style="margin-right: 0.5rem;"></i>Email Address *
+                            </label>
+                            <input 
+                                type="email" 
+                                id="contactEmail" 
+                                name="email" 
+                                required 
+                                placeholder="john@example.com"
+                                style="width: 100%; padding: 0.875rem 1rem; border: 2px solid var(--gray-200); border-radius: var(--radius-md); font-size: 1rem; transition: border-color 0.2s;"
+                            >
+                        </div>
+
+                        <!-- Subject -->
+                        <div>
+                            <label for="contactSubject" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--gray-700);">
+                                <i class="fas fa-tag" style="margin-right: 0.5rem;"></i>Subject *
+                            </label>
+                            <select 
+                                id="contactSubject" 
+                                name="subject" 
+                                required
+                                style="width: 100%; padding: 0.875rem 1rem; border: 2px solid var(--gray-200); border-radius: var(--radius-md); font-size: 1rem; background: white; transition: border-color 0.2s;"
+                            >
+                                <option value="">Select a subject</option>
+                                <option value="support">Technical Support</option>
+                                <option value="feedback">Feedback</option>
+                                <option value="partnership">Partnership Inquiry</option>
+                                <option value="general">General Question</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Message -->
+                        <div>
+                            <label for="contactMessage" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--gray-700);">
+                                <i class="fas fa-comment" style="margin-right: 0.5rem;"></i>Message *
+                            </label>
+                            <textarea 
+                                id="contactMessage" 
+                                name="message" 
+                                required 
+                                rows="6"
+                                placeholder="Tell us how we can help you..."
+                                style="width: 100%; padding: 0.875rem 1rem; border: 2px solid var(--gray-200); border-radius: var(--radius-md); font-size: 1rem; resize: vertical; font-family: inherit; transition: border-color 0.2s;"
+                            ></textarea>
+                        </div>
+
+                        <!-- Error/Success Message -->
+                        <div id="contactFormMessage" class="hidden" style="padding: 1rem; border-radius: var(--radius-md); font-size: 0.875rem;"></div>
+
+                        <!-- Submit Button -->
+                        <button 
+                            type="submit" 
+                            class="btn btn-primary btn-large"
+                            style="width: 100%; padding: 1rem; background: var(--primary-color); color: white; border: none; border-radius: var(--radius-md); font-size: 1.125rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: background-color 0.2s;"
+                        >
+                            <i class="fas fa-paper-plane"></i> Send Message
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section style="padding: 5rem 0; background: var(--gray-50);">
+        <div class="container" style="max-width: 900px;">
+            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 3rem; color: var(--gray-900); text-align: center;">Frequently Asked Questions</h2>
+            
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <div style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--gray-900);">
+                        <i class="fas fa-question-circle" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                        How accurate is the disease detection?
+                    </h3>
+                    <p style="color: var(--gray-600); margin: 0; line-height: 1.7;">
+                        Our AI model achieves 95%+ accuracy in detecting chilli plant diseases, trained on thousands of real-world images and validated through extensive testing.
+                    </p>
+                </div>
+
+                <div style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--gray-900);">
+                        <i class="fas fa-question-circle" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                        Is the service free to use?
+                    </h3>
+                    <p style="color: var(--gray-600); margin: 0; line-height: 1.7;">
+                        Yes! Chilli Care is completely free for farmers and agricultural enthusiasts. Our mission is to support sustainable farming worldwide.
+                    </p>
+                </div>
+
+                <div style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--gray-900);">
+                        <i class="fas fa-question-circle" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                        Can I use this on my mobile device?
+                    </h3>
+                    <p style="color: var(--gray-600); margin: 0; line-height: 1.7;">
+                        Absolutely! Our platform is fully responsive and works seamlessly on smartphones, tablets, and desktops. You can even use your phone's camera to capture images directly.
+                    </p>
+                </div>
+
+                <div style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--gray-900);">
+                        <i class="fas fa-question-circle" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                        What should I do after getting a diagnosis?
+                    </h3>
+                    <p style="color: var(--gray-600); margin: 0; line-height: 1.7;">
+                        Follow the treatment recommendations provided with your diagnosis. We offer both conventional and organic treatment options. For severe cases, consult with a local agricultural expert.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div class="modal-overlay hidden" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Welcome Back</h2>
+                <button class="modal-close" id="closeLoginModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="loginEmail">
+                        <i class="fas fa-envelope"></i> Email Address
+                    </label>
+                    <input type="email" id="loginEmail" name="email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="loginPassword" name="password" required placeholder="Enter your password">
+                </div>
+                <div class="form-error hidden" id="loginError"></div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class="fas fa-sign-in-alt"></i> Log In
+                </button>
+                <p class="auth-switch">
+                    Don't have an account? <a href="#" id="switchToSignup">Sign up</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal-overlay hidden" id="signupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Account</h2>
+                <button class="modal-close" id="closeSignupModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="signupForm" class="auth-form">
+                <div class="form-group">
+                    <label for="signupEmail">
+                        <i class="fas fa-envelope"></i> Email Address
+                    </label>
+                    <input type="email" id="signupEmail" name="email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="signupPassword" name="password" required placeholder="At least 6 characters">
+                </div>
+                <div class="form-group">
+                    <label for="signupPasswordConfirm">
+                        <i class="fas fa-lock"></i> Confirm Password
+                    </label>
+                    <input type="password" id="signupPasswordConfirm" name="passwordConfirm" required placeholder="Re-enter password">
+                </div>
+                <div class="form-error hidden" id="signupError"></div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+                <p class="auth-switch">
+                    Already have an account? <a href="#" id="switchToLogin">Log in</a>
+                </p>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Contact Form Handler -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const contactForm = document.getElementById('contactForm');
+        const messageDiv = document.getElementById('contactFormMessage');
+        
+        // Focus styling for form inputs
+        const inputs = contactForm.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.borderColor = 'var(--primary-color)';
+            });
+            input.addEventListener('blur', function() {
+                this.style.borderColor = 'var(--gray-200)';
+            });
+        });
+        
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('contactName').value,
+                email: document.getElementById('contactEmail').value,
+                subject: document.getElementById('contactSubject').value,
+                message: document.getElementById('contactMessage').value
+            };
+            
+            // Show loading state
+            const submitBtn = contactForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            submitBtn.disabled = true;
+            
+            // Simulate API call (replace with actual API endpoint)
+            setTimeout(() => {
+                // Success
+                messageDiv.className = '';
+                messageDiv.style.background = 'var(--success-light)';
+                messageDiv.style.color = 'var(--success-color)';
+                messageDiv.style.border = '1px solid var(--success-color)';
+                messageDiv.innerHTML = '<i class="fas fa-check-circle"></i> Thank you! Your message has been sent successfully. We\'ll get back to you soon.';
+                
+                // Reset form
+                contactForm.reset();
+                
+                // Reset button
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                
+                // Hide message after 5 seconds
+                setTimeout(() => {
+                    messageDiv.className = 'hidden';
+                }, 5000);
+            }, 1500);
+        });
+        
+        // Social media hover effects
+        const socialLinks = document.querySelectorAll('a[href="#"]');
+        socialLinks.forEach(link => {
+            link.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1)';
+            });
+            link.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+    });
+    </script>
+    
+    <!-- Responsive CSS -->
+    <style>
+    @media (max-width: 768px) {
+        .contact-hero h1 {
+            font-size: 2rem !important;
+        }
+        .contact-hero p {
+            font-size: 1rem !important;
+        }
+        [style*="grid-template-columns: 1fr 1fr"] {
+            grid-template-columns: 1fr !important;
+            gap: 2rem !important;
+        }
+    }
+    </style>
+{% endblock %}
