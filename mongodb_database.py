@@ -288,6 +288,111 @@ class MongoDB:
             logger.error(f"Error counting predictions: {e}")
             return 0
     
+    def count_unique_locations(self):
+        """
+        Count unique locations (city + region combinations) from predictions
+        This gives an accurate count of different places where farmers are using the system
+        
+        Returns:
+            Count of unique city-region combinations
+        """
+        if not self.connected:
+            return 0
+        
+        try:
+            # Use aggregation to get distinct city-region combinations
+            pipeline = [
+                {
+                    "$match": {
+                        "location": {"$exists": True},
+                        "user_type": {"$ne": "admin"}  # Exclude admin predictions
+                    }
+                },
+                {
+                    "$group": {
+                        "_id": {
+                            "city": "$location.city",
+                            "region": "$location.region",
+                            "country": "$location.country"
+                        }
+                    }
+                },
+                {
+                    "$match": {
+                        "_id.city": {"$ne": "Unknown", "$ne": "Local", "$ne": None}
+                    }
+                },
+                {
+                    "$count": "total"
+                }
+            ]
+            
+            result = list(self.db.predictions.aggregate(pipeline))
+            
+            if result and len(result) > 0:
+                return result[0]['total']
+            return 0
+        except Exception as e:
+            logger.error(f"Error counting unique locations: {e}")
+            return 0
+    
+    def get_location_statistics(self):
+        """
+        Get statistics on locations where predictions are being made
+        
+        Returns:
+            List of locations with prediction counts
+        """
+        if not self.connected:
+            return []
+        
+        try:
+            pipeline = [
+                {
+                    "$match": {
+                        "location": {"$exists": True},
+                        "user_type": {"$ne": "admin"}
+                    }
+                },
+                {
+                    "$group": {
+                        "_id": {
+                            "city": "$location.city",
+                            "region": "$location.region",
+                            "country": "$location.country"
+                        },
+                        "count": {"$sum": 1}
+                    }
+                },
+                {
+                    "$match": {
+                        "_id.city": {"$ne": "Unknown", "$ne": "Local", "$ne": None}
+                    }
+                },
+                {
+                    "$sort": {"count": -1}
+                },
+                {
+                    "$limit": 20
+                }
+            ]
+            
+            results = list(self.db.predictions.aggregate(pipeline))
+            
+            formatted_results = []
+            for result in results:
+                formatted_results.append({
+                    'city': result['_id'].get('city', 'Unknown'),
+                    'region': result['_id'].get('region', 'Unknown'),
+                    'country': result['_id'].get('country', 'Unknown'),
+                    'prediction_count': result['count']
+                })
+            
+            return formatted_results
+        except Exception as e:
+            logger.error(f"Error fetching location statistics: {e}")
+            return []
+    
     # ==================== ANALYTICS OPERATIONS ====================
     
     def get_disease_statistics(self):
@@ -417,7 +522,8 @@ class MongoDB:
                 "password": password_hash,
                 "user_type": user_type,
                 "created_at": datetime.now(),
-                "last_login": None
+                "last_login": None,
+                "is_logged_in": False
             }
             
             result = self.db.users.insert_one(user_data)
@@ -470,7 +576,7 @@ class MongoDB:
     
     def update_last_login(self, email):
         """
-        Update user's last login timestamp
+        Update user's last login timestamp and set logged in status
         
         Args:
             email: User email address
@@ -484,16 +590,19 @@ class MongoDB:
         try:
             result = self.db.users.update_one(
                 {"email": email},
-                {"$set": {"last_login": datetime.now()}}
+                {"$set": {
+                    "last_login": datetime.now(),
+                    "is_logged_in": True
+                }}
             )
             return result.modified_count > 0
         except Exception as e:
             logger.error(f"Error updating last login: {e}")
             return False
     
-    def delete_user(self, email):
+    def update_logout_status(self, email):
         """
-        Delete a user account
+        Update user's logout status
         
         Args:
             email: User email address
@@ -505,6 +614,34 @@ class MongoDB:
             return False
         
         try:
+            result = self.db.users.update_one(
+                {"email": email},
+                {"$set": {"is_logged_in": False}}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            logger.error(f"Error updating logout status: {e}")
+            return False
+    
+    def delete_user(self, email):
+        """
+        Delete a user account and all associated predictions
+        
+        Args:
+            email: User email address
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.connected:
+            return False
+        
+        try:
+            # First, delete all predictions associated with this user
+            predictions_result = self.db.predictions.delete_many({"user_email": email})
+            logger.info(f"✓ Deleted {predictions_result.deleted_count} predictions for user: {email}")
+            
+            # Then delete the user account
             result = self.db.users.delete_one({"email": email})
             if result.deleted_count > 0:
                 logger.info(f"✓ Deleted user: {email}")

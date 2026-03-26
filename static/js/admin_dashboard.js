@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Stats Elements
     const totalFarmersEl = document.getElementById('totalFarmers');
-    const totalDiseasesEl = document.getElementById('totalDiseases');
+    const totalPredictionsEl = document.getElementById('totalPredictions');
     const totalPlacesEl = document.getElementById('totalPlaces');
     const activityListEl = document.getElementById('activityList');
     
@@ -121,19 +121,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateStatistics(stats) {
-        // Update total farmers
+        // Update total farmers (only farmers, not admin) - no animation, just direct value
         if (totalFarmersEl) {
-            animateNumber(totalFarmersEl, stats.total_farmers || 0);
+            totalFarmersEl.textContent = stats.total_farmers || 0;
         }
         
-        // Update total diseases (count unique diseases from disease_stats)
-        if (totalDiseasesEl) {
-            totalDiseasesEl.textContent = '12'; // Fixed value from design
+        // Update total predictions (all predictions made by farmers)
+        if (totalPredictionsEl) {
+            totalPredictionsEl.textContent = stats.total_predictions || 0;
         }
         
-        // Update total places (placeholder)
+        // Update total places (unique locations based on IP addresses)
         if (totalPlacesEl) {
-            totalPlacesEl.textContent = '9'; // Fixed value from design
+            totalPlacesEl.textContent = stats.unique_locations || 0;
         }
     }
     
@@ -341,6 +341,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 pageTitle.textContent = sectionTitles[sectionName];
             }
             
+            // Load data for specific sections when switched
+            if (sectionName === 'users' && allUsers.length === 0) {
+                // Load users for the first time
+                initUserManagement();
+            } else if (sectionName === 'users') {
+                // Refresh users to get latest data
+                loadUsers();
+            }
+            
             // Close mobile sidebar if open
             if (window.innerWidth <= 1024) {
                 sidebar.classList.remove('active');
@@ -399,6 +408,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Refresh dashboard data
             await loadDashboardData(true);
             
+            // Refresh user table if user management section is active
+            const usersSection = document.getElementById('usersSection');
+            if (usersSection && usersSection.classList.contains('active')) {
+                await loadUsers();
+            }
+            
             // Remove spinning animation after a short delay
             setTimeout(() => {
                 this.classList.remove('spinning');
@@ -421,6 +436,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Set up interval for automatic updates
         updateInterval = setInterval(() => {
             loadDashboardData(true); // Silent update
+            
+            // Also refresh user table if user management section is active
+            const usersSection = document.getElementById('usersSection');
+            if (usersSection && usersSection.classList.contains('active')) {
+                loadUsers();
+            }
         }, UPDATE_INTERVAL);
         
         console.log('Real-time updates started (refreshing every 30 seconds)');
@@ -436,8 +457,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function updateLastRefreshTime() {
         const updateIndicator = document.querySelector('.update-indicator');
-        if (updateIndicator && lastUpdateTime) {
-            const timeAgo = formatTimeAgo(lastUpdateTime.toISOString());
+        if (updateIndicator) {
+            const now = new Date();
+            const timeAgo = lastUpdateTime ? formatTimeAgo(lastUpdateTime.toISOString()) : 'just now';
             const timeText = updateIndicator.querySelector('.update-time');
             if (timeText) {
                 timeText.textContent = `Updated ${timeAgo}`;
@@ -457,6 +479,12 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             startRealTimeUpdates();
             loadDashboardData(true); // Refresh immediately when page becomes visible
+            
+            // Also refresh user table if user management section is active
+            const usersSection = document.getElementById('usersSection');
+            if (usersSection && usersSection.classList.contains('active')) {
+                loadUsers();
+            }
         }
     });
     
@@ -544,6 +572,10 @@ document.addEventListener('DOMContentLoaded', function() {
             allUsers = data.users || [];
             filteredUsers = [...allUsers];
             
+            
+            // Update the last refresh time indicator
+            lastUpdateTime = new Date();
+            updateLastRefreshTime();
             renderUserTable();
         } catch (error) {
             console.error('Error loading users:', error);
@@ -581,9 +613,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const userType = user.user_type || 'Farmer';
                 const email = user.email || 'N/A';
                 const lastLogin = user.last_login ? formatDate(user.last_login) : 'Never';
-                const isOnline = isUserOnline(user.last_login);
-                const statusClass = isOnline ? 'status-online' : 'status-offline';
-                const statusText = isOnline ? 'Log In' : 'Log Out';
+                // Use actual login status from database
+                const isLoggedIn = user.is_logged_in === true;
+                const statusClass = isLoggedIn ? 'status-online' : 'status-offline';
+                const statusText = isLoggedIn ? 'Login' : 'Logout';
                 
                 return `
                     <tr>
@@ -691,12 +724,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                  user.email.toLowerCase().includes(searchTerm) ||
                                  user.user_type.toLowerCase().includes(searchTerm);
             
-            // Status filter
+            // Status filter - use actual login status
             let matchesStatus = true;
             if (statusValue === 'online') {
-                matchesStatus = isUserOnline(user.last_login);
+                matchesStatus = user.is_logged_in === true;
             } else if (statusValue === 'offline') {
-                matchesStatus = !isUserOnline(user.last_login);
+                matchesStatus = user.is_logged_in !== true;
             }
             
             return matchesSearch && matchesStatus;

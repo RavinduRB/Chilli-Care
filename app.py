@@ -22,9 +22,13 @@ from google.genai import types
 from dotenv import load_dotenv
 import requests
 import bcrypt
+from functools import lru_cache
 
 # Load environment variables from .env file
 load_dotenv()
+
+# Location cache to avoid repeated API calls
+location_cache = {}
 
 # Import Hugging Face Transformers for local BLIP model
 try:
@@ -136,6 +140,103 @@ logger.info("✓ Local BLIP model configured for backup validation")
 
 # Current API key index for rotation
 current_gemini_key_index = 0
+
+# Helper function to get real client IP (handles proxies/load balancers)
+def get_client_ip():
+    """
+    Get the real client IP address, considering proxy headers
+    
+    Returns:
+        Client IP address as string
+    """
+    # Check if behind a proxy (X-Forwarded-For header)
+    if request.headers.get('X-Forwarded-For'):
+        # X-Forwarded-For can contain multiple IPs: "client, proxy1, proxy2"
+        # The first one is the real client IP
+        ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
+    elif request.headers.get('X-Real-IP'):
+        # Some proxies use X-Real-IP header
+        ip = request.headers.get('X-Real-IP')
+    else:
+        # Direct connection (no proxy)
+        ip = request.remote_addr
+    
+    return ip
+
+# IP Geolocation function using ip-api.com (45 requests/minute, no API key)
+def get_location_from_ip(ip_address):
+    """
+    Get location from IP address using ip-api.com
+    Free tier: 45 requests/minute
+    
+    Args:
+        ip_address: IP address to lookup
+        
+    Returns:
+        Dict with location info or None
+    """
+    try:
+        # Handle local/localhost IPs
+        if ip_address in ['127.0.0.1', 'localhost', '::1', None, '']:
+            return {
+                'city': 'Local',
+                'region': 'Local',
+                'country': 'Local'
+            }
+        
+        # Handle private IP ranges (RFC 1918) - can't be geolocated
+        if ip_address:
+            # Check if private IP
+            if (ip_address.startswith('192.168.') or 
+                ip_address.startswith('10.') or 
+                ip_address.startswith('172.16.') or
+                ip_address.startswith('172.17.') or
+                ip_address.startswith('172.18.') or
+                ip_address.startswith('172.19.') or
+                ip_address.startswith('172.2') or
+                ip_address.startswith('172.30.') or
+                ip_address.startswith('172.31.')):
+                return {
+                    'city': 'Private Network',
+                    'region': 'Private Network',
+                    'country': 'Private Network'
+                }
+        
+        # Check cache first
+        if ip_address in location_cache:
+            return location_cache[ip_address]
+        
+        # Query ip-api.com
+        response = requests.get(
+            f'http://ip-api.com/json/{ip_address}',
+            params={'fields': 'status,country,regionName,city,lat,lon'},
+            timeout=3
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('status') == 'success':
+                location = {
+                    'city': data.get('city', 'Unknown'),
+                    'region': data.get('regionName', 'Unknown'),
+                    'country': data.get('country', 'Unknown'),
+                    'latitude': data.get('lat'),
+                    'longitude': data.get('lon')
+                }
+                # Cache the result
+                location_cache[ip_address] = location
+                return location
+    except Exception as e:
+        logger.warning(f"Error getting location for {ip_address}: {e}")
+    
+    # Return default if lookup fails
+    default_location = {
+        'city': 'Unknown',
+        'region': 'Unknown',
+        'country': 'Unknown'
+    }
+    location_cache[ip_address] = default_location
+    return default_location
 
 # Global variables for model and settings
 model = None
@@ -932,6 +1033,9 @@ def save_prediction_to_mongo(prediction_result, validation_method, validation_me
         return None
     
     try:
+        # Get location from IP address
+        location = get_location_from_ip(user_ip)
+        
         prediction_data = {
             'image_filename': image_filename,
             'predicted_disease': prediction_result['predicted_class'],
@@ -942,6 +1046,7 @@ def save_prediction_to_mongo(prediction_result, validation_method, validation_me
             'validation_message': validation_message,
             'user_ip': user_ip,
             'user_agent': user_agent,
+            'location': location,
             'model_version': '1.0.0',
             'timestamp': datetime.now()
         }
@@ -1018,6 +1123,9 @@ def signup():
         
         if user_id:
             try:
+                # Update last login and set logged in status
+                mongodb.update_last_login(email)
+                
                 # Create user object and login
                 user = User(user_id, email, 'farmer')
                 session.permanent = True
@@ -1134,6 +1242,10 @@ def logout():
     """User logout endpoint"""
     try:
         if current_user.is_authenticated:
+            # Update logout status in database
+            if mongodb and mongodb.connected:
+                mongodb.update_logout_status(current_user.email)
+            
             logout_user()
             return jsonify({
                 'success': True,
@@ -1279,8 +1391,8 @@ def api_predict():
         disease_name = prediction_result['predicted_class']
         disease_data = get_disease_info_from_db(disease_name)
         
-        # Save prediction to MongoDB
-        user_ip = request.remote_addr
+        # Save prediction to MongoDB (capture real client IP)
+        user_ip = get_client_ip()
         user_agent = request.headers.get('User-Agent', '')[:500]
         prediction_id = save_prediction_to_mongo(
             prediction_result,
@@ -1687,6 +1799,7 @@ def get_admin_dashboard():
         total_users = mongodb.count_users()
         total_farmers = mongodb.count_users(user_type='farmer')
         total_predictions = mongodb.count_predictions()
+        unique_locations = mongodb.count_unique_locations()
         recent_predictions = mongodb.get_recent_predictions_count(days=7)
         
         # Get disease statistics
@@ -1723,6 +1836,7 @@ def get_admin_dashboard():
                 'total_users': total_users,
                 'total_farmers': total_farmers,
                 'total_predictions': total_predictions,
+                'unique_locations': unique_locations,
                 'recent_predictions_7d': recent_predictions
             },
             'disease_stats': formatted_disease_stats,
@@ -1771,7 +1885,8 @@ def get_admin_users():
                 'email': user['email'],
                 'user_type': user['user_type'],
                 'created_at': user['created_at'].isoformat() if user.get('created_at') else None,
-                'last_login': user['last_login'].isoformat() if user.get('last_login') else None
+                'last_login': user['last_login'].isoformat() if user.get('last_login') else None,
+                'is_logged_in': user.get('is_logged_in', False)
             })
         
         return jsonify({
@@ -2026,6 +2141,40 @@ def update_admin_disease(disease_name):
         
     except Exception as e:
         logger.error(f"Error updating disease: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/admin/locations', methods=['GET'])
+@login_required
+def get_location_statistics():
+    """Get detailed location statistics (admin only)"""
+    if current_user.user_type != 'admin':
+        return jsonify({
+            'success': False,
+            'error': 'Unauthorized - Admin access required'
+        }), 403
+    
+    if not (mongodb and mongodb.connected):
+        return jsonify({
+            'success': False,
+            'error': 'MongoDB not configured'
+        }), 503
+    
+    try:
+        # Get location statistics from database
+        locations = mongodb.get_location_statistics()
+        
+        return jsonify({
+            'success': True,
+            'total_locations': len(locations),
+            'locations': locations
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching location statistics: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
