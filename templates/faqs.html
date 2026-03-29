@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+
+{% set active_page = 'faqs' %}
+
+{% block title %}FAQs | Chilli Care{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Frequently Asked Questions about Chilli Care - AI-powered chilli disease detection system.">
+{% endblock %}
+
+{% block content %}
+    <!-- FAQs Hero Section -->
+    <section class="faqs-hero" style="padding: 6rem 0 4rem; background: var(--gradient-hero); color: white; text-align: center;">
+        <div class="container">
+            <h1 style="font-size: 3rem; font-weight: 700; margin-bottom: 1.5rem;">Frequently Asked Questions</h1>
+            <p style="font-size: 1.25rem; max-width: 800px; margin: 0 auto; opacity: 0.9;">
+                Find answers to common questions about our AI-powered disease detection system
+            </p>
+        </div>
+    </section>
+
+    <!-- FAQs Content Section -->
+    <section style="padding: 5rem 0; background: white;">
+        <div class="container" style="max-width: 900px;">
+            
+            <!-- General Questions -->
+            <div style="margin-bottom: 4rem;">
+                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 2rem; color: var(--gray-900); border-left: 4px solid var(--primary-color); padding-left: 1rem;">
+                    General Questions
+                </h2>
+                
+                <!-- FAQ Item 1 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>What is Chilli Care?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin: 0;">
+                            Chilli Care is an advanced AI-powered platform that helps farmers, agricultural researchers, and plant enthusiasts 
+                            identify and diagnose diseases in chilli plants. Using state-of-the-art deep learning technology and computer vision, 
+                            our system can detect five major chilli diseases with over 90% accuracy by analyzing plant leaf images.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 2 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>How does the disease detection work?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin-bottom: 1rem;">
+                            Our system uses a Convolutional Neural Network (CNN) trained on thousands of labeled chilli plant images. Here's how it works:
+                        </p>
+                        <ol style="margin-left: 2rem; color: var(--gray-700); line-height: 1.8;">
+                            <li>You upload a clear photo of a chilli plant leaf</li>
+                            <li>Our AI model processes the image and analyzes visual patterns</li>
+                            <li>The system compares features against its trained knowledge base</li>
+                            <li>Within seconds, you receive a diagnosis with confidence score and treatment recommendations</li>
+                        </ol>
+                        <p style="color: var(--gray-700); line-height: 1.8; margin-top: 1rem; margin-bottom: 0;">
+                            For enhanced accuracy, we also integrate with Google Gemini AI for additional image analysis and contextual recommendations.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 3 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>Which diseases can Chilli Care detect?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin-bottom: 1rem;">
+                            Our system can accurately detect the following five conditions:
+                        </p>
+                        <ul style="margin-left: 2rem; color: var(--gray-700); line-height: 1.8;">
+                            <li><strong>Healthy Leaves</strong> - Normal, disease-free plants</li>
+                            <li><strong>Anthracnose</strong> - Fungal disease causing dark lesions</li>
+                            <li><strong>Leaf Curl Virus</strong> - Viral infection causing leaf distortion</li>
+                            <li><strong>Whitefly Infestation</strong> - Pest damage affecting plant health</li>
+                            <li><strong>Yellowish Leaves</strong> - Nutrient deficiency or disease symptoms</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 4 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>Is Chilli Care free to use?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin: 0;">
+                            Yes! Chilli Care is currently free to use for all farmers and agricultural professionals. You can create an 
+                            account and start detecting diseases immediately. We believe in making precision agriculture accessible to everyone. 
+                            While we may introduce premium features in the future, the core disease detection functionality will always remain 
+                            free for farmers.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account & Usage -->
+            <div style="margin-bottom: 4rem;">
+                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 2rem; color: var(--gray-900); border-left: 4px solid var(--primary-color); padding-left: 1rem;">
+                    Account & Usage
+                </h2>
+
+                <!-- FAQ Item 5 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>Do I need to create an account?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin-bottom: 1rem;">
+                            Creating an account is optional but highly recommended! Here's why:
+                        </p>
+                        <ul style="margin-left: 2rem; color: var(--gray-700); line-height: 1.8;">
+                            <li><strong>Without account:</strong> You can use the basic disease detection feature</li>
+                            <li><strong>With account:</strong> Access detection history, analytics, personalized recommendations, and track your plants over time</li>
+                        </ul>
+                        <p style="color: var(--gray-700); line-height: 1.8; margin-top: 1rem; margin-bottom: 0;">
+                            Creating an account is quick, free, and only requires an email address.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 6 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>Can I use Chilli Care on my mobile phone?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin: 0;">
+                            Absolutely! Chilli Care is fully responsive and works seamlessly on smartphones, tablets, and desktop computers. 
+                            You can take a photo directly with your phone's camera or upload existing images from your gallery. The mobile 
+                            experience is optimized for field use, making it perfect for farmers working in their fields.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 7 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>How do I get the best detection results?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin-bottom: 1rem;">
+                            For optimal accuracy, follow these guidelines when capturing images:
+                        </p>
+                        <ul style="margin-left: 2rem; color: var(--gray-700); line-height: 1.8;">
+                            <li><strong>Lighting:</strong> Take photos in natural daylight, avoiding harsh shadows</li>
+                            <li><strong>Focus:</strong> Ensure the leaf is in sharp focus and fills most of the frame</li>
+                            <li><strong>Background:</strong> Use a plain or neutral background when possible</li>
+                            <li><strong>Leaf condition:</strong> Capture the affected area clearly</li>
+                            <li><strong>Angle:</strong> Take photos from directly above or at a slight angle</li>
+                            <li><strong>Image quality:</strong> Use high-resolution images (avoid blurry or pixelated photos)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 8 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>Is there a limit to how many images I can analyze?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin: 0;">
+                            Currently, there are no strict limits on the number of images you can analyze. However, we encourage responsible 
+                            use of the service. If you need to analyze a large number of images for research or commercial purposes, please 
+                            contact us to discuss appropriate usage plans.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accuracy & Reliability -->
+            <div style="margin-bottom: 4rem;">
+                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 2rem; color: var(--gray-900); border-left: 4px solid var(--primary-color); padding-left: 1rem;">
+                    Accuracy & Reliability
+                </h2>
+
+                <!-- FAQ Item 9 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>How accurate is the disease detection?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin: 0;">
+                            Our AI model achieves over 90% accuracy in controlled test conditions. The actual accuracy in real-world scenarios 
+                            depends on factors like image quality, lighting conditions, disease progression stage, and plant variety. We provide 
+                            a confidence score with each prediction to help you understand the reliability of the diagnosis. For critical 
+                            decisions, we recommend consulting with agricultural experts and using our system as a supplementary diagnostic tool.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 10 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>Should I rely solely on Chilli Care for diagnosis?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin-bottom: 1rem;">
+                            <strong>No.</strong> While Chilli Care provides highly accurate AI-powered predictions, it should be used as a 
+                            diagnostic aid, not a replacement for professional agricultural advice. We recommend:
+                        </p>
+                        <ul style="margin-left: 2rem; color: var(--gray-700); line-height: 1.8;">
+                            <li>Using our system for quick initial assessments</li>
+                            <li>Consulting with certified plant pathologists or agricultural extension officers for confirmation</li>
+                            <li>Following up with laboratory testing when needed</li>
+                            <li>Considering multiple factors including soil health, weather, and farming practices</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 11 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>What if the AI makes a wrong prediction?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin: 0;">
+                            While our system is highly accurate, no AI is perfect. If you believe a prediction is incorrect, please check the 
+                            confidence score provided. Low confidence scores may indicate uncertainty. You can also try uploading a different 
+                            or clearer image. We continuously improve our model, and user feedback helps us enhance accuracy. If you encounter 
+                            persistent issues, please contact our support team with the image and details.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Privacy & Data -->
+            <div style="margin-bottom: 4rem;">
+                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 2rem; color: var(--gray-900); border-left: 4px solid var(--primary-color); padding-left: 1rem;">
+                    Privacy & Data
+                </h2>
+
+                <!-- FAQ Item 12 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>What happens to my uploaded images?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin: 0;">
+                            Your privacy is important to us. Images are processed on our secure servers and are not permanently stored unless 
+                            you explicitly save them to your history (available for registered users). Temporary files are automatically deleted 
+                            after processing. If you save images to your history, they are stored securely and are only accessible to you. We do 
+                            not share your images with third parties. Anonymous, aggregated data may be used to improve our AI model.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 13 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>Is my personal information secure?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin-bottom: 1rem;">
+                            Yes. We implement industry-standard security measures including:
+                        </p>
+                        <ul style="margin-left: 2rem; color: var(--gray-700); line-height: 1.8;">
+                            <li>Password encryption using bcrypt</li>
+                            <li>Secure HTTPS/TLS connections</li>
+                            <li>Secure database storage with MongoDB Atlas</li>
+                            <li>Regular security audits and updates</li>
+                        </ul>
+                        <p style="color: var(--gray-700); line-height: 1.8; margin-top: 1rem; margin-bottom: 0;">
+                            For more details, please review our <a href="/privacy" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Privacy Policy</a>.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 14 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>Can I delete my account and data?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin: 0;">
+                            Yes. You have full control over your data. You can delete your account at any time from your profile menu. When 
+                            you delete your account, all your personal information, detection history, and saved images are permanently removed 
+                            from our systems within 30 days. This action is irreversible.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical & Support -->
+            <div style="margin-bottom: 4rem;">
+                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 2rem; color: var(--gray-900); border-left: 4px solid var(--primary-color); padding-left: 1rem;">
+                    Technical & Support
+                </h2>
+
+                <!-- FAQ Item 15 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>What browsers are supported?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin-bottom: 1rem;">
+                            Chilli Care works on all modern browsers including:
+                        </p>
+                        <ul style="margin-left: 2rem; color: var(--gray-700); line-height: 1.8;">
+                            <li>Google Chrome (recommended)</li>
+                            <li>Mozilla Firefox</li>
+                            <li>Microsoft Edge</li>
+                            <li>Safari (macOS and iOS)</li>
+                            <li>Opera</li>
+                        </ul>
+                        <p style="color: var(--gray-700); line-height: 1.8; margin-top: 1rem; margin-bottom: 0;">
+                            For the best experience, please use the latest version of your browser.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 16 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>The website is loading slowly. What should I do?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin-bottom: 1rem;">
+                            If you're experiencing slow loading times, try these steps:
+                        </p>
+                        <ul style="margin-left: 2rem; color: var(--gray-700); line-height: 1.8;">
+                            <li>Check your internet connection</li>
+                            <li>Clear your browser cache and cookies</li>
+                            <li>Close unnecessary browser tabs</li>
+                            <li>Try a different browser</li>
+                            <li>Reduce image file size before uploading (max 16MB)</li>
+                        </ul>
+                        <p style="color: var(--gray-700); line-height: 1.8; margin-top: 1rem; margin-bottom: 0;">
+                            If problems persist, please contact our support team.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 17 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>How can I contact support?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin-bottom: 1rem;">
+                            We're here to help! You can reach us through:
+                        </p>
+                        <ul style="margin-left: 2rem; color: var(--gray-700); line-height: 1.8;">
+                            <li><strong>Email:</strong> support@chillicare.com</li>
+                            <li><strong>Contact Form:</strong> <a href="/contact" style="color: var(--primary-color); text-decoration: none;">Visit our Contact page</a></li>
+                        </ul>
+                        <p style="color: var(--gray-700); line-height: 1.8; margin-top: 1rem; margin-bottom: 0;">
+                            We typically respond within 24-48 hours during business days.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 18 -->
+                <div style="margin-bottom: 2rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden;">
+                    <button class="faq-question" style="width: 100%; text-align: left; padding: 1.5rem; background: var(--gray-50); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1.125rem; font-weight: 600; color: var(--gray-900);">
+                        <span>Can Chilli Care detect diseases in other plants?</span>
+                        <i class="fas fa-chevron-down" style="color: var(--primary-color); transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-answer" style="padding: 1.5rem; background: white; display: none;">
+                        <p style="color: var(--gray-700); line-height: 1.8; margin: 0;">
+                            Currently, Chilli Care is specifically trained to detect diseases in chilli (pepper) plants only. Using it for 
+                            other plant species will likely produce inaccurate results. However, we're continuously expanding our capabilities 
+                            and may add support for other crops in the future. Follow our updates or contact us if you're interested in specific 
+                            plant detection features.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Still Have Questions? -->
+            <div style="background: var(--primary-light); padding: 3rem; border-radius: var(--radius-lg); text-align: center; margin-top: 4rem;">
+                <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem; color: var(--gray-900);">
+                    Still Have Questions?
+                </h2>
+                <p style="font-size: 1.125rem; color: var(--gray-700); margin-bottom: 2rem; line-height: 1.6;">
+                    Can't find the answer you're looking for? Our support team is ready to help!
+                </p>
+                <a href="/contact" style="display: inline-block; padding: 1rem 2.5rem; background: var(--primary-color); color: white; border-radius: var(--radius-lg); text-decoration: none; font-weight: 600; transition: transform 0.2s, box-shadow 0.2s;">
+                    Contact Support
+                </a>
+            </div>
+
+        </div>
+    </section>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // FAQ Toggle Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const faqQuestions = document.querySelectorAll('.faq-question');
+            
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', function() {
+                    const answer = this.nextElementSibling;
+                    const icon = this.querySelector('i');
+                    const isOpen = answer.style.display === 'block';
+                    
+                    // Close all other FAQs
+                    document.querySelectorAll('.faq-answer').forEach(a => {
+                        a.style.display = 'none';
+                    });
+                    document.querySelectorAll('.faq-question i').forEach(i => {
+                        i.style.transform = 'rotate(0deg)';
+                    });
+                    
+                    // Toggle current FAQ
+                    if (!isOpen) {
+                        answer.style.display = 'block';
+                        icon.style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

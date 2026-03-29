@@ -1538,6 +1538,12 @@ def terms():
     return render_template('terms.html')
 
 
+@app.route('/faqs')
+def faqs():
+    """FAQs page"""
+    return render_template('faqs.html')
+
+
 @app.route('/analytics')
 def analytics():
     """Analytics page"""
