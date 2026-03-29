@@ -1526,6 +1526,18 @@ def contact():
     return render_template('contact.html')
 
 
+@app.route('/privacy')
+def privacy():
+    """Privacy Policy page"""
+    return render_template('privacy.html')
+
+
+@app.route('/terms')
+def terms():
+    """Terms of Service page"""
+    return render_template('terms.html')
+
+
 @app.route('/analytics')
 def analytics():
     """Analytics page"""
