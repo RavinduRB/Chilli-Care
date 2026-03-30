@@ -53,6 +53,28 @@
                         </div>
                     </div>
                     
+                    <!-- Notification Bell (Only visible when logged in) -->
+                    <div class="notification-section hidden" id="notificationSection">
+                        <button class="notification-btn" id="notificationBtn">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge hidden" id="notificationBadge">0</span>
+                        </button>
+                        <div class="notification-dropdown hidden" id="notificationDropdown">
+                            <div class="notification-header">
+                                <h4>Notifications</h4>
+                                <button class="mark-all-read" id="markAllReadBtn">Mark all as read</button>
+                            </div>
+                            <div class="notification-list" id="notificationList">
+                                <div class="notification-loading">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                                </div>
+                            </div>
+                            <div class="notification-footer">
+                                <button class="view-all-notifications" id="viewAllBtn">View All Notifications</button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Logged in profile -->
                     <div class="profile-section hidden" id="profileSection">
                         <button class="profile-btn" id="profileBtn">
@@ -111,6 +133,10 @@
                                 <i class="fas fa-user-circle"></i>
                                 <span id="mobileUserEmail"></span>
                             </li>
+                            <li><button class="mobile-nav-item" id="mobileNotificationBtn">
+                                <i class="fas fa-bell"></i> Notifications
+                                <span class="mobile-notification-badge hidden" id="mobileNotificationBadge">0</span>
+                            </button></li>
                             <li><button class="mobile-nav-item" id="mobileLogoutBtn">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </button></li>
@@ -126,6 +152,32 @@
 
     <!-- Main Content -->
     {% block content %}{% endblock %}
+
+    <!-- Notification Modal (for mobile and detailed view) -->
+    <div class="modal hidden" id="notificationModal">
+        <div class="modal-overlay" id="notificationModalOverlay"></div>
+        <div class="modal-content notification-modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-bell"></i> All Notifications</h3>
+                <button class="modal-close" id="closeNotificationModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="notification-filter">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="unread">Unread</button>
+                    <button class="filter-btn" data-filter="admin">Admin Replies</button>
+                    <button class="filter-btn" data-filter="system">System Updates</button>
+                </div>
+                <div class="all-notifications-list" id="allNotificationsList">
+                    <div class="notification-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -174,6 +226,9 @@
         </div>
     </footer>
 
+    <!-- Notification System Script -->
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>

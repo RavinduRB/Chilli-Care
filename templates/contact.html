@@ -347,17 +347,37 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
             submitBtn.disabled = true;
             
-            // Simulate API call (replace with actual API endpoint)
-            setTimeout(() => {
-                // Success
-                messageDiv.className = '';
-                messageDiv.style.background = 'var(--success-light)';
-                messageDiv.style.color = 'var(--success-color)';
-                messageDiv.style.border = '1px solid var(--success-color)';
-                messageDiv.innerHTML = '<i class="fas fa-check-circle"></i> Thank you! Your message has been sent successfully. We\'ll get back to you soon.';
-                
-                // Reset form
-                contactForm.reset();
+            // Hide any previous messages
+            messageDiv.className = 'hidden';
+            
+            // Send to API
+            fetch('/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Success
+                    messageDiv.className = '';
+                    messageDiv.style.background = 'var(--success-light)';
+                    messageDiv.style.color = 'var(--success-color)';
+                    messageDiv.style.border = '1px solid var(--success-color)';
+                    messageDiv.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
+                    
+                    // Reset form
+                    contactForm.reset();
+                } else {
+                    // Error
+                    messageDiv.className = '';
+                    messageDiv.style.background = '#FEE2E2';
+                    messageDiv.style.color = '#DC2626';
+                    messageDiv.style.border = '1px solid #DC2626';
+                    messageDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + data.message;
+                }
                 
                 // Reset button
                 submitBtn.innerHTML = originalText;
@@ -367,7 +387,20 @@
                 setTimeout(() => {
                     messageDiv.className = 'hidden';
                 }, 5000);
-            }, 1500);
+            })
+            .catch(error => {
+                // Network or other error
+                messageDiv.className = '';
+                messageDiv.style.background = '#FEE2E2';
+                messageDiv.style.color = '#DC2626';
+                messageDiv.style.border = '1px solid #DC2626';
+                messageDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Sorry, there was an error. Please try again later.';
+                
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                
+                console.error('Contact form error:', error);
+            });
         });
         
         // Social media hover effects

@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify, send_from_directory, session, redirect
 from flask_cors import CORS
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_mail import Mail, Message
 from werkzeug.utils import secure_filename
 import tensorflow as tf
 from tensorflow import keras
@@ -75,7 +76,18 @@ app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HT
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
+# Email configuration for Flask-Mail
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')  # Your Gmail address
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')  # Your Gmail App Password
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME', 'noreply@chillicare.com')
+
 CORS(app)  # Enable CORS for API access
+
+# Initialize Flask-Mail
+mail = Mail(app)
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -1524,6 +1536,281 @@ def about():
 def contact():
     """Contact page"""
     return render_template('contact.html')
+
+@app.route('/api/contact', methods=['POST'])
+def submit_contact():
+    """Handle contact form submission"""
+    try:
+        data = request.get_json()
+        
+        # Validation
+        required_fields = ['name', 'email', 'subject', 'message']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({
+                    'success': False, 
+                    'message': f'{field.capitalize()} is required'
+                }), 400
+        
+        # Email validation
+        import re
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, data['email']):
+            return jsonify({
+                'success': False,
+                'message': 'Please provide a valid email address'
+            }), 400
+        
+        # Store in MongoDB (optional - add if you want to save messages)
+        if mongodb and mongodb.db is not None:
+            contact_data = {
+                'name': data['name'],
+                'email': data['email'],
+                'subject': data['subject'],
+                'message': data['message'],
+                'timestamp': datetime.now(),
+                'status': 'new'
+            }
+            mongodb.db.contact_messages.insert_one(contact_data)
+        
+        # Send email notification
+        try:
+            if app.config['MAIL_USERNAME'] and app.config['MAIL_PASSWORD']:
+                # Email to you (admin)
+                msg = Message(
+                    subject=f"New Contact Form Submission: {data['subject']}",
+                    recipients=[app.config['MAIL_USERNAME']],  # Your Gmail
+                    body=f"""
+New message from your Chilli Care contact form:
+
+Name: {data['name']}
+Email: {data['email']}
+Subject: {data['subject']}
+
+Message:
+{data['message']}
+
+---
+Received at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                    """.strip()
+                )
+                mail.send(msg)
+                logger.info(f"Contact form email sent to admin from {data['email']}")
+            else:
+                logger.warning("Email credentials not configured - message saved to database only")
+        except Exception as email_error:
+            logger.error(f"Failed to send email: {str(email_error)}")
+            # Don't fail the request if email fails - message is still saved to DB
+        
+        logger.info(f"Contact form submission from {data['email']}: {data['subject']}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Thank you for contacting us! We\'ll get back to you soon.'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Contact form error: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'Sorry, there was an error submitting your message. Please try again.'
+        }), 500
+
+
+# ============================================
+# NOTIFICATION ENDPOINTS
+# ============================================
+
+@app.route('/api/notifications', methods=['GET'])
+@login_required
+def get_notifications():
+    """Get notifications for the logged-in user"""
+    try:
+        limit = int(request.args.get('limit', 20))
+        skip = int(request.args.get('skip', 0))
+        unread_only = request.args.get('unread_only', 'false').lower() == 'true'
+        notification_type = request.args.get('type')
+        
+        if not mongodb or not mongodb.connected:
+            return jsonify({
+                'success': False,
+                'error': 'Database not available'
+            }), 503
+        
+        notifications = mongodb.get_user_notifications(
+            current_user.email,
+            limit=limit,
+            skip=skip,
+            unread_only=unread_only,
+            notification_type=notification_type
+        )
+        
+        # Convert ObjectId to string for JSON serialization
+        for notif in notifications:
+            notif['_id'] = str(notif['_id'])
+            notif['created_at'] = notif['created_at'].isoformat()
+        
+        unread_count = mongodb.count_unread_notifications(current_user.email)
+        
+        return jsonify({
+            'success': True,
+            'notifications': notifications,
+            'unread_count': unread_count
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error fetching notifications: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to fetch notifications'
+        }), 500
+
+
+@app.route('/api/notifications/count', methods=['GET'])
+@login_required
+def get_notification_count():
+    """Get unread notification count for the logged-in user"""
+    try:
+        if not mongodb or not mongodb.connected:
+            return jsonify({
+                'success': False,
+                'error': 'Database not available'
+            }), 503
+        
+        unread_count = mongodb.count_unread_notifications(current_user.email)
+        
+        return jsonify({
+            'success': True,
+            'unread_count': unread_count
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error counting notifications: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to count notifications'
+        }), 500
+
+
+@app.route('/api/notifications/<notification_id>/read', methods=['POST'])
+@login_required
+def mark_notification_read(notification_id):
+    """Mark a notification as read"""
+    try:
+        if not mongodb or not mongodb.connected:
+            return jsonify({
+                'success': False,
+                'error': 'Database not available'
+            }), 503
+        
+        success = mongodb.mark_notification_read(notification_id)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Notification marked as read'
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Notification not found'
+            }), 404
+        
+    except Exception as e:
+        logger.error(f"Error marking notification as read: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to mark notification as read'
+        }), 500
+
+
+@app.route('/api/notifications/mark-all-read', methods=['POST'])
+@login_required
+def mark_all_notifications_read():
+    """Mark all notifications as read for the logged-in user"""
+    try:
+        if not mongodb or not mongodb.connected:
+            return jsonify({
+                'success': False,
+                'error': 'Database not available'
+            }), 503
+        
+        count = mongodb.mark_all_notifications_read(current_user.email)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Marked {count} notifications as read',
+            'count': count
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error marking all notifications as read: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to mark notifications as read'
+        }), 500
+
+
+@app.route('/api/admin/notifications/broadcast', methods=['POST'])
+@login_required
+def broadcast_notification():
+    """
+    Admin endpoint to broadcast a notification to all users or filtered users
+    Requires admin privileges
+    """
+    try:
+        # Check if user is admin
+        if current_user.user_type != 'admin':
+            return jsonify({
+                'success': False,
+                'error': 'Admin privileges required'
+            }), 403
+        
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'No data provided'
+            }), 400
+        
+        title = data.get('title')
+        message = data.get('message')
+        notification_type = data.get('type', 'system_update')
+        user_type_filter = data.get('user_type_filter')  # 'farmer', 'admin', or None
+        
+        if not title or not message:
+            return jsonify({
+                'success': False,
+                'error': 'Title and message are required'
+            }), 400
+        
+        if not mongodb or not mongodb.connected:
+            return jsonify({
+                'success': False,
+                'error': 'Database not available'
+            }), 503
+        
+        count = mongodb.broadcast_notification(
+            notification_type=notification_type,
+            title=title,
+            message=message,
+            metadata=data.get('metadata'),
+            user_type_filter=user_type_filter
+        )
+        
+        return jsonify({
+            'success': True,
+            'message': f'Notification sent to {count} users',
+            'count': count
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error broadcasting notification: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to broadcast notification'
+        }), 500
 
 
 @app.route('/privacy')

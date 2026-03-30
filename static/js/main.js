@@ -179,6 +179,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     currentUser = data.user;
                     updateAuthUI(true);
                     hideAuthModals();
+                    
+                    // Show notification bell
+                    if (typeof window.showNotificationBell === 'function') {
+                        window.showNotificationBell();
+                    }
+                    
                     showToast('Login successful! Welcome back.', 'success');
                 } else {
                     loginError.textContent = data.error || 'Login failed';
@@ -224,6 +230,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     currentUser = data.user;
                     updateAuthUI(true);
                     hideAuthModals();
+                    
+                    // Show notification bell
+                    if (typeof window.showNotificationBell === 'function') {
+                        window.showNotificationBell();
+                    }
+                    
                     showToast('Account created successfully! Welcome.', 'success');
                 } else {
                     signupError.textContent = data.error || 'Signup failed';
@@ -252,6 +264,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     currentUser = null;
                     updateAuthUI(false);
                     profileDropdown.classList.add('hidden');
+                    
+                    // Hide notification bell
+                    if (typeof window.hideNotificationBell === 'function') {
+                        window.hideNotificationBell();
+                    }
+                    
                     showToast('Logged out successfully', 'success');
                 }
             } catch (error) {
@@ -280,6 +298,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     currentUser = null;
                     updateAuthUI(false);
                     profileDropdown.classList.add('hidden');
+                    
+                    // Hide notification bell
+                    if (typeof window.hideNotificationBell === 'function') {
+                        window.hideNotificationBell();
+                    }
+                    
                     showToast('Account deleted successfully', 'success');
                 } else {
                     showToast(data.error || 'Failed to delete account', 'error');
@@ -312,6 +336,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         icon.classList.remove('fa-times');
                         icon.classList.add('fa-bars');
                     }
+                    
+                    // Hide notification bell
+                    if (typeof window.hideNotificationBell === 'function') {
+                        window.hideNotificationBell();
+                    }
+                    
                     showToast('Logged out successfully', 'success');
                 }
             } catch (error) {
@@ -346,6 +376,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         icon.classList.remove('fa-times');
                         icon.classList.add('fa-bars');
                     }
+                    
+                    // Hide notification bell
+                    if (typeof window.hideNotificationBell === 'function') {
+                        window.hideNotificationBell();
+                    }
+                    
                     showToast('Account deleted successfully', 'success');
                 } else {
                     showToast(data.error || 'Failed to delete account', 'error');

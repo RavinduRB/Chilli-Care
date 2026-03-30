@@ -93,6 +93,12 @@ class MongoDB:
             self.db.users.create_index([("email", ASCENDING)], unique=True)
             self.db.users.create_index([("user_type", ASCENDING)])
             
+            # Notifications collection indexes
+            self.db.notifications.create_index([("user_email", ASCENDING)])
+            self.db.notifications.create_index([("created_at", DESCENDING)])
+            self.db.notifications.create_index([("read", ASCENDING)])
+            self.db.notifications.create_index([("type", ASCENDING)])
+            
             logger.info("✓ Database indexes created")
         except Exception as e:
             logger.warning(f"Failed to create indexes: {e}")
@@ -782,6 +788,217 @@ class MongoDB:
         except Exception as e:
             logger.error(f"Error fetching user disease statistics: {e}")
             return []
+    
+    # ==================== NOTIFICATION OPERATIONS ====================
+    
+    def create_notification(self, user_email, notification_type, title, message, metadata=None):
+        """
+        Create a new notification for a user
+        
+        Args:
+            user_email: Email of the user to notify
+            notification_type: Type of notification ('admin_reply', 'system_update')
+            title: Notification title
+            message: Notification message
+            metadata: Additional metadata (optional)
+            
+        Returns:
+            Inserted notification ID or None
+        """
+        if not self.connected:
+            return None
+        
+        try:
+            notification_data = {
+                'user_email': user_email,
+                'type': notification_type,
+                'title': title,
+                'message': message,
+                'metadata': metadata or {},
+                'read': False,
+                'created_at': datetime.now(),
+                'updated_at': datetime.now()
+            }
+            
+            result = self.db.notifications.insert_one(notification_data)
+            logger.info(f"✓ Created notification for {user_email}")
+            return str(result.inserted_id)
+        except Exception as e:
+            logger.error(f"Error creating notification: {e}")
+            return None
+    
+    def get_user_notifications(self, user_email, limit=20, skip=0, unread_only=False, notification_type=None):
+        """
+        Get notifications for a user
+        
+        Args:
+            user_email: User's email address
+            limit: Number of notifications to return
+            skip: Number of notifications to skip
+            unread_only: If True, return only unread notifications
+            notification_type: Filter by notification type
+            
+        Returns:
+            List of notification documents
+        """
+        if not self.connected:
+            return []
+        
+        try:
+            query = {'user_email': user_email}
+            
+            if unread_only:
+                query['read'] = False
+            
+            if notification_type:
+                query['type'] = notification_type
+            
+            notifications = self.db.notifications.find(query)\
+                .sort("created_at", DESCENDING)\
+                .skip(skip)\
+                .limit(limit)
+            
+            return list(notifications)
+        except Exception as e:
+            logger.error(f"Error fetching notifications: {e}")
+            return []
+    
+    def count_unread_notifications(self, user_email):
+        """
+        Count unread notifications for a user
+        
+        Args:
+            user_email: User's email address
+            
+        Returns:
+            Count of unread notifications
+        """
+        if not self.connected:
+            return 0
+        
+        try:
+            return self.db.notifications.count_documents({
+                'user_email': user_email,
+                'read': False
+            })
+        except Exception as e:
+            logger.error(f"Error counting unread notifications: {e}")
+            return 0
+    
+    def mark_notification_read(self, notification_id):
+        """
+        Mark a notification as read
+        
+        Args:
+            notification_id: ID of the notification
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.connected:
+            return False
+        
+        try:
+            from bson.objectid import ObjectId
+            
+            result = self.db.notifications.update_one(
+                {"_id": ObjectId(notification_id)},
+                {"$set": {"read": True, "updated_at": datetime.now()}}
+            )
+            
+            return result.modified_count > 0
+        except Exception as e:
+            logger.error(f"Error marking notification as read: {e}")
+            return False
+    
+    def mark_all_notifications_read(self, user_email):
+        """
+        Mark all notifications as read for a user
+        
+        Args:
+            user_email: User's email address
+            
+        Returns:
+            Number of notifications marked as read
+        """
+        if not self.connected:
+            return 0
+        
+        try:
+            result = self.db.notifications.update_many(
+                {"user_email": user_email, "read": False},
+                {"$set": {"read": True, "updated_at": datetime.now()}}
+            )
+            
+            logger.info(f"✓ Marked {result.modified_count} notifications as read for {user_email}")
+            return result.modified_count
+        except Exception as e:
+            logger.error(f"Error marking all notifications as read: {e}")
+            return 0
+    
+    def delete_notification(self, notification_id):
+        """
+        Delete a notification
+        
+        Args:
+            notification_id: ID of the notification
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.connected:
+            return False
+        
+        try:
+            from bson.objectid import ObjectId
+            
+            result = self.db.notifications.delete_one({"_id": ObjectId(notification_id)})
+            return result.deleted_count > 0
+        except Exception as e:
+            logger.error(f"Error deleting notification: {e}")
+            return False
+    
+    def broadcast_notification(self, notification_type, title, message, metadata=None, user_type_filter=None):
+        """
+        Create a notification for all users (or filtered by user type)
+        
+        Args:
+            notification_type: Type of notification ('system_update', etc.)
+            title: Notification title
+            message: Notification message
+            metadata: Additional metadata (optional)
+            user_type_filter: Filter users by type ('farmer', 'admin', or None for all)
+            
+        Returns:
+            Number of notifications created
+        """
+        if not self.connected:
+            return 0
+        
+        try:
+            # Get all users
+            query = {}
+            if user_type_filter:
+                query['user_type'] = user_type_filter
+            
+            users = self.db.users.find(query, {"email": 1})
+            
+            count = 0
+            for user in users:
+                if self.create_notification(
+                    user['email'], 
+                    notification_type, 
+                    title, 
+                    message, 
+                    metadata
+                ):
+                    count += 1
+            
+            logger.info(f"✓ Broadcast notification to {count} users")
+            return count
+        except Exception as e:
+            logger.error(f"Error broadcasting notification: {e}")
+            return 0
 
 
 # Global database instance
