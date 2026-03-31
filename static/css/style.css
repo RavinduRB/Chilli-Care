@@ -2208,7 +2208,7 @@ button {
     top: calc(100% + 0.5rem);
     right: 0;
     min-width: 250px;
-    background: var(--card-bg);
+    background: white;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
@@ -2345,7 +2345,7 @@ button {
     right: 0;
     width: 380px;
     max-width: 90vw;
-    background: var(--card-bg);
+    background: white;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
@@ -2533,7 +2533,7 @@ button {
 
 /* Modal Content */
 .modal-content {
-    background: var(--card-bg);
+    background: white;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     width: 100%;
@@ -2656,6 +2656,224 @@ button {
 
 .modal.hidden {
     display: none;
+}
+
+/* Notification item read button */
+.notification-read-btn {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    transition: all 0.3s ease;
+    margin-left: 0.5rem;
+    align-self: center;
+}
+
+.notification-item:hover .notification-read-btn {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Notification Detail Modal */
+.notification-detail-modal-content {
+    max-width: 500px;
+    width: 100%;
+}
+
+.notification-detail-body {
+    padding: 1.25rem 0 0.5rem;
+}
+
+.notification-detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.notification-detail-type {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+}
+
+.notification-detail-type.type-admin {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+}
+
+.notification-detail-type.type-system {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+}
+
+.notification-detail-time {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.notification-detail-message {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 1.25rem;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    border-left: 3px solid var(--primary-color);
+}
+
+/* Notification Modal — Responsive */
+
+/* Tablets (481px – 768px) */
+@media (max-width: 768px) {
+    .notification-modal-overlay {
+        padding: 0.75rem;
+        align-items: center;
+    }
+
+    .notification-modal-content,
+    .notification-detail-modal-content {
+        max-width: 100%;
+        width: 100%;
+        max-height: 88vh;
+    }
+
+    .notification-modal-content .modal-header h3 {
+        font-size: 1.05rem;
+    }
+
+    .notification-detail-body {
+        padding: 1rem 0 0.5rem;
+    }
+
+    .notification-item-content {
+        padding: 0.875rem 1rem;
+    }
+
+    .filter-btn {
+        padding: 0.45rem 0.85rem;
+        font-size: 0.82rem;
+    }
+}
+
+/* Small phones (up to 480px) — most modern smartphones */
+@media (max-width: 480px) {
+    .notification-modal-overlay {
+        padding: 0.5rem;
+        align-items: center;
+    }
+
+    .notification-modal-overlay .modal-content {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 16px;
+        padding: 1rem 0.875rem 1.25rem;
+        max-height: 92vh;
+    }
+
+    .notification-modal-content,
+    .notification-detail-modal-content {
+        max-height: 92vh;
+    }
+
+    .notification-modal-content .modal-header {
+        padding-bottom: 0.75rem;
+    }
+
+    .notification-modal-content .modal-header h3 {
+        font-size: 0.95rem;
+    }
+
+    .notification-filter {
+        gap: 0.3rem;
+        padding: 0.625rem 0;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .notification-filter::-webkit-scrollbar {
+        display: none;
+    }
+
+    .filter-btn {
+        padding: 0.375rem 0.625rem;
+        font-size: 0.75rem;
+        min-height: 36px;
+    }
+
+    .notification-item-content {
+        padding: 0.75rem 0.875rem;
+    }
+
+    .notification-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .notification-title {
+        font-size: 0.85rem;
+    }
+
+    .notification-message {
+        font-size: 0.78rem;
+    }
+
+    .notification-detail-body {
+        padding: 0.875rem 0 0.5rem;
+    }
+
+    .notification-detail-message {
+        font-size: 0.875rem;
+        padding: 0.875rem;
+        line-height: 1.65;
+    }
+
+    .notification-detail-meta {
+        gap: 0.5rem;
+    }
+}
+
+/* Extra-small phones (up to 375px) — iPhone SE, older Androids */
+@media (max-width: 375px) {
+    .notification-modal-overlay {
+        padding: 0.375rem;
+    }
+
+    .notification-modal-overlay .modal-content {
+        padding: 0.875rem 0.75rem 1rem;
+        border-radius: 14px;
+    }
+
+    .filter-btn {
+        padding: 0.35rem 0.5rem;
+        font-size: 0.72rem;
+    }
+
+    .notification-title {
+        font-size: 0.82rem;
+    }
+
+    .notification-message {
+        font-size: 0.75rem;
+    }
+
+    .notification-detail-message {
+        font-size: 0.82rem;
+        padding: 0.75rem;
+    }
 }
 
 /* Auth Form */

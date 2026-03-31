@@ -2486,6 +2486,250 @@ def get_location_statistics():
         }), 500
 
 
+@app.route('/api/admin/messages', methods=['GET'])
+@login_required
+def get_all_messages():
+    """Get all contact messages grouped by user (admin only)"""
+    if current_user.user_type != 'admin':
+        return jsonify({
+            'success': False,
+            'error': 'Unauthorized - Admin access required'
+        }), 403
+    
+    if not (mongodb and mongodb.connected):
+        return jsonify({
+            'success': False,
+            'error': 'MongoDB not configured'
+        }), 503
+    
+    try:
+        # Get all messages from contact_messages collection
+        messages = list(mongodb.db.contact_messages.find().sort('timestamp', -1))
+        
+        # Group messages by user email
+        user_conversations = {}
+        for msg in messages:
+            email = msg['email']
+            if email not in user_conversations:
+                # Initialize conversation with user's name (skip if this is an admin reply)
+                user_name = msg['name'] if msg.get('type') != 'admin_reply' else 'User'
+                user_conversations[email] = {
+                    'email': email,
+                    'name': user_name,
+                    'messages': [],
+                    'unread_count': 0,
+                    'last_message_time': msg['timestamp']
+                }
+            
+            # Update conversation name if we haven't found the user's real name yet
+            # (in case the first message was an admin reply)
+            if user_conversations[email]['name'] == 'User' and msg.get('type') != 'admin_reply':
+                user_conversations[email]['name'] = msg['name']
+            
+            # Convert ObjectId to string
+            msg['_id'] = str(msg['_id'])
+            msg['timestamp'] = msg['timestamp'].isoformat() if msg.get('timestamp') else None
+            
+            # Count unread messages (only count user messages, not admin replies)
+            if msg.get('status') == 'new' and msg.get('type') != 'admin_reply':
+                user_conversations[email]['unread_count'] += 1
+            
+            user_conversations[email]['messages'].append(msg)
+        
+        # Convert to list and sort by last message time
+        conversations_list = list(user_conversations.values())
+        conversations_list.sort(key=lambda x: x['last_message_time'], reverse=True)
+        
+        # Format timestamps for sorting
+        for conv in conversations_list:
+            conv['last_message_time'] = conv['last_message_time'].isoformat() if conv.get('last_message_time') else None
+        
+        return jsonify({
+            'success': True,
+            'conversations': conversations_list,
+            'total_conversations': len(conversations_list),
+            'total_messages': len(messages)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching messages: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/admin/messages/<email>', methods=['GET'])
+@login_required
+def get_user_messages(email):
+    """Get all messages for a specific user (admin only)"""
+    if current_user.user_type != 'admin':
+        return jsonify({
+            'success': False,
+            'error': 'Unauthorized - Admin access required'
+        }), 403
+    
+    if not (mongodb and mongodb.connected):
+        return jsonify({
+            'success': False,
+            'error': 'MongoDB not configured'
+        }), 503
+    
+    try:
+        # Get messages for this user
+        messages = list(mongodb.db.contact_messages.find({'email': email}).sort('timestamp', 1))
+        
+        # Format messages
+        for msg in messages:
+            msg['_id'] = str(msg['_id'])
+            msg['timestamp'] = msg['timestamp'].isoformat() if msg.get('timestamp') else None
+        
+        return jsonify({
+            'success': True,
+            'messages': messages,
+            'email': email
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching user messages: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/admin/messages/<email>/reply', methods=['POST'])
+@login_required
+def reply_to_message(email):
+    """Send a reply to a user message (admin only)"""
+    if current_user.user_type != 'admin':
+        return jsonify({
+            'success': False,
+            'error': 'Unauthorized - Admin access required'
+        }), 403
+    
+    if not (mongodb and mongodb.connected):
+        return jsonify({
+            'success': False,
+            'error': 'MongoDB not configured'
+        }), 503
+    
+    try:
+        data = request.get_json()
+        reply_message = data.get('message', '').strip()
+        
+        if not reply_message:
+            return jsonify({
+                'success': False,
+                'error': 'Reply message is required'
+            }), 400
+        
+        # Store the reply in contact_messages collection
+        # Use the user's email so the reply appears in their conversation
+        reply_data = {
+            'name': 'Admin',
+            'email': email,  # User's email (so reply appears in their conversation)
+            'admin_email': current_user.email,  # Track which admin replied
+            'subject': 'Reply from Admin',
+            'message': reply_message,
+            'timestamp': datetime.now(),
+            'status': 'replied',
+            'type': 'admin_reply'
+        }
+        
+        result = mongodb.db.contact_messages.insert_one(reply_data)
+        
+        # Send notification to the user
+        notification_data = {
+            'user_email': email,
+            'title': 'Admin Reply',
+            'message': f'The admin has replied to your message: {reply_message[:100]}...' if len(reply_message) > 100 else reply_message,
+            'type': 'admin_reply',
+            'created_at': datetime.now(),
+            'read': False
+        }
+        mongodb.db.notifications.insert_one(notification_data)
+        
+        # Send email notification if email is configured
+        try:
+            if app.config['MAIL_USERNAME'] and app.config['MAIL_PASSWORD']:
+                msg = Message(
+                    subject="Reply from Chilli Care Admin",
+                    recipients=[email],
+                    body=f"""
+Hello,
+
+The Chilli Care admin team has replied to your message:
+
+{reply_message}
+
+---
+Chilli Care Admin Team
+                    """.strip()
+                )
+                mail.send(msg)
+                logger.info(f"Reply email sent to {email}")
+        except Exception as email_error:
+            logger.warning(f"Could not send email notification: {email_error}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Reply sent successfully',
+            'reply_id': str(result.inserted_id)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error sending reply: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/admin/messages/<message_id>/mark-read', methods=['POST'])
+@login_required
+def mark_message_read(message_id):
+    """Mark a message as read (admin only)"""
+    if current_user.user_type != 'admin':
+        return jsonify({
+            'success': False,
+            'error': 'Unauthorized - Admin access required'
+        }), 403
+    
+    if not (mongodb and mongodb.connected):
+        return jsonify({
+            'success': False,
+            'error': 'MongoDB not configured'
+        }), 503
+    
+    try:
+        from bson import ObjectId
+        
+        # Update message status
+        result = mongodb.db.contact_messages.update_one(
+            {'_id': ObjectId(message_id)},
+            {'$set': {'status': 'read'}}
+        )
+        
+        if result.modified_count > 0:
+            return jsonify({
+                'success': True,
+                'message': 'Message marked as read'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Message not found or already read'
+            }), 404
+        
+    except Exception as e:
+        logger.error(f"Error marking message as read: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({'error': 'Not found'}), 404

@@ -334,7 +334,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 'diseases': 'Disease Management',
                 'predictions': 'Prediction History',
                 'mapping': 'District Mapping',
-                'analytics': 'Analytics'
+                'analytics': 'Analytics',
+                'messages': 'Messages Management'
             };
             
             if (pageTitle && sectionTitles[sectionName]) {
@@ -348,6 +349,9 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (sectionName === 'users') {
                 // Refresh users to get latest data
                 loadUsers();
+            } else if (sectionName === 'messages') {
+                // Load messages when switching to messages section
+                loadAllMessages();
             }
             
             // Close mobile sidebar if open
@@ -1071,6 +1075,350 @@ document.addEventListener('DOMContentLoaded', function() {
     if (saveBtn) {
         saveBtn.addEventListener('click', saveDiseaseChanges);
         saveBtn.style.display = 'none'; // Hidden by default
+    }
+
+    // ============================================
+    // MESSAGES MANAGEMENT
+    // ============================================
+    
+    // Messages Elements
+    const conversationsList = document.getElementById('conversationsList');
+    const conversationEmpty = document.getElementById('conversationEmpty');
+    const conversationView = document.getElementById('conversationView');
+    const conversationMessages = document.getElementById('conversationMessages');
+    const conversationUserName = document.getElementById('conversationUserName');
+    const conversationUserEmail = document.getElementById('conversationUserEmail');
+    const replyForm = document.getElementById('replyForm');
+    const replyMessage = document.getElementById('replyMessage');
+    const refreshMessagesBtn = document.getElementById('refreshMessagesBtn');
+    const closeConversationBtn = document.getElementById('closeConversationBtn');
+    const messagesSearchInput = document.getElementById('messagesSearchInput');
+    
+    let allConversations = [];
+    let currentConversationEmail = null;
+    
+    // Load all messages
+    async function loadAllMessages() {
+        try {
+            if (conversationsList) {
+                conversationsList.innerHTML = `
+                    <div class="loading-conversations">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading conversations...</p>
+                    </div>
+                `;
+            }
+            
+            const response = await fetch('/api/admin/messages');
+            const data = await response.json();
+            
+            if (data.success) {
+                allConversations = data.conversations;
+                displayConversations(allConversations);
+            } else {
+                showToast(data.error || 'Failed to load messages', 'error');
+                if (conversationsList) {
+                    conversationsList.innerHTML = `
+                        <div class="messages-empty">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <h3>Failed to Load</h3>
+                            <p>Could not load messages</p>
+                        </div>
+                    `;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading messages:', error);
+            showToast('Failed to load messages', 'error');
+        }
+    }
+    
+    // Display conversations list
+    function displayConversations(conversations) {
+        if (!conversationsList) return;
+        
+        if (conversations.length === 0) {
+            conversationsList.innerHTML = `
+                <div class="messages-empty">
+                    <i class="fas fa-inbox"></i>
+                    <h3>No Messages</h3>
+                    <p>No user messages yet</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        conversations.forEach(conv => {
+            const lastMessage = conv.messages[0];
+            const timeAgo = formatTimeAgo(conv.last_message_time);
+            const preview = lastMessage ? lastMessage.message.substring(0, 60) + '...' : 'No message';
+            const unreadBadge = conv.unread_count > 0 ? `<span class="conversation-badge">${conv.unread_count}</span>` : '';
+            
+            html += `
+                <div class="conversation-item" data-email="${conv.email}">
+                    <div class="conversation-item-header">
+                        <div>
+                            <div class="conversation-user-name">${escapeHtml(conv.name)}</div>
+                            <div class="conversation-user-email">${escapeHtml(conv.email)}</div>
+                        </div>
+                        <div class="conversation-time">${timeAgo}</div>
+                    </div>
+                    <div class="conversation-preview">${escapeHtml(preview)}</div>
+                    ${unreadBadge}
+                </div>
+            `;
+        });
+        
+        conversationsList.innerHTML = html;
+        
+        // Add click event listeners
+        document.querySelectorAll('.conversation-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const email = this.getAttribute('data-email');
+                loadConversation(email);
+                
+                // Mark as active
+                document.querySelectorAll('.conversation-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    }
+    
+    // Load specific conversation
+    async function loadConversation(email) {
+        try {
+            currentConversationEmail = email;
+            
+            // Show loading in conversation view
+            if (conversationMessages) {
+                conversationMessages.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #9ca3af;"></i>
+                    </div>
+                `;
+            }
+            
+            // Hide empty state and show conversation view
+            if (conversationEmpty) conversationEmpty.style.display = 'none';
+            if (conversationView) conversationView.classList.remove('hidden');
+            
+            const response = await fetch(`/api/admin/messages/${encodeURIComponent(email)}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                displayConversation(data.messages, email);
+                
+                // Mark messages as read
+                data.messages.forEach(msg => {
+                    if (msg.status === 'new' && msg.type !== 'admin_reply') {
+                        markMessageAsRead(msg._id);
+                    }
+                });
+                
+                // Update conversation unread count in sidebar
+                const conversationItem = document.querySelector(`.conversation-item[data-email="${email}"]`);
+                if (conversationItem) {
+                    const badge = conversationItem.querySelector('.conversation-badge');
+                    if (badge) badge.remove();
+                }
+            } else {
+                showToast(data.error || 'Failed to load conversation', 'error');
+            }
+        } catch (error) {
+            console.error('Error loading conversation:', error);
+            showToast('Failed to load conversation', 'error');
+        }
+    }
+    
+    // Display conversation messages
+    function displayConversation(messages, email) {
+        if (!conversationMessages || !conversationUserName || !conversationUserEmail) return;
+        
+        // Update header - find the user's actual name (not "Admin")
+        if (messages.length > 0) {
+            // Find first non-admin message to get user's real name
+            const userMessage = messages.find(msg => msg.type !== 'admin_reply');
+            const userName = userMessage ? userMessage.name : messages[0].name;
+            conversationUserName.textContent = userName;
+            conversationUserEmail.textContent = email;
+        }
+        
+        // Display messages
+        let html = '';
+        messages.forEach(msg => {
+            const isAdminReply = msg.type === 'admin_reply';
+            const messageClass = isAdminReply ? 'admin-message' : 'user-message';
+            const timeFormatted = formatMessageTime(msg.timestamp);
+            const statusBadge = msg.status ? `<span class="message-status ${msg.status}">${msg.status}</span>` : '';
+            
+            html += `
+                <div class="message-bubble ${messageClass}">
+                    <div class="message-content">
+                        <div class="message-header">
+                            <span class="message-sender">${escapeHtml(msg.name)}</span>
+                            <span class="message-time">${timeFormatted}</span>
+                        </div>
+                        ${msg.subject && !isAdminReply ? `<div class="message-subject">${escapeHtml(msg.subject)}</div>` : ''}
+                        <div class="message-text">${escapeHtml(msg.message)}</div>
+                        ${!isAdminReply ? statusBadge : ''}
+                    </div>
+                </div>
+            `;
+        });
+        
+        conversationMessages.innerHTML = html;
+        
+        // Scroll to bottom
+        conversationMessages.scrollTop = conversationMessages.scrollHeight;
+    }
+    
+    // Mark message as read
+    async function markMessageAsRead(messageId) {
+        try {
+            await fetch(`/api/admin/messages/${messageId}/mark-read`, {
+                method: 'POST'
+            });
+        } catch (error) {
+            console.error('Error marking message as read:', error);
+        }
+    }
+    
+    // Send reply
+    if (replyForm) {
+        replyForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!currentConversationEmail) {
+                showToast('No conversation selected', 'error');
+                return;
+            }
+            
+            const message = replyMessage.value.trim();
+            if (!message) {
+                showToast('Please enter a message', 'error');
+                return;
+            }
+            
+            try {
+                // Disable form
+                replyMessage.disabled = true;
+                const submitBtn = replyForm.querySelector('.btn-send-reply');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+                
+                const response = await fetch(`/api/admin/messages/${encodeURIComponent(currentConversationEmail)}/reply`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Reply sent successfully', 'success');
+                    
+                    // Clear form
+                    replyMessage.value = '';
+                    
+                    // Reload conversation to show new message
+                    await loadConversation(currentConversationEmail);
+                    
+                    // Reload conversations list to update preview
+                    await loadAllMessages();
+                } else {
+                    showToast(data.error || 'Failed to send reply', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending reply:', error);
+                showToast('Failed to send reply', 'error');
+            } finally {
+                // Re-enable form
+                replyMessage.disabled = false;
+                const submitBtn = replyForm.querySelector('.btn-send-reply');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Reply';
+            }
+        });
+    }
+    
+    // Refresh messages button
+    if (refreshMessagesBtn) {
+        refreshMessagesBtn.addEventListener('click', async function() {
+            this.querySelector('i').classList.add('fa-spin');
+            await loadAllMessages();
+            this.querySelector('i').classList.remove('fa-spin');
+        });
+    }
+    
+    // Close conversation button
+    if (closeConversationBtn) {
+        closeConversationBtn.addEventListener('click', function() {
+            if (conversationView) conversationView.classList.add('hidden');
+            if (conversationEmpty) conversationEmpty.style.display = 'flex';
+            currentConversationEmail = null;
+            
+            // Remove active class from all conversation items
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                item.classList.remove('active');
+            });
+        });
+    }
+    
+    // Search conversations
+    if (messagesSearchInput) {
+        messagesSearchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            if (searchTerm === '') {
+                displayConversations(allConversations);
+            } else {
+                const filtered = allConversations.filter(conv => {
+                    return conv.name.toLowerCase().includes(searchTerm) ||
+                           conv.email.toLowerCase().includes(searchTerm) ||
+                           conv.messages.some(msg => msg.message.toLowerCase().includes(searchTerm));
+                });
+                displayConversations(filtered);
+            }
+        });
+    }
+    
+    // Format time ago
+    function formatTimeAgo(timestamp) {
+        if (!timestamp) return 'Unknown';
+        
+        const date = new Date(timestamp);
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+        
+        if (seconds < 60) return 'Just now';
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+        if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+        if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+        
+        return date.toLocaleDateString();
+    }
+    
+    // Format message time
+    function formatMessageTime(timestamp) {
+        if (!timestamp) return '';
+        
+        const date = new Date(timestamp);
+        return date.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+    
+    // Escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
 });

@@ -225,6 +225,79 @@
                     <h2 class="section-title">Analytics</h2>
                     <p class="section-description">Coming soon - Detailed analytics</p>
                 </section>
+                
+                <!-- Messages Section -->
+                <section class="content-section" id="messagesSection">
+                    <div class="messages-container">
+                        <!-- Left Sidebar - Conversations List -->
+                        <div class="messages-sidebar">
+                            <div class="messages-sidebar-header">
+                                <h2><i class="fas fa-envelope"></i> User Messages</h2>
+                                <button class="btn-refresh-messages" id="refreshMessagesBtn" title="Refresh messages">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="messages-search">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="messagesSearchInput" placeholder="Search conversations..." class="search-input">
+                            </div>
+                            
+                            <div class="conversations-list" id="conversationsList">
+                                <div class="loading-conversations">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Loading conversations...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Side - Conversation View -->
+                        <div class="messages-main">
+                            <div class="conversation-empty" id="conversationEmpty">
+                                <i class="fas fa-comments"></i>
+                                <h3>No Conversation Selected</h3>
+                                <p>Select a conversation from the left to view messages</p>
+                            </div>
+                            
+                            <div class="conversation-view hidden" id="conversationView">
+                                <div class="conversation-header">
+                                    <div class="conversation-user-info">
+                                        <div class="conversation-avatar">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div class="conversation-details">
+                                            <h3 id="conversationUserName">User Name</h3>
+                                            <p id="conversationUserEmail">user@email.com</p>
+                                        </div>
+                                    </div>
+                                    <button class="btn-close-conversation" id="closeConversationBtn">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="conversation-messages" id="conversationMessages">
+                                    <!-- Messages will be dynamically loaded here -->
+                                </div>
+                                
+                                <div class="conversation-reply">
+                                    <form id="replyForm" class="reply-form">
+                                        <textarea 
+                                            id="replyMessage" 
+                                            class="reply-textarea" 
+                                            placeholder="Type your reply here..."
+                                            rows="3"
+                                            required
+                                        ></textarea>
+                                        <button type="submit" class="btn-send-reply">
+                                            <i class="fas fa-paper-plane"></i>
+                                            Send Reply
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
         </main>
     </div>

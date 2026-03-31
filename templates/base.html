@@ -154,11 +154,10 @@
     {% block content %}{% endblock %}
 
     <!-- Notification Modal (for mobile and detailed view) -->
-    <div class="modal hidden" id="notificationModal">
-        <div class="modal-overlay" id="notificationModalOverlay"></div>
+    <div class="modal-overlay notification-modal-overlay hidden" id="notificationModal">
         <div class="modal-content notification-modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-bell"></i> All Notifications</h3>
+                <h3><i class="fas fa-bell"></i> Notifications</h3>
                 <button class="modal-close" id="closeNotificationModal">
                     <i class="fas fa-times"></i>
                 </button>
@@ -175,6 +174,25 @@
                         <i class="fas fa-spinner fa-spin"></i> Loading...
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Detail Modal -->
+    <div class="modal-overlay notification-modal-overlay hidden" id="notificationDetailModal">
+        <div class="modal-content notification-detail-modal-content">
+            <div class="modal-header">
+                <h3 id="notificationDetailTitle"><i class="fas fa-envelope-open"></i> Message</h3>
+                <button class="modal-close" id="closeNotificationDetailModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="notification-detail-body">
+                <div class="notification-detail-meta">
+                    <span class="notification-detail-type" id="notificationDetailType"></span>
+                    <span class="notification-detail-time" id="notificationDetailTime"></span>
+                </div>
+                <div class="notification-detail-message" id="notificationDetailMessage"></div>
             </div>
         </div>
     </div>

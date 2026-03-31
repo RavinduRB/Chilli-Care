@@ -180,8 +180,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateAuthUI(true);
                     hideAuthModals();
                     
-                    // Show notification bell
-                    if (typeof window.showNotificationBell === 'function') {
+                    // Show notification bell (not for admin users)
+                    if (currentUser.user_type !== 'admin' && typeof window.showNotificationBell === 'function') {
                         window.showNotificationBell();
                     }
                     
@@ -231,8 +231,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateAuthUI(true);
                     hideAuthModals();
                     
-                    // Show notification bell
-                    if (typeof window.showNotificationBell === 'function') {
+                    // Show notification bell (not for admin users)
+                    if (currentUser.user_type !== 'admin' && typeof window.showNotificationBell === 'function') {
                         window.showNotificationBell();
                     }
                     

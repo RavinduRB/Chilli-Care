@@ -17,10 +17,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Notification Modal Elements
     const notificationModal = document.getElementById('notificationModal');
-    const notificationModalOverlay = document.getElementById('notificationModalOverlay');
     const closeNotificationModal = document.getElementById('closeNotificationModal');
     const allNotificationsList = document.getElementById('allNotificationsList');
     const filterBtns = document.querySelectorAll('.filter-btn');
+    
+    // Notification Detail Modal Elements
+    const notificationDetailModal = document.getElementById('notificationDetailModal');
+    const closeNotificationDetailModal = document.getElementById('closeNotificationDetailModal');
+    const notificationDetailTitle = document.getElementById('notificationDetailTitle');
+    const notificationDetailType = document.getElementById('notificationDetailType');
+    const notificationDetailTime = document.getElementById('notificationDetailTime');
+    const notificationDetailMessage = document.getElementById('notificationDetailMessage');
     
     let currentFilter = 'all';
     let notificationCheckInterval = null;
@@ -34,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const response = await fetch('/api/auth/status');
             const data = await response.json();
-            return data.authenticated;
+            return data.authenticated ? data.user : false;
         } catch (error) {
             console.error('Error checking auth status:', error);
             return false;
@@ -43,9 +50,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize notification system
     async function initNotifications() {
-        const loggedIn = await isUserLoggedIn();
+        const user = await isUserLoggedIn();
+        const loggedIn = !!user;
         
         if (loggedIn) {
+            // Don't show notification bell for admin users
+            if (user.user_type === 'admin') return;
+            
             // Show notification bell
             if (notificationSection) {
                 notificationSection.classList.remove('hidden');
@@ -199,6 +210,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Format time
         const timeAgo = formatTimeAgo(notification.created_at);
         
+        // Truncate message preview
+        const previewMessage = notification.message.length > 80
+            ? notification.message.substring(0, 80) + '...'
+            : notification.message;
+        
         div.innerHTML = `
             <div class="notification-item-content">
                 <div class="notification-icon ${iconClass}">
@@ -206,22 +222,58 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="notification-text">
                     <div class="notification-title">${escapeHtml(notification.title)}</div>
-                    <div class="notification-message">${escapeHtml(notification.message)}</div>
+                    <div class="notification-message">${escapeHtml(previewMessage)}</div>
                     <div class="notification-time">${timeAgo}</div>
+                </div>
+                <div class="notification-read-btn" title="Read message">
+                    <i class="fas fa-chevron-right"></i>
                 </div>
             </div>
         `;
         
-        // Mark as read when clicked
+        // Open detail modal when clicked
         div.addEventListener('click', async () => {
+            // Mark as read
             if (!notification.read) {
                 await markNotificationAsRead(notification._id);
                 div.classList.remove('unread');
+                notification.read = true;
                 await updateNotificationCount();
             }
+            
+            // Open detail modal
+            openNotificationDetail(notification);
         });
         
         return div;
+    }
+    
+    // Open notification detail modal
+    function openNotificationDetail(notification) {
+        if (!notificationDetailModal) return;
+        
+        const typeLabel = notification.type === 'admin_reply' ? 'Admin Reply' : 'System Update';
+        const timeFormatted = new Date(notification.created_at).toLocaleString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+        
+        // Populate detail modal
+        if (notificationDetailTitle) {
+            notificationDetailTitle.innerHTML = `<i class="fas fa-envelope-open"></i> ${escapeHtml(notification.title)}`;
+        }
+        if (notificationDetailType) {
+            notificationDetailType.textContent = typeLabel;
+            notificationDetailType.className = `notification-detail-type ${notification.type === 'admin_reply' ? 'type-admin' : 'type-system'}`;
+        }
+        if (notificationDetailTime) {
+            notificationDetailTime.textContent = timeFormatted;
+        }
+        if (notificationDetailMessage) {
+            notificationDetailMessage.textContent = notification.message;
+        }
+        
+        notificationDetailModal.classList.remove('hidden');
     }
     
     // Mark notification as read
@@ -322,6 +374,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mobile notification button
     if (mobileNotificationBtn) {
         mobileNotificationBtn.addEventListener('click', () => {
+            // Close mobile menu first
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            if (mobileMenu) mobileMenu.classList.remove('active');
+            if (mobileMenuToggle) {
+                const icon = mobileMenuToggle.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            }
+            
+            // Open notification modal
             notificationModal.classList.remove('hidden');
             loadAllNotifications(currentFilter);
         });
@@ -334,9 +399,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    if (notificationModalOverlay) {
-        notificationModalOverlay.addEventListener('click', () => {
-            notificationModal.classList.add('hidden');
+    // Close notification modal when clicking backdrop
+    if (notificationModal) {
+        notificationModal.addEventListener('click', (e) => {
+            if (e.target === notificationModal) {
+                notificationModal.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Close notification detail modal
+    if (closeNotificationDetailModal) {
+        closeNotificationDetailModal.addEventListener('click', () => {
+            notificationDetailModal.classList.add('hidden');
+        });
+    }
+    
+    // Close detail modal when clicking backdrop
+    if (notificationDetailModal) {
+        notificationDetailModal.addEventListener('click', (e) => {
+            if (e.target === notificationDetailModal) {
+                notificationDetailModal.classList.add('hidden');
+            }
         });
     }
     
