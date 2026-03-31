@@ -12,12 +12,13 @@ html {
     background: var(--gradient-primary);
     color: white;
     padding: 3rem 0 2rem;
-    margin-top: 60px;
 }
 
 .header-content {
     display: flex;
     align-items: center;
+    justify-content: center;
+    text-align: center;
     gap: 1.5rem;
 }
 
