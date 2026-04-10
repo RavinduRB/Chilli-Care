@@ -222,8 +222,146 @@
                 
                 <!-- Analytics Section -->
                 <section class="content-section" id="analyticsSection">
-                    <h2 class="section-title">Analytics</h2>
-                    <p class="section-description">Coming soon - Detailed analytics</p>
+                    <div class="analytics-header-bar">
+                        <div class="analytics-header-left">
+                        </div>
+                        <div class="analytics-controls">
+                            <select id="analyticsTimePeriod" class="analytics-select">
+                                <option value="7">Last 7 Days</option>
+                                <option value="30" selected>Last 30 Days</option>
+                                <option value="90">Last 90 Days</option>
+                                <option value="all">All Time</option>
+                            </select>
+                            <button class="btn-refresh-analytics" id="refreshAnalyticsBtn" title="Refresh analytics">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Analytics Stats Grid -->
+                    <div class="analytics-stats-grid">
+                        <div class="analytics-stat-card">
+                            <div class="analytics-stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                <i class="fas fa-disease"></i>
+                            </div>
+                            <div class="analytics-stat-info">
+                                <h3 class="analytics-stat-value" id="analyticsTotalDiseases">0</h3>
+                                <p class="analytics-stat-label">Total Disease Detections</p>
+                            </div>
+                        </div>
+                        
+                        <div class="analytics-stat-card">
+                            <div class="analytics-stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                <i class="fas fa-seedling"></i>
+                            </div>
+                            <div class="analytics-stat-info">
+                                <h3 class="analytics-stat-value" id="analyticsHealthyPlants">0</h3>
+                                <p class="analytics-stat-label">Healthy Plants</p>
+                            </div>
+                        </div>
+                        
+                        <div class="analytics-stat-card">
+                            <div class="analytics-stat-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="analytics-stat-info">
+                                <h3 class="analytics-stat-value" id="analyticsMostCommonDisease">-</h3>
+                                <p class="analytics-stat-label">Most Common Disease</p>
+                                <p class="analytics-stat-sublabel" id="analyticsMostCommonCount">0 cases</p>
+                            </div>
+                        </div>
+                        
+                        <div class="analytics-stat-card">
+                            <div class="analytics-stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="analytics-stat-info">
+                                <h3 class="analytics-stat-value" id="analyticsLeastCommonDisease">-</h3>
+                                <p class="analytics-stat-label">Least Common Disease</p>
+                                <p class="analytics-stat-sublabel" id="analyticsLeastCommonCount">0 cases</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts Grid -->
+                    <div class="analytics-charts-container">
+                        <!-- Disease Distribution Chart -->
+                        <div class="analytics-chart-card">
+                            <div class="analytics-chart-header">
+                                <h3><i class="fas fa-chart-pie"></i> Disease Distribution (Excluding Healthy)</h3>
+                                <p>Breakdown of detected diseases</p>
+                            </div>
+                            <div class="analytics-chart-body">
+                                <canvas id="diseaseDistributionChart" class="analytics-chart"></canvas>
+                                <div id="noDataMessage" class="analytics-no-data" style="display: none;">
+                                    <i class="fas fa-chart-pie"></i>
+                                    <p>No disease data available</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Disease Comparison Chart -->
+                        <div class="analytics-chart-card">
+                            <div class="analytics-chart-header">
+                                <h3><i class="fas fa-chart-bar"></i> Disease Comparison</h3>
+                                <p>Compare disease detection counts</p>
+                            </div>
+                            <div class="analytics-chart-body">
+                                <canvas id="diseaseComparisonChart" class="analytics-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- All Predictions Overview -->
+                    <div class="analytics-predictions-section">
+                        <div class="analytics-section-header">
+                            <h3><i class="fas fa-list"></i> All Predictions Overview</h3>
+                            <p>Recent predictions from all users</p>
+                        </div>
+                        
+                        <div class="analytics-predictions-table-container">
+                            <table class="analytics-predictions-table">
+                                <thead>
+                                    <tr>
+                                        <th>Disease</th>
+                                        <th>Confidence</th>
+                                        <th>Location</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="analyticsPredictionsTableBody">
+                                    <tr>
+                                        <td colspan="4" class="analytics-table-loading">
+                                            <i class="fas fa-spinner fa-spin"></i> Loading predictions...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div class="analytics-empty-state" id="analyticsEmptyState" style="display: none;">
+                            <i class="fas fa-inbox"></i>
+                            <h3>No Predictions Available</h3>
+                            <p>There are no predictions to display for the selected time period</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading Overlay -->
+                    <div class="analytics-loading-overlay" id="analyticsLoadingOverlay" style="display: none;">
+                        <div class="analytics-loading-spinner"></div>
+                        <p>Loading analytics data...</p>
+                    </div>
+                    
+                    <!-- Error State -->
+                    <div class="analytics-error-state" id="analyticsErrorState" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Failed to load analytics data</h3>
+                        <p id="analyticsErrorMessage">An error occurred while fetching analytics data.</p>
+                        <button class="btn-retry-analytics" onclick="loadAnalyticsData()">
+                            <i class="fas fa-redo"></i> Retry
+                        </button>
+                    </div>
                 </section>
                 
                 <!-- Messages Section -->

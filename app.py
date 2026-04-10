@@ -1864,6 +1864,116 @@ def admin_dashboard():
     return render_template('admin_dashboard.html')
 
 
+@app.route('/api/admin/analytics', methods=['GET'])
+@login_required
+def get_admin_analytics():
+    """Get admin analytics data (admin only)"""
+    if current_user.user_type != 'admin':
+        return jsonify({
+            'success': False,
+            'error': 'Unauthorized'
+        }), 403
+    
+    if not (mongodb and mongodb.connected):
+        return jsonify({
+            'success': False,
+            'error': 'MongoDB not configured'
+        }), 503
+    
+    try:
+        # Get time period from query params (default: last 30 days)
+        from datetime import datetime, timedelta
+        period = request.args.get('period', '30')
+        
+        # Calculate date range
+        if period == 'all':
+            start_date = None
+        else:
+            days = int(period)
+            start_date = datetime.now() - timedelta(days=days)
+        
+        # Get all predictions
+        query = {}
+        if start_date:
+            query['timestamp'] = {'$gte': start_date}
+        
+        predictions = list(mongodb.db.predictions.find(query))
+        
+        # Calculate statistics
+        total_detections = len(predictions)
+        
+        # Count by disease (excluding healthy)
+        disease_counts = {}
+        healthy_count = 0
+        
+        for pred in predictions:
+            disease = pred.get('predicted_disease', 'Unknown')
+            # Check if disease contains 'healthy' (case-insensitive)
+            if 'healthy' in disease.lower():
+                healthy_count += 1
+            else:
+                disease_counts[disease] = disease_counts.get(disease, 0) + 1
+        
+        # Find most and least common diseases (excluding healthy)
+        most_common = None
+        most_common_count = 0
+        least_common = None
+        least_common_count = float('inf')
+        
+        for disease, count in disease_counts.items():
+            if count > most_common_count:
+                most_common = disease
+                most_common_count = count
+            if count < least_common_count:
+                least_common = disease
+                least_common_count = count
+        
+        # Prepare disease distribution data
+        disease_distribution = []
+        for disease, count in sorted(disease_counts.items(), key=lambda x: x[1], reverse=True):
+            disease_distribution.append({
+                'disease': disease,
+                'count': count
+            })
+        
+        # Get all predictions overview (recent)
+        recent_predictions = sorted(predictions, key=lambda x: x.get('timestamp', datetime.min), reverse=True)[:10]
+        
+        predictions_overview = []
+        for pred in recent_predictions:
+            predictions_overview.append({
+                'disease': pred.get('predicted_disease', 'Unknown'),
+                'confidence': round(pred.get('confidence', 0), 2),
+                'timestamp': pred.get('timestamp').isoformat() if pred.get('timestamp') else None,
+                'location': pred.get('location', {}).get('city', 'Unknown')
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'total_detections': total_detections - healthy_count,  # Exclude healthy from total diseases
+                'healthy_plants': healthy_count,
+                'most_common': {
+                    'disease': most_common if most_common else '-',
+                    'count': most_common_count if most_common else 0
+                },
+                'least_common': {
+                    'disease': least_common if least_common else '-',
+                    'count': least_common_count if least_common and least_common_count != float('inf') else 0
+                },
+                'disease_distribution': disease_distribution,
+                'recent_predictions': predictions_overview
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching admin analytics: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.route('/api/history', methods=['GET'])
 def get_prediction_history():
     """Get prediction history with pagination"""

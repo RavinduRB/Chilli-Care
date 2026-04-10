@@ -352,6 +352,9 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (sectionName === 'messages') {
                 // Load messages when switching to messages section
                 loadAllMessages();
+            } else if (sectionName === 'analytics') {
+                // Load analytics when switching to analytics section
+                loadAnalyticsData();
             }
             
             // Close mobile sidebar if open
@@ -1419,6 +1422,289 @@ document.addEventListener('DOMContentLoaded', function() {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // ============================================
+    // ANALYTICS
+    // ============================================
+    
+    // Analytics chart instances
+    let diseaseDistributionChart = null;
+    let diseaseComparisonChart = null;
+    
+    // Load analytics data
+    window.loadAnalyticsData = async function() {
+        const analyticsSection = document.getElementById('analyticsSection');
+        const loadingOverlay = document.getElementById('analyticsLoadingOverlay');
+        const errorState = document.getElementById('analyticsErrorState');
+        
+        try {
+            // Show loading
+            if (loadingOverlay) loadingOverlay.style.display = 'flex';
+            if (errorState) errorState.style.display = 'none';
+            
+            // Get selected time period
+            const timePeriod = document.getElementById('analyticsTimePeriod')?.value || '30';
+            
+            const response = await fetch(`/api/admin/analytics?period=${timePeriod}`);
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to load analytics');
+            }
+            
+            const data = result.data;
+            
+            // Update statistics cards
+            document.getElementById('analyticsTotalDiseases').textContent = data.total_detections || 0;
+            document.getElementById('analyticsHealthyPlants').textContent = data.healthy_plants || 0;
+            
+            // Format disease names for display
+            const formatDiseaseName = (name) => {
+                if (!name || name === '-') return '-';
+                // Convert "Chilli__Anthacnose" to "Anthacnose"
+                return name.replace(/^Chilli[_\s]+/i, '').replace(/_/g, ' ');
+            };
+            
+            document.getElementById('analyticsMostCommonDisease').textContent = 
+                formatDiseaseName(data.most_common.disease);
+            document.getElementById('analyticsMostCommonCount').textContent = 
+                `${data.most_common.count} cases`;
+            
+            document.getElementById('analyticsLeastCommonDisease').textContent = 
+                formatDiseaseName(data.least_common.disease);
+            document.getElementById('analyticsLeastCommonCount').textContent = 
+                `${data.least_common.count} cases`;
+            
+            // Update charts
+            updateAnalyticsCharts(data.disease_distribution);
+            
+            // Update predictions table
+            updateAnalyticsPredictionsTable(data.recent_predictions);
+            
+            // Hide loading
+            if (loadingOverlay) loadingOverlay.style.display = 'none';
+            
+        } catch (error) {
+            console.error('Error loading analytics:', error);
+            
+            // Hide loading
+            if (loadingOverlay) loadingOverlay.style.display = 'none';
+            
+            // Show error
+            if (errorState) {
+                errorState.style.display = 'flex';
+                const errorMessage = document.getElementById('analyticsErrorMessage');
+                if (errorMessage) {
+                    errorMessage.textContent = error.message || 'An error occurred while fetching analytics data.';
+                }
+            }
+        }
+    };
+    
+    // Update analytics charts
+    function updateAnalyticsCharts(diseaseData) {
+        const noDataMessage = document.getElementById('noDataMessage');
+        const distributionCanvas = document.getElementById('diseaseDistributionChart');
+        const comparisonCanvas = document.getElementById('diseaseComparisonChart');
+        
+        if (!diseaseData || diseaseData.length === 0) {
+            // No data - show empty state
+            if (noDataMessage) noDataMessage.style.display = 'flex';
+            if (distributionCanvas) distributionCanvas.style.display = 'none';
+            if (comparisonCanvas) comparisonCanvas.style.display = 'none';
+            return;
+        }
+        
+        // Hide empty state, show charts
+        if (noDataMessage) noDataMessage.style.display = 'none';
+        if (distributionCanvas) distributionCanvas.style.display = 'block';
+        if (comparisonCanvas) comparisonCanvas.style.display = 'block';
+        
+        // Prepare chart data
+        const labels = diseaseData.map(d => {
+            const name = d.disease.replace(/^Chilli[_\s]+/i, '').replace(/_/g, ' ');
+            return name;
+        });
+        const counts = diseaseData.map(d => d.count);
+        
+        // Color palette
+        const colors = [
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 206, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(153, 102, 255, 0.8)',
+            'rgba(255, 159, 64, 0.8)'
+        ];
+        
+        // Destroy existing charts
+        if (diseaseDistributionChart) {
+            diseaseDistributionChart.destroy();
+        }
+        if (diseaseComparisonChart) {
+            diseaseComparisonChart.destroy();
+        }
+        
+        // Create pie chart
+        if (distributionCanvas) {
+            const ctx = distributionCanvas.getContext('2d');
+            diseaseDistributionChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Create bar chart
+        if (comparisonCanvas) {
+            const ctx = comparisonCanvas.getContext('2d');
+            diseaseComparisonChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Detection Count',
+                        data: counts,
+                        backgroundColor: colors,
+                        borderWidth: 0,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Detections: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+    
+    // Update predictions table
+    function updateAnalyticsPredictionsTable(predictions) {
+        const tableBody = document.getElementById('analyticsPredictionsTableBody');
+        const emptyState = document.getElementById('analyticsEmptyState');
+        
+        if (!predictions || predictions.length === 0) {
+            if (tableBody) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="analytics-table-empty">No predictions available</td></tr>';
+            }
+            return;
+        }
+        
+        // Hide empty state
+        if (emptyState) emptyState.style.display = 'none';
+        
+        // Build table rows
+        let html = '';
+        predictions.forEach(pred => {
+            const diseaseName = pred.disease.replace(/^Chilli[_\s]+/i, '').replace(/_/g, ' ');
+            // Handle confidence - if already > 1, it's a percentage; if <= 1, multiply by 100
+            const confValue = pred.confidence > 1 ? pred.confidence : pred.confidence * 100;
+            const confidence = confValue.toFixed(1) + '%';
+            const date = pred.timestamp ? new Date(pred.timestamp).toLocaleDateString() : 'N/A';
+            const location = pred.location || 'Unknown';
+            
+            // Color code based on disease type
+            let diseaseClass = 'disease-tag';
+            if (pred.disease.toLowerCase().includes('healthy')) {
+                diseaseClass += ' disease-healthy';
+            } else {
+                diseaseClass += ' disease-sick';
+            }
+            
+            html += `
+                <tr>
+                    <td><span class="${diseaseClass}">${diseaseName}</span></td>
+                    <td>${confidence}</td>
+                    <td>${location}</td>
+                    <td>${date}</td>
+                </tr>
+            `;
+        });
+        
+        if (tableBody) {
+            tableBody.innerHTML = html;
+        }
+    }
+    
+    // Analytics time period change handler
+    const analyticsTimePeriod = document.getElementById('analyticsTimePeriod');
+    if (analyticsTimePeriod) {
+        analyticsTimePeriod.addEventListener('change', function() {
+            loadAnalyticsData();
+        });
+    }
+    
+    // Refresh analytics button
+    const refreshAnalyticsBtn = document.getElementById('refreshAnalyticsBtn');
+    if (refreshAnalyticsBtn) {
+        refreshAnalyticsBtn.addEventListener('click', function() {
+            this.querySelector('i').classList.add('fa-spin');
+            loadAnalyticsData().finally(() => {
+                this.querySelector('i').classList.remove('fa-spin');
+            });
+        });
     }
 
 });
