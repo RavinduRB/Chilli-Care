@@ -325,7 +325,7 @@ class MongoDB:
                 },
                 {
                     "$match": {
-                        "_id.city": {"$ne": "Unknown", "$ne": "Local", "$ne": None}
+                        "_id.city": {"$ne": "Unknown", "$ne": "Local", "$ne": "Private Network", "$ne": None}
                     }
                 },
                 {
@@ -372,7 +372,7 @@ class MongoDB:
                 },
                 {
                     "$match": {
-                        "_id.city": {"$ne": "Unknown", "$ne": "Local", "$ne": None}
+                        "_id.city": {"$ne": "Unknown", "$ne": "Local", "$ne": "Private Network", "$ne": None}
                     }
                 },
                 {
