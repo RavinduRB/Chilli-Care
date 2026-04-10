@@ -216,8 +216,153 @@
                 
                 <!-- District Mapping Section -->
                 <section class="content-section" id="mappingSection">
-                    <h2 class="section-title">District Mapping</h2>
-                    <p class="section-description">Coming soon - Geographic distribution</p>
+                    <div class="mapping-header-bar">
+                        <div class="mapping-header-left">
+                        </div>
+                        <div class="mapping-controls">
+                            <button class="btn-refresh-mapping" id="refreshMappingBtn" title="Refresh map">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filter Controls -->
+                    <div class="mapping-filters">
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label for="countryFilter">
+                                    <i class="fas fa-globe"></i> Country
+                                </label>
+                                <select id="countryFilter" class="mapping-filter-select">
+                                    <option value="">All Countries</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="regionFilter">
+                                    <i class="fas fa-map"></i> Province/Region
+                                </label>
+                                <select id="regionFilter" class="mapping-filter-select">
+                                    <option value="">All Regions</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="cityFilter">
+                                    <i class="fas fa-city"></i> City
+                                </label>
+                                <select id="cityFilter" class="mapping-filter-select">
+                                    <option value="">All Cities</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <button class="btn-reset-filters" id="resetFiltersBtn">
+                                    <i class="fas fa-redo"></i> Reset Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Statistics Cards -->
+                    <div class="mapping-stats-grid">
+                        <div class="mapping-stat-card">
+                            <div class="mapping-stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="mapping-stat-info">
+                                <h3 class="mapping-stat-value" id="mappingTotalLocations">0</h3>
+                                <p class="mapping-stat-label">Total Locations</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mapping-stat-card">
+                            <div class="mapping-stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="mapping-stat-info">
+                                <h3 class="mapping-stat-value" id="mappingTotalPredictions">0</h3>
+                                <p class="mapping-stat-label">Total Predictions</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mapping-stat-card">
+                            <div class="mapping-stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <div class="mapping-stat-info">
+                                <h3 class="mapping-stat-value" id="mappingCountriesCount">0</h3>
+                                <p class="mapping-stat-label">Countries</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mapping-stat-card">
+                            <div class="mapping-stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                <i class="fas fa-city"></i>
+                            </div>
+                            <div class="mapping-stat-info">
+                                <h3 class="mapping-stat-value" id="mappingCitiesCount">0</h3>
+                                <p class="mapping-stat-label">Cities</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Map Container -->
+                    <div class="mapping-container">
+                        <div id="predictionMap" class="prediction-map"></div>
+                    </div>
+                    
+                    <!-- Locations Table -->
+                    <div class="mapping-locations-section">
+                        <div class="mapping-section-header">
+                            <h3><i class="fas fa-list"></i> Locations Overview</h3>
+                            <p>Detailed list of prediction locations</p>
+                        </div>
+                        
+                        <div class="mapping-table-container">
+                            <table class="mapping-table">
+                                <thead>
+                                    <tr>
+                                        <th>City</th>
+                                        <th>Province/Region</th>
+                                        <th>Country</th>
+                                        <th>Predictions</th>
+                                        <th>Top Disease</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mappingTableBody">
+                                    <tr>
+                                        <td colspan="5" class="mapping-table-loading">
+                                            <i class="fas fa-spinner fa-spin"></i> Loading locations...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div class="mapping-empty-state" id="mappingEmptyState" style="display: none;">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <h3>No Location Data Available</h3>
+                            <p>No predictions with valid location data found</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading Overlay -->
+                    <div class="mapping-loading-overlay" id="mappingLoadingOverlay" style="display: none;">
+                        <div class="mapping-loading-spinner"></div>
+                        <p>Loading map data...</p>
+                    </div>
+                    
+                    <!-- Error State -->
+                    <div class="mapping-error-state" id="mappingErrorState" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Failed to load mapping data</h3>
+                        <p id="mappingErrorMessage">An error occurred while fetching location data.</p>
+                        <button class="btn-retry-mapping" onclick="loadMappingData()">
+                            <i class="fas fa-redo"></i> Retry
+                        </button>
+                    </div>
                 </section>
                 
                 <!-- Analytics Section -->

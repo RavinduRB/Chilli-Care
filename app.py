@@ -1974,6 +1974,118 @@ def get_admin_analytics():
         }), 500
 
 
+@app.route('/api/admin/mapping', methods=['GET'])
+@login_required
+def get_admin_mapping():
+    """Get location mapping data for admin (admin only)"""
+    if current_user.user_type != 'admin':
+        return jsonify({
+            'success': False,
+            'error': 'Unauthorized'
+        }), 403
+    
+    if not (mongodb and mongodb.connected):
+        return jsonify({
+            'success': False,
+            'error': 'MongoDB not configured'
+        }), 503
+    
+    try:
+        # Get filter parameters
+        city_filter = request.args.get('city', None)
+        region_filter = request.args.get('region', None)
+        country_filter = request.args.get('country', None)
+        
+        # Build query
+        query = {}
+        
+        # Only include predictions with valid location data
+        query['location'] = {'$exists': True}
+        
+        # Apply filters
+        if city_filter:
+            query['location.city'] = city_filter
+        if region_filter:
+            query['location.region'] = region_filter
+        if country_filter:
+            query['location.country'] = country_filter
+        
+        # Get all predictions with location
+        predictions = list(mongodb.db.predictions.find(query))
+        
+        # Format locations for map
+        locations = []
+        for pred in predictions:
+            location = pred.get('location', {})
+            
+            # Skip if no lat/lon or invalid locations
+            if not location.get('latitude') or not location.get('longitude'):
+                continue
+            
+            city = location.get('city', 'Unknown')
+            # Skip invalid/local/private locations
+            if city in ['Unknown', 'Local', 'Private Network']:
+                continue
+            
+            locations.append({
+                'latitude': location.get('latitude'),
+                'longitude': location.get('longitude'),
+                'city': city,
+                'region': location.get('region', 'Unknown'),
+                'country': location.get('country', 'Unknown'),
+                'disease': pred.get('predicted_disease', 'Unknown'),
+                'confidence': pred.get('confidence', 0),
+                'timestamp': pred.get('timestamp').isoformat() if pred.get('timestamp') else None
+            })
+        
+        # Get unique filter options
+        cities = sorted(list(set([loc['city'] for loc in locations])))
+        regions = sorted(list(set([loc['region'] for loc in locations])))
+        countries = sorted(list(set([loc['country'] for loc in locations])))
+        
+        # Calculate statistics by location
+        location_stats = {}
+        for loc in locations:
+            key = f"{loc['city']}, {loc['region']}, {loc['country']}"
+            if key not in location_stats:
+                location_stats[key] = {
+                    'city': loc['city'],
+                    'region': loc['region'],
+                    'country': loc['country'],
+                    'latitude': loc['latitude'],
+                    'longitude': loc['longitude'],
+                    'count': 0,
+                    'diseases': {}
+                }
+            location_stats[key]['count'] += 1
+            
+            disease = loc['disease']
+            if disease not in location_stats[key]['diseases']:
+                location_stats[key]['diseases'][disease] = 0
+            location_stats[key]['diseases'][disease] += 1
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'locations': list(location_stats.values()),
+                'filters': {
+                    'cities': cities,
+                    'regions': regions,
+                    'countries': countries
+                },
+                'total_locations': len(location_stats),
+                'total_predictions': len(locations)
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching mapping data: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.route('/api/history', methods=['GET'])
 def get_prediction_history():
     """Get prediction history with pagination"""

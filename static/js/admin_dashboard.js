@@ -355,6 +355,9 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (sectionName === 'analytics') {
                 // Load analytics when switching to analytics section
                 loadAnalyticsData();
+            } else if (sectionName === 'mapping') {
+                // Load mapping when switching to mapping section
+                loadMappingData();
             }
             
             // Close mobile sidebar if open
@@ -1702,6 +1705,362 @@ document.addEventListener('DOMContentLoaded', function() {
         refreshAnalyticsBtn.addEventListener('click', function() {
             this.querySelector('i').classList.add('fa-spin');
             loadAnalyticsData().finally(() => {
+                this.querySelector('i').classList.remove('fa-spin');
+            });
+        });
+    }
+
+    // ============================================
+    // DISTRICT MAPPING
+    // ============================================
+    
+    // Map instance
+    let predictionMap = null;
+    let markerCluster = null;
+    let currentMappingData = null;
+    
+    // Load mapping data
+    window.loadMappingData = async function() {
+        const mappingSection = document.getElementById('mappingSection');
+        const loadingOverlay = document.getElementById('mappingLoadingOverlay');
+        const errorState = document.getElementById('mappingErrorState');
+        
+        try {
+            // Show loading
+            if (loadingOverlay) loadingOverlay.style.display = 'flex';
+            if (errorState) errorState.style.display = 'none';
+            
+            // Get filter values
+            const countryFilter = document.getElementById('countryFilter')?.value || '';
+            const regionFilter = document.getElementById('regionFilter')?.value || '';
+            const cityFilter = document.getElementById('cityFilter')?.value || '';
+            
+            // Build query params
+            const params = new URLSearchParams();
+            if (countryFilter) params.append('country', countryFilter);
+            if (regionFilter) params.append('region', regionFilter);
+            if (cityFilter) params.append('city', cityFilter);
+            
+            const response = await fetch(`/api/admin/mapping?${params.toString()}`);
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to load mapping data');
+            }
+            
+            const data = result.data;
+            currentMappingData = data;
+            
+            // Update statistics
+            document.getElementById('mappingTotalLocations').textContent = data.total_locations || 0;
+            document.getElementById('mappingTotalPredictions').textContent = data.total_predictions || 0;
+            document.getElementById('mappingCountriesCount').textContent = data.filters.countries.length || 0;
+            document.getElementById('mappingCitiesCount').textContent = data.filters.cities.length || 0;
+            
+            // Update filters if they're empty (first load)
+            updateMapFilters(data.filters);
+            
+            // Update map
+            updateMap(data.locations);
+            
+            // Update table
+            updateMappingTable(data.locations);
+            
+            // Hide loading
+            if (loadingOverlay) loadingOverlay.style.display = 'none';
+            
+        } catch (error) {
+            console.error('Error loading mapping data:', error);
+            
+            // Hide loading
+            if (loadingOverlay) loadingOverlay.style.display = 'none';
+            
+            // Show error
+            if (errorState) {
+                errorState.style.display = 'flex';
+                const errorMessage = document.getElementById('mappingErrorMessage');
+                if (errorMessage) {
+                    errorMessage.textContent = error.message || 'An error occurred while fetching location data.';
+                }
+            }
+        }
+    };
+    
+    // Update filter dropdowns
+    function updateMapFilters(filters) {
+        const countryFilter = document.getElementById('countryFilter');
+        const regionFilter = document.getElementById('regionFilter');
+        const cityFilter = document.getElementById('cityFilter');
+        
+        // Save current values
+        const currentCountry = countryFilter?.value || '';
+        const currentRegion = regionFilter?.value || '';
+        const currentCity = cityFilter?.value || '';
+        
+        // Update countries
+        if (countryFilter && filters.countries) {
+            const countriesHTML = '<option value="">All Countries</option>' +
+                filters.countries.map(c => `<option value="${c}" ${c === currentCountry ? 'selected' : ''}>${c}</option>`).join('');
+            countryFilter.innerHTML = countriesHTML;
+        }
+        
+        // Update regions
+        if (regionFilter && filters.regions) {
+            const regionsHTML = '<option value="">All Regions</option>' +
+                filters.regions.map(r => `<option value="${r}" ${r === currentRegion ? 'selected' : ''}>${r}</option>`).join('');
+            regionFilter.innerHTML = regionsHTML;
+        }
+        
+        // Update cities
+        if (cityFilter && filters.cities) {
+            const citiesHTML = '<option value="">All Cities</option>' +
+                filters.cities.map(c => `<option value="${c}" ${c === currentCity ? 'selected' : ''}>${c}</option>`).join('');
+            cityFilter.innerHTML = citiesHTML;
+        }
+    }
+    
+    // Initialize map
+    function initializeMap() {
+        if (predictionMap) return; // Already initialized
+        
+        const mapElement = document.getElementById('predictionMap');
+        if (!mapElement) return;
+        
+        // Create map centered on world view with scroll handling
+        predictionMap = L.map('predictionMap', {
+            scrollWheelZoom: false,  // Disable scroll wheel zoom by default
+            tap: false,  // Disable tap for mobile
+            touchZoom: true,  // Keep touch zoom enabled
+            dragging: true,  // Keep dragging enabled
+            zoomControl: true,  // Keep zoom controls
+            doubleClickZoom: true,  // Keep double click zoom
+            boxZoom: true  // Keep box zoom
+        }).setView([20, 0], 2);
+        
+        // Enable scroll zoom only when map is focused
+        predictionMap.on('focus', function() {
+            predictionMap.scrollWheelZoom.enable();
+        });
+        
+        predictionMap.on('blur', function() {
+            predictionMap.scrollWheelZoom.disable();
+        });
+        
+        // Enable scroll zoom when clicking on the map
+        predictionMap.on('click', function() {
+            predictionMap.scrollWheelZoom.enable();
+        });
+        
+        // Disable scroll zoom when mouse leaves map
+        mapElement.addEventListener('mouseleave', function() {
+            if (predictionMap) {
+                predictionMap.scrollWheelZoom.disable();
+            }
+        });
+        
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 18,
+            minZoom: 2
+        }).addTo(predictionMap);
+        
+        // Initialize marker cluster group
+        markerCluster = L.markerClusterGroup({
+            maxClusterRadius: 50,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true
+        });
+        
+        predictionMap.addLayer(markerCluster);
+        
+        // Add scroll hint message
+        const scrollHint = L.control({position: 'topright'});
+        scrollHint.onAdd = function() {
+            const div = L.DomUtil.create('div', 'map-scroll-hint');
+            div.innerHTML = '<small style="background: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 4px; font-size: 11px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Click map to enable scroll zoom</small>';
+            div.style.display = 'none';
+            return div;
+        };
+        scrollHint.addTo(predictionMap);
+        
+        // Show hint when hovering over map
+        mapElement.addEventListener('mouseenter', function() {
+            const hint = document.querySelector('.map-scroll-hint');
+            if (hint && !predictionMap.scrollWheelZoom.enabled()) {
+                hint.style.display = 'block';
+                setTimeout(() => {
+                    hint.style.display = 'none';
+                }, 2000);
+            }
+        });
+    }
+    
+    // Update map with locations
+    function updateMap(locations) {
+        if (!predictionMap) {
+            initializeMap();
+        }
+        
+        if (!predictionMap || !markerCluster) return;
+        
+        // Clear existing markers
+        markerCluster.clearLayers();
+        
+        if (!locations || locations.length === 0) {
+            return;
+        }
+        
+        // Add markers for each location
+        locations.forEach(loc => {
+            if (!loc.latitude || !loc.longitude) return;
+            
+            // Create custom icon with color based on prediction count
+            const count = loc.count;
+            let iconColor = '#4facfe';
+            if (count > 20) iconColor = '#f5576c';
+            else if (count > 10) iconColor = '#fa709a';
+            else if (count > 5) iconColor = '#fbbf24';
+            
+            // Create marker
+            const marker = L.marker([loc.latitude, loc.longitude], {
+                icon: L.divIcon({
+                    className: 'custom-map-marker',
+                    html: `<div style="background: ${iconColor}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 12px;">${count}</div>`,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                })
+            });
+            
+            // Create popup content
+            const topDisease = Object.entries(loc.diseases).sort((a, b) => b[1] - a[1])[0];
+            const diseaseList = Object.entries(loc.diseases)
+                .sort((a, b) => b[1] - a[1])
+                .map(([disease, count]) => {
+                    const name = disease.replace(/^Chilli[_\s]+/i, '').replace(/_/g, ' ');
+                    return `<li>${name}: ${count}</li>`;
+                })
+                .join('');
+            
+            const popupContent = `
+                <div class="map-popup">
+                    <h4><i class="fas fa-map-marker-alt"></i> ${loc.city}</h4>
+                    <p class="popup-location">${loc.region}, ${loc.country}</p>
+                    <div class="popup-stats">
+                        <div class="popup-stat">
+                            <span class="popup-label">Total Predictions:</span>
+                            <span class="popup-value">${loc.count}</span>
+                        </div>
+                    </div>
+                    <div class="popup-diseases">
+                        <strong>Diseases Detected:</strong>
+                        <ul>${diseaseList}</ul>
+                    </div>
+                </div>
+            `;
+            
+            marker.bindPopup(popupContent, {
+                maxWidth: 300,
+                className: 'custom-popup'
+            });
+            
+            markerCluster.addLayer(marker);
+        });
+        
+        // Fit map to markers if any exist
+        if (locations.length > 0) {
+            const bounds = markerCluster.getBounds();
+            if (bounds.isValid()) {
+                predictionMap.fitBounds(bounds, {
+                    padding: [50, 50],
+                    maxZoom: 10
+                });
+            }
+        }
+    }
+    
+    // Update mapping table
+    function updateMappingTable(locations) {
+        const tableBody = document.getElementById('mappingTableBody');
+        const emptyState = document.getElementById('mappingEmptyState');
+        
+        if (!locations || locations.length === 0) {
+            if (tableBody) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="mapping-table-empty">No location data available</td></tr>';
+            }
+            if (emptyState) emptyState.style.display = 'flex';
+            return;
+        }
+        
+        // Hide empty state
+        if (emptyState) emptyState.style.display = 'none';
+        
+        // Sort by prediction count
+        locations.sort((a, b) => b.count - a.count);
+        
+        // Build table rows
+        let html = '';
+        locations.forEach(loc => {
+            // Find top disease
+            const topDisease = Object.entries(loc.diseases).sort((a, b) => b[1] - a[1])[0];
+            const diseaseName = topDisease ? topDisease[0].replace(/^Chilli[_\s]+/i, '').replace(/_/g, ' ') : 'N/A';
+            const diseaseCount = topDisease ? topDisease[1] : 0;
+            
+            html += `
+                <tr>
+                    <td>${loc.city}</td>
+                    <td>${loc.region}</td>
+                    <td>${loc.country}</td>
+                    <td><span class="prediction-count-badge">${loc.count}</span></td>
+                    <td>${diseaseName} (${diseaseCount})</td>
+                </tr>
+            `;
+        });
+        
+        if (tableBody) {
+            tableBody.innerHTML = html;
+        }
+    }
+    
+    // Filter change handlers
+    const countryFilter = document.getElementById('countryFilter');
+    const regionFilter = document.getElementById('regionFilter');
+    const cityFilter = document.getElementById('cityFilter');
+    const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+    const refreshMappingBtn = document.getElementById('refreshMappingBtn');
+    
+    if (countryFilter) {
+        countryFilter.addEventListener('change', function() {
+            loadMappingData();
+        });
+    }
+    
+    if (regionFilter) {
+        regionFilter.addEventListener('change', function() {
+            loadMappingData();
+        });
+    }
+    
+    if (cityFilter) {
+        cityFilter.addEventListener('change', function() {
+            loadMappingData();
+        });
+    }
+    
+    if (resetFiltersBtn) {
+        resetFiltersBtn.addEventListener('click', function() {
+            if (countryFilter) countryFilter.value = '';
+            if (regionFilter) regionFilter.value = '';
+            if (cityFilter) cityFilter.value = '';
+            loadMappingData();
+        });
+    }
+    
+    if (refreshMappingBtn) {
+        refreshMappingBtn.addEventListener('click', function() {
+            this.querySelector('i').classList.add('fa-spin');
+            loadMappingData().finally(() => {
                 this.querySelector('i').classList.remove('fa-spin');
             });
         });
