@@ -30,21 +30,23 @@
         </div>
     </section>
 
-    <!-- Authentication Required Message -->
-    <section class="auth-required hidden" id="authRequired">
-        <div class="container">
-            <div class="auth-required-card">
-                <i class="fas fa-lock"></i>
-                <h2>Login Required</h2>
-                <p>Please log in to view your personal analytics</p>
-                <button class="btn btn-primary" id="authRequiredLoginBtn">
-                    <i class="fas fa-sign-in-alt"></i> Log In
-                </button>
+    <!-- Main Content Wrapper (maintains consistent height) -->
+    <div class="analytics-main-wrapper">
+        <!-- Authentication Required Message -->
+        <section class="auth-required hidden" id="authRequired">
+            <div class="container">
+                <div class="auth-required-card">
+                    <i class="fas fa-lock"></i>
+                    <h2>Login Required</h2>
+                    <p>Please log in to view your personal analytics</p>
+                    <button class="btn btn-primary" id="authRequiredLoginBtn">
+                        <i class="fas fa-sign-in-alt"></i> Log In
+                    </button>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Analytics Content -->
+        <!-- Analytics Content -->
     <section class="analytics-content hidden" id="analyticsContent">
         <div class="container">
             <!-- Statistics Cards -->
@@ -168,6 +170,8 @@
             </div>
         </div>
     </section>
+    </div>
+    <!-- End Main Content Wrapper -->
 
     <!-- Login Modal -->
     <div class="modal hidden" id="loginModal">

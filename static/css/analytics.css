@@ -38,10 +38,32 @@ html {
     opacity: 0.95;
 }
 
+/* Main Content Wrapper - prevents footer jumping */
+.analytics-main-wrapper {
+    min-height: calc(100vh - 300px);
+    position: relative;
+}
+
+.analytics-main-wrapper > section {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.analytics-main-wrapper > section:not(.hidden) {
+    position: relative;
+    opacity: 1;
+    visibility: visible;
+}
+
 /* Authentication Required Section */
 .auth-required {
     padding: 4rem 0;
-    min-height: 60vh;
+    min-height: calc(100vh - 300px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -77,6 +99,7 @@ html {
 /* Analytics Content */
 .analytics-content {
     padding: 2rem 0;
+    min-height: calc(100vh - 300px);
     overflow-x: hidden;
 }
 
@@ -366,7 +389,7 @@ html {
 /* Loading Section */
 .loading-section {
     padding: 4rem 0;
-    min-height: 60vh;
+    min-height: calc(100vh - 300px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -899,4 +922,13 @@ html {
 /* Hidden State */
 .hidden {
     display: none !important;
+}
+
+/* Override for sections within main wrapper - use opacity instead */
+.analytics-main-wrapper > section.hidden {
+    display: block !important;
+    position: absolute !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none;
 }
