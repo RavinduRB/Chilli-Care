@@ -511,22 +511,28 @@
                 
                 <!-- Messages Section -->
                 <section class="content-section" id="messagesSection">
-                    <div class="messages-container">
+                    <div class="whatsapp-container">
                         <!-- Left Sidebar - Conversations List -->
-                        <div class="messages-sidebar">
-                            <div class="messages-sidebar-header">
-                                <h2><i class="fas fa-envelope"></i> User Messages</h2>
-                                <button class="btn-refresh-messages" id="refreshMessagesBtn" title="Refresh messages">
-                                    <i class="fas fa-sync-alt"></i>
-                                </button>
+                        <div class="whatsapp-sidebar">
+                            <div class="whatsapp-sidebar-header">
+                                <div class="whatsapp-header-content">
+                                    <h2><i class="fas fa-comment-dots"></i> Messages</h2>
+                                    <div class="whatsapp-header-actions">
+                                        <button class="whatsapp-icon-btn" id="refreshMessagesBtn" title="Refresh messages">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <div class="messages-search">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="messagesSearchInput" placeholder="Search conversations..." class="search-input">
+                            <div class="whatsapp-search">
+                                <div class="whatsapp-search-input">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="messagesSearchInput" placeholder="Search or start new chat">
+                                </div>
                             </div>
                             
-                            <div class="conversations-list" id="conversationsList">
+                            <div class="whatsapp-conversations" id="conversationsList">
                                 <div class="loading-conversations">
                                     <i class="fas fa-spinner fa-spin"></i>
                                     <p>Loading conversations...</p>
@@ -535,47 +541,83 @@
                         </div>
                         
                         <!-- Right Side - Conversation View -->
-                        <div class="messages-main">
-                            <div class="conversation-empty" id="conversationEmpty">
-                                <i class="fas fa-comments"></i>
-                                <h3>No Conversation Selected</h3>
-                                <p>Select a conversation from the left to view messages</p>
+                        <div class="whatsapp-chat">
+                            <div class="whatsapp-empty" id="conversationEmpty">
+                                <div class="whatsapp-empty-content">
+                                    <i class="fas fa-comments"></i>
+                                    <h3>WhatsApp-Style Messaging</h3>
+                                    <p>Select a conversation from the left to start messaging</p>
+                                    <div class="whatsapp-empty-footer">
+                                        <i class="fas fa-lock"></i>
+                                        <span>Your messages are secure</span>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <div class="conversation-view hidden" id="conversationView">
-                                <div class="conversation-header">
-                                    <div class="conversation-user-info">
-                                        <div class="conversation-avatar">
+                            <div class="whatsapp-conversation hidden" id="conversationView">
+                                <div class="whatsapp-chat-header">
+                                    <div class="whatsapp-chat-user">
+                                        <div class="whatsapp-avatar">
                                             <i class="fas fa-user"></i>
                                         </div>
-                                        <div class="conversation-details">
+                                        <div class="whatsapp-user-info">
                                             <h3 id="conversationUserName">User Name</h3>
                                             <p id="conversationUserEmail">user@email.com</p>
                                         </div>
                                     </div>
-                                    <button class="btn-close-conversation" id="closeConversationBtn">
-                                        <i class="fas fa-times"></i>
-                                    </button>
+                                    <div class="whatsapp-chat-actions">
+                                        <button class="whatsapp-icon-btn" title="Search in conversation">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                        <button class="whatsapp-icon-btn" id="closeConversationBtn" title="Close">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 
-                                <div class="conversation-messages" id="conversationMessages">
+                                <div class="whatsapp-messages" id="conversationMessages">
                                     <!-- Messages will be dynamically loaded here -->
                                 </div>
                                 
-                                <div class="conversation-reply">
-                                    <form id="replyForm" class="reply-form">
-                                        <textarea 
-                                            id="replyMessage" 
-                                            class="reply-textarea" 
-                                            placeholder="Type your reply here..."
-                                            rows="3"
-                                            required
-                                        ></textarea>
-                                        <button type="submit" class="btn-send-reply">
-                                            <i class="fas fa-paper-plane"></i>
-                                            Send Reply
+                                <div class="whatsapp-footer">
+                                    <div class="whatsapp-input-area">
+                                        <button class="whatsapp-icon-btn whatsapp-emoji-btn" id="emojiPickerBtn" title="Emoji">
+                                            <i class="far fa-smile"></i>
                                         </button>
-                                    </form>
+                                        <div class="whatsapp-input-wrapper">
+                                            <form id="replyForm" class="whatsapp-form">
+                                                <textarea 
+                                                    id="replyMessage" 
+                                                    class="whatsapp-input" 
+                                                    placeholder="Type a message"
+                                                    rows="1"
+                                                    required
+                                                ></textarea>
+                                                <button type="submit" class="whatsapp-send-btn" title="Send">
+                                                    <i class="fas fa-paper-plane"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <!-- Emoji Picker -->
+                                    <div class="whatsapp-emoji-picker hidden" id="emojiPicker">
+                                        <div class="emoji-picker-search">
+                                            <input type="text" id="emojiSearch" placeholder="Search emoji...">
+                                        </div>
+                                        <div class="emoji-picker-categories">
+                                            <button class="emoji-category active" data-category="smileys">😀</button>
+                                            <button class="emoji-category" data-category="gestures">👋</button>
+                                            <button class="emoji-category" data-category="animals">🐶</button>
+                                            <button class="emoji-category" data-category="food">🍕</button>
+                                            <button class="emoji-category" data-category="travel">✈️</button>
+                                            <button class="emoji-category" data-category="activities">⚽</button>
+                                            <button class="emoji-category" data-category="objects">💡</button>
+                                            <button class="emoji-category" data-category="symbols">❤️</button>
+                                        </div>
+                                        <div class="emoji-picker-content" id="emojiPickerContent">
+                                            <!-- Emojis will be loaded here -->
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

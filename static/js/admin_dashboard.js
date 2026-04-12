@@ -1158,20 +1158,22 @@ document.addEventListener('DOMContentLoaded', function() {
         conversations.forEach(conv => {
             const lastMessage = conv.messages[0];
             const timeAgo = formatTimeAgo(conv.last_message_time);
-            const preview = lastMessage ? lastMessage.message.substring(0, 60) + '...' : 'No message';
+            const preview = lastMessage ? lastMessage.message.substring(0, 50) : 'No message';
             const unreadBadge = conv.unread_count > 0 ? `<span class="conversation-badge">${conv.unread_count}</span>` : '';
             
             html += `
                 <div class="conversation-item" data-email="${conv.email}">
                     <div class="conversation-item-header">
-                        <div>
+                        <div style="flex: 1; min-width: 0;">
                             <div class="conversation-user-name">${escapeHtml(conv.name)}</div>
                             <div class="conversation-user-email">${escapeHtml(conv.email)}</div>
+                            <div class="conversation-preview">${escapeHtml(preview)}</div>
                         </div>
-                        <div class="conversation-time">${timeAgo}</div>
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                            <div class="conversation-time">${timeAgo}</div>
+                            ${unreadBadge}
+                        </div>
                     </div>
-                    <div class="conversation-preview">${escapeHtml(preview)}</div>
-                    ${unreadBadge}
                 </div>
             `;
         });
@@ -1309,9 +1311,11 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 // Disable form
                 replyMessage.disabled = true;
-                const submitBtn = replyForm.querySelector('.btn-send-reply');
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+                const submitBtn = replyForm.querySelector('.whatsapp-send-btn');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                }
                 
                 const response = await fetch(`/api/admin/messages/${encodeURIComponent(currentConversationEmail)}/reply`, {
                     method: 'POST',
@@ -1329,6 +1333,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Clear form
                     replyMessage.value = '';
                     
+                    // Reset textarea height
+                    replyMessage.style.height = 'auto';
+                    
                     // Reload conversation to show new message
                     await loadConversation(currentConversationEmail);
                     
@@ -1343,9 +1350,11 @@ document.addEventListener('DOMContentLoaded', function() {
             } finally {
                 // Re-enable form
                 replyMessage.disabled = false;
-                const submitBtn = replyForm.querySelector('.btn-send-reply');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Reply';
+                const submitBtn = replyForm.querySelector('.whatsapp-send-btn');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                }
             }
         });
     }
@@ -1370,6 +1379,14 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.conversation-item').forEach(item => {
                 item.classList.remove('active');
             });
+            
+            // On mobile, show the sidebar again
+            if (window.innerWidth <= 768) {
+                const sidebar = document.querySelector('.whatsapp-sidebar');
+                if (sidebar) {
+                    sidebar.classList.remove('hide-mobile');
+                }
+            }
         });
     }
     
@@ -1426,6 +1443,177 @@ document.addEventListener('DOMContentLoaded', function() {
         div.textContent = text;
         return div.innerHTML;
     }
+
+    // ============================================
+    // EMOJI PICKER
+    // ============================================
+    
+    const emojiPickerBtn = document.getElementById('emojiPickerBtn');
+    const emojiPicker = document.getElementById('emojiPicker');
+    const emojiPickerContent = document.getElementById('emojiPickerContent');
+    const emojiSearch = document.getElementById('emojiSearch');
+    const replyMessageInput = document.getElementById('replyMessage');
+    
+    // Comprehensive emoji collection by category
+    const emojis = {
+        smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '😶‍🌫️', '😵', '😵‍💫', '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '😕', '😟', '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱'],
+        gestures: ['👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✍️', '💪', '🦾', '🦿', '🦵', '🦶', '👂', '🦻', '👃', '🧠', '🦷', '🦴', '👀', '👁️', '👅', '👄', '💋', '🩸'],
+        animals: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦟', '🦗', '🕷️', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓', '🦍', '🦧', '🐘', '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🐃', '🐄', '🐎', '🐖', '🐏', '🐑', '🦙', '🐐', '🦌', '🐕', '🐩', '🦮', '🐕‍🦺', '🐈', '🐓', '🦃', '🦚', '🦜', '🦢', '🦩', '🕊️', '🐇', '🦝', '🦨', '🦡', '🦦', '🦥', '🐁', '🐀', '🐿️', '🦔'],
+        food: ['🍕', '🍔', '🍟', '🌭', '🍿', '🧈', '🥓', '🥚', '🍳', '🧇', '🥞', '🧈', '🍞', '🥐', '🥨', '🥯', '🥖', '🧀', '🥗', '🥙', '🥪', '🌮', '🌯', '🥫', '🍝', '🍜', '🍲', '🍛', '🍣', '🍱', '🥟', '🦪', '🍤', '🍙', '🍚', '🍘', '🍥', '🥠', '🥮', '🍢', '🍡', '🍧', '🍨', '🍦', '🥧', '🧁', '🍰', '🎂', '🍮', '🍭', '🍬', '🍫', '🍿', '🍩', '🍪', '🌰', '🥜', '🍯', '🥛', '🍼', '☕', '🍵', '🧃', '🥤', '🍶', '🍺', '🍻', '🥂', '🍷', '🥃', '🍸', '🍹', '🧉', '🍾', '🧊', '🥄', '🍴', '🍽️', '🥢', '🥡'],
+        travel: ['✈️', '🛫', '🛬', '🪂', '💺', '🚁', '🚟', '🚠', '🚡', '🛰️', '🚀', '🛸', '🚉', '🚊', '🚝', '🚞', '🚋', '🚌', '🚍', '🚎', '🚐', '🚑', '🚒', '🚓', '🚔', '🚕', '🚖', '🚗', '🚘', '🚙', '🛻', '🚚', '🚛', '🚜', '🏎️', '🏍️', '🛵', '🦽', '🦼', '🛴', '🚲', '🛹', '🛼', '🚏', '🛣️', '🛤️', '🛢️', '⛽', '🚨', '🚥', '🚦', '🛑', '🚧', '⚓', '⛵', '🛶', '🚤', '🛳️', '⛴️', '🛥️', '🚢', '🗿', '🗽', '🗼', '🏰', '🏯', '🏟️', '🎡', '🎢', '🎠', '⛲', '⛱️', '🏖️', '🏝️', '🏜️', '🌋', '⛰️', '🏔️', '🗻', '🏕️', '⛺', '🏠', '🏡', '🏘️', '🏚️', '🏗️', '🏭', '🏢', '🏬', '🏣', '🏤', '🏥', '🏦', '🏨', '🏪', '🏫', '🏩', '💒', '🏛️', '⛪', '🕌', '🕍', '🛕'],
+        activities: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🥅', '⛳', '🪁', '🏹', '🎣', '🤿', '🥊', '🥋', '🎽', '🛹', '🛷', '⛸️', '🥌', '🎿', '⛷️', '🏂', '🪂', '🏋️', '🤸', '🤺', '🤾', '🏌️', '🏇', '🧘', '🏊', '🤽', '🚣', '🧗', '🚵', '🚴', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️', '🏵️', '🎗️', '🎫', '🎟️', '🎪', '🤹', '🎭', '🩰', '🎨', '🎬', '🎤', '🎧', '🎼', '🎹', '🥁', '🎷', '🎺', '🎸', '🪕', '🎻', '🎲', '♟️', '🎯', '🎳', '🎮', '🎰', '🧩'],
+        objects: ['💡', '🔦', '🏮', '🪔', '📱', '💻', '⌨️', '🖥️', '🖨️', '🖱️', '🖲️', '💾', '📀', '🧮', '🎥', '📹', '📷', '📸', '📼', '🔍', '🔎', '🕯️', '💡', '🔦', '🏮', '🪔', '📔', '📕', '📖', '📗', '📘', '📙', '📚', '📓', '📒', '📃', '📜', '📄', '📰', '🗞️', '📑', '🔖', '🏷️', '💰', '💴', '💵', '💶', '💷', '💸', '💳', '🧾', '✉️', '📧', '📨', '📩', '📤', '📥', '📦', '📫', '📪', '📬', '📭', '📮', '🗳️', '✏️', '✒️', '🖊️', '🖋️', '🖌️', '🖍️', '📝', '💼', '📁', '📂', '🗂️', '📅', '📆', '🗒️', '🗓️', '📇', '📈', '📉', '📊', '📋', '📌', '📍', '📎', '🖇️', '📏', '📐', '✂️', '🗃️', '🗄️', '🗑️'],
+        symbols: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓', '🆔', '⚛️', '🉑', '☢️', '☣️', '📴', '📳', '🈶', '🈚', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌', '⭕', '🛑', '⛔', '📛', '🚫', '💯', '💢', '♨️', '🚷', '🚯', '🚳', '🚱', '🔞', '📵', '🚭', '❗', '❕', '❓', '❔', '‼️', '⁉️', '🔅', '🔆', '〽️', '⚠️', '🚸', '🔱', '⚜️', '🔰', '♻️', '✅', '🈯', '💹', '❇️', '✳️', '❎', '🌐', '💠', '➿', '🌀', '♠️', '♣️', '♥️', '♦️', '🃏', '🎴', '🀄', '🔇', '🔈', '🔉', '🔊', '🔔', '🔕', '🎵', '🎶', '🏧', '🚮', '🚰', '♿', '🚹', '🚺', '🚻', '🚼', '⏩', '⏭️', '⏯️', '⏸️', '⏹️', '⏺️', '⏏️', '🔀', '🔁', '🔂', '▶️', '◀️', '🔼', '🔽', '⏫', '⏬', '➡️', '⬅️', '⬆️', '⬇️', '↗️', '↘️', '↙️', '↖️', '↕️', '↔️', '🔄', '↪️', '↩️', '⤴️', '⤵️', '🔃', '#️⃣', '*️⃣', '0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟', '🔠', '🔡', '🔢', '🔣', '🔤', '🅰️', '🆎', '🅱️', '🆑', '🆒', '🆓', 'ℹ️', '🆔', 'Ⓜ️', '🆕', '🆖', '🅾️', '🆗', '🅿️', '🆘', '🆙', '🆚', '🈁', '🈂️', '🈷️', '🈶', '🈯', '🉐', '🈹', '🈚', '🈲', '🉑', '🈸', '🈴', '🈳', '㊗️', '㊙️', '🈺', '🈵']
+    };
+    
+    // Initialize emoji picker
+    function initializeEmojiPicker() {
+        if (!emojiPickerContent) return;
+        
+        // Load default category (smileys)
+        loadEmojiCategory('smileys');
+        
+        // Add category button listeners
+        document.querySelectorAll('.emoji-category').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.emoji-category').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                const category = this.getAttribute('data-category');
+                loadEmojiCategory(category);
+            });
+        });
+        
+        // Emoji search
+        if (emojiSearch) {
+            emojiSearch.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                if (searchTerm === '') {
+                    const activeCategory = document.querySelector('.emoji-category.active')?.getAttribute('data-category') || 'smileys';
+                    loadEmojiCategory(activeCategory);
+                } else {
+                    searchEmojis(searchTerm);
+                }
+            });
+        }
+    }
+    
+    // Load emoji category
+    function loadEmojiCategory(category) {
+        if (!emojiPickerContent || !emojis[category]) return;
+        
+        let html = '';
+        emojis[category].forEach(emoji => {
+            html += `<div class="emoji-item" data-emoji="${emoji}">${emoji}</div>`;
+        });
+        
+        emojiPickerContent.innerHTML = html;
+        
+        // Add click listeners to emoji items
+        document.querySelectorAll('.emoji-item').forEach(item => {
+            item.addEventListener('click', function() {
+                insertEmoji(this.getAttribute('data-emoji'));
+            });
+        });
+    }
+    
+    // Search emojis
+    function searchEmojis(searchTerm) {
+        let results = [];
+        
+        // Simple search - find emojis in all categories
+        Object.values(emojis).forEach(categoryEmojis => {
+            results = results.concat(categoryEmojis);
+        });
+        
+        let html = '';
+        results.slice(0, 64).forEach(emoji => {
+            html += `<div class="emoji-item" data-emoji="${emoji}">${emoji}</div>`;
+        });
+        
+        if (html === '') {
+            html = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #667781;">No emojis found</div>';
+        }
+        
+        emojiPickerContent.innerHTML = html;
+        
+        // Add click listeners to emoji items
+        document.querySelectorAll('.emoji-item').forEach(item => {
+            item.addEventListener('click', function() {
+                insertEmoji(this.getAttribute('data-emoji'));
+            });
+        });
+    }
+    
+    // Insert emoji at cursor position
+    function insertEmoji(emoji) {
+        if (!replyMessageInput) return;
+        
+        const start = replyMessageInput.selectionStart;
+        const end = replyMessageInput.selectionEnd;
+        const text = replyMessageInput.value;
+        
+        replyMessageInput.value = text.substring(0, start) + emoji + text.substring(end);
+        replyMessageInput.selectionStart = replyMessageInput.selectionEnd = start + emoji.length;
+        replyMessageInput.focus();
+        
+        // Close emoji picker
+        if (emojiPicker) {
+            emojiPicker.classList.add('hidden');
+        }
+    }
+    
+    // Toggle emoji picker
+    if (emojiPickerBtn) {
+        emojiPickerBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (emojiPicker) {
+                emojiPicker.classList.toggle('hidden');
+            }
+        });
+    }
+    
+    // Close emoji picker when clicking outside
+    document.addEventListener('click', function(e) {
+        if (emojiPicker && !emojiPicker.contains(e.target) && e.target !== emojiPickerBtn) {
+            emojiPicker.classList.add('hidden');
+        }
+    });
+    
+    // Initialize emoji picker on page load
+    initializeEmojiPicker();
+    
+    // Auto-resize textarea
+    if (replyMessageInput) {
+        replyMessageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+        
+        // Reset on form submit
+        if (replyForm) {
+            replyForm.addEventListener('submit', function() {
+                setTimeout(() => {
+                    if (replyMessageInput) {
+                        replyMessageInput.style.height = 'auto';
+                    }
+                }, 100);
+            });
+        }
+    }
+    
+    // Mobile: hide sidebar when conversation is opened
+    const originalLoadConversation = loadConversation;
+    loadConversation = async function(email) {
+        // On mobile, hide the sidebar when opening a conversation
+        if (window.innerWidth <= 768) {
+            const sidebar = document.querySelector('.whatsapp-sidebar');
+            if (sidebar) {
+                sidebar.classList.add('hide-mobile');
+            }
+        }
+        // Call the original function
+        return await originalLoadConversation(email);
+    };
 
     // ============================================
     // ANALYTICS
