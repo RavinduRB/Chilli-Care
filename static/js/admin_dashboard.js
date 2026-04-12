@@ -349,6 +349,12 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (sectionName === 'users') {
                 // Refresh users to get latest data
                 loadUsers();
+            } else if (sectionName === 'predictions' && allPredictions.length === 0) {
+                // Load predictions for the first time
+                initPredictionManagement();
+            } else if (sectionName === 'predictions') {
+                // Refresh predictions to get latest data
+                loadPredictions(currentPredictionPage);
             } else if (sectionName === 'messages') {
                 // Load messages when switching to messages section
                 loadAllMessages();
@@ -514,16 +520,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    function showToast(message, type = 'success') {
+    function showToast(message, type = 'success', duration = 3000) {
         const toast = document.getElementById('toast');
         if (!toast) return;
         
-        toast.textContent = message;
+        toast.innerHTML = message;
         toast.className = 'toast show ' + type;
         
         setTimeout(() => {
             toast.classList.remove('show');
-        }, 3000);
+        }, duration);
     }
     
     function animateNumber(element, target) {
@@ -562,6 +568,275 @@ document.addEventListener('DOMContentLoaded', function() {
             return 'Unknown';
         }
     }
+    
+    // ============================================
+    // PREDICTION HISTORY FUNCTIONALITY
+    // ============================================
+    
+    let allPredictions = [];
+    let filteredPredictions = [];
+    let currentPredictionPage = 1;
+    const predictionsPerPage = 20;
+    
+    async function loadPredictions(page = 1) {
+        try {
+            // Get filter values
+            const diseaseFilter = document.getElementById('diseaseFilter')?.value || '';
+            const userTypeFilter = document.getElementById('userTypeFilter')?.value || '';
+            const confidenceFilter = document.getElementById('confidenceFilter')?.value || '';
+            const searchQuery = document.getElementById('predictionSearchInput')?.value || '';
+            
+            // Build query parameters
+            const params = new URLSearchParams({
+                page: page,
+                limit: predictionsPerPage
+            });
+            
+            if (diseaseFilter) params.append('disease', diseaseFilter);
+            if (userTypeFilter) params.append('user_type', userTypeFilter);
+            if (confidenceFilter) params.append('confidence', confidenceFilter);
+            if (searchQuery) params.append('search', searchQuery);
+            
+            const response = await fetch(`/api/admin/predictions?${params}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                allPredictions = data.predictions;
+                currentPredictionPage = page;
+                
+                // Update statistics
+                updatePredictionStatistics(data.statistics);
+                
+                // Display predictions
+                displayPredictions(data.predictions);
+                
+                // Update pagination
+                updatePredictionPagination(data.pagination);
+            } else {
+                showToast(data.error || 'Failed to load predictions', 'error');
+            }
+        } catch (error) {
+            console.error('Error loading predictions:', error);
+            showToast('Failed to load predictions', 'error');
+        }
+    }
+    
+    function updatePredictionStatistics(stats) {
+        const totalCountEl = document.getElementById('predictionTotalCount');
+        const avgConfidenceEl = document.getElementById('predictionAvgConfidence');
+        const healthyCountEl = document.getElementById('predictionHealthyCount');
+        const diseaseCountEl = document.getElementById('predictionDiseaseCount');
+        
+        if (totalCountEl) totalCountEl.textContent = stats.total_predictions || 0;
+        if (avgConfidenceEl) avgConfidenceEl.textContent = (stats.avg_confidence || 0) + '%';
+        if (healthyCountEl) healthyCountEl.textContent = stats.healthy_count || 0;
+        if (diseaseCountEl) diseaseCountEl.textContent = stats.diseased_count || 0;
+    }
+    
+    function displayPredictions(predictions) {
+        const tableBody = document.getElementById('predictionTableBody');
+        if (!tableBody) return;
+        
+        if (predictions.length === 0) {
+            tableBody.innerHTML = `
+                <tr class="no-data-row">
+                    <td colspan="7" class="text-center">
+                        <i class="fas fa-inbox"></i>
+                        <p>No predictions found</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        predictions.forEach(prediction => {
+            const date = new Date(prediction.timestamp);
+            const formattedDate = date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+            const formattedTime = date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            // Format disease name
+            const diseaseName = formatDiseaseName(prediction.predicted_disease);
+            
+            // Confidence badge color
+            let confidenceBadge = 'badge-success';
+            if (prediction.confidence < 70) {
+                confidenceBadge = 'badge-danger';
+            } else if (prediction.confidence < 90) {
+                confidenceBadge = 'badge-warning';
+            }
+            
+            // Validation badge
+            let validationBadge = 'badge-secondary';
+            let validationText = prediction.validation_method || 'None';
+            if (validationText.toLowerCase().includes('gemini')) {
+                validationBadge = 'badge-primary';
+            } else if (validationText.toLowerCase().includes('blip')) {
+                validationBadge = 'badge-info';
+            }
+            
+            // User type badge
+            const userTypeBadge = prediction.user_type === 'farmer' ? 'badge-success' : 'badge-secondary';
+            
+            html += `
+                <tr>
+                    <td>
+                        <div class="prediction-date">
+                            <div class="date-main">${formattedDate}</div>
+                            <div class="date-time">${formattedTime}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="user-info-cell">
+                            <div class="user-email">${prediction.user_email}</div>
+                            <span class="badge ${userTypeBadge}">${prediction.user_type}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="disease-cell">
+                            <span class="disease-name">${diseaseName}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="confidence-badge ${confidenceBadge}">
+                            ${prediction.confidence}%
+                        </span>
+                    </td>
+                    <td>
+                        <div class="location-cell">
+                            <i class="fas fa-map-marker-alt"></i>
+                            ${prediction.location}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="validation-badge ${validationBadge}">
+                            ${validationText}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn-action btn-view" onclick="viewPredictionDetails('${prediction._id}')" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        tableBody.innerHTML = html;
+    }
+    
+    function formatDiseaseName(disease) {
+        // Convert database format to display format
+        const diseaseMap = {
+            'Chilli___healthy': 'Healthy',
+            'Chilli __Whitefly': 'Whitefly',
+            'Chilli__Anthacnose': 'Anthacnose',
+            'Chilli __Yellowish': 'Yellowish',
+            'Chilli__Leaf_Curl_Virus': 'Leaf Curl Virus'
+        };
+        return diseaseMap[disease] || disease;
+    }
+    
+    function updatePredictionPagination(pagination) {
+        const pageInfo = document.getElementById('predictionPageInfo');
+        const prevBtn = document.getElementById('predictionPrevPageBtn');
+        const nextBtn = document.getElementById('predictionNextPageBtn');
+        
+        if (pageInfo) {
+            pageInfo.textContent = `Page ${pagination.page} of ${pagination.pages}`;
+        }
+        
+        if (prevBtn) {
+            prevBtn.disabled = pagination.page <= 1;
+        }
+        
+        if (nextBtn) {
+            nextBtn.disabled = pagination.page >= pagination.pages;
+        }
+    }
+    
+    function initPredictionManagement() {
+        // Load initial predictions
+        loadPredictions(1);
+        
+        // Set up filter event listeners
+        const diseaseFilter = document.getElementById('diseaseFilter');
+        const userTypeFilter = document.getElementById('userTypeFilter');
+        const confidenceFilter = document.getElementById('confidenceFilter');
+        const searchInput = document.getElementById('predictionSearchInput');
+        
+        if (diseaseFilter) {
+            diseaseFilter.addEventListener('change', () => loadPredictions(1));
+        }
+        
+        if (userTypeFilter) {
+            userTypeFilter.addEventListener('change', () => loadPredictions(1));
+        }
+        
+        if (confidenceFilter) {
+            confidenceFilter.addEventListener('change', () => loadPredictions(1));
+        }
+        
+        if (searchInput) {
+            let searchTimeout;
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    loadPredictions(1);
+                }, 500);
+            });
+        }
+        
+        // Set up pagination buttons
+        const prevBtn = document.getElementById('predictionPrevPageBtn');
+        const nextBtn = document.getElementById('predictionNextPageBtn');
+        
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                if (currentPredictionPage > 1) {
+                    loadPredictions(currentPredictionPage - 1);
+                }
+            });
+        }
+        
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                loadPredictions(currentPredictionPage + 1);
+            });
+        }
+    }
+    
+    // View prediction details (placeholder function)
+    window.viewPredictionDetails = function(predictionId) {
+        const prediction = allPredictions.find(p => p._id === predictionId);
+        if (!prediction) return;
+        
+        // Show prediction details in a toast or modal
+        let detailsMessage = `
+            <strong>Prediction Details</strong><br>
+            Disease: ${formatDiseaseName(prediction.predicted_disease)}<br>
+            Confidence: ${prediction.confidence}%<br>
+            User: ${prediction.user_email}<br>
+            Location: ${prediction.location}<br>
+            Validation: ${prediction.validation_method || 'None'}
+        `;
+        
+        if (prediction.top_3_predictions && prediction.top_3_predictions.length > 0) {
+            detailsMessage += '<br><br><strong>Top 3 Predictions:</strong><br>';
+            prediction.top_3_predictions.forEach((pred, idx) => {
+                detailsMessage += `${idx + 1}. ${formatDiseaseName(pred[0])}: ${pred[1].toFixed(2)}%<br>`;
+            });
+        }
+        
+        showToast(detailsMessage, 'info', 8000);
+    };
     
     // ============================================
     // USER MANAGEMENT FUNCTIONALITY

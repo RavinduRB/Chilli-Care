@@ -3669,3 +3669,330 @@
         font-size: 12px;
     }
 }
+
+/* ============================================
+   PREDICTION HISTORY SECTION
+   ============================================ */
+
+/* Prediction Controls */
+.prediction-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 24px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.prediction-controls .search-box {
+    flex: 1;
+    min-width: 250px;
+}
+
+.prediction-controls .filter-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Prediction Statistics Grid */
+.prediction-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.prediction-stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.prediction-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Prediction Table */
+.prediction-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    font-size: 14px;
+}
+
+.prediction-table thead {
+    background: linear-gradient(135deg, #1a4d2e 0%, #2d5f3f 100%);
+    color: white;
+}
+
+.prediction-table th {
+    padding: 16px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.prediction-table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+    transition: background-color 0.2s ease;
+}
+
+.prediction-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+.prediction-table td {
+    padding: 16px 14px;
+    color: #374151;
+}
+
+/* Prediction Date Cell */
+.prediction-date {
+    display: flex;
+    flex-direction: column;
+}
+
+.date-main {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 14px;
+}
+
+.date-time {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+/* User Info Cell */
+.user-info-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.user-email {
+    font-weight: 500;
+    color: #1f2937;
+    font-size: 14px;
+}
+
+/* Disease Cell */
+.disease-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.disease-name {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Confidence Badge */
+.confidence-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: center;
+}
+
+.badge-success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-primary {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.badge-info {
+    background: #e0f2fe;
+    color: #075985;
+}
+
+.badge-secondary {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+/* Location Cell */
+.location-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.location-cell i {
+    color: #ef4444;
+    font-size: 12px;
+}
+
+/* Validation Badge */
+.validation-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+/* Action Buttons */
+.btn-action {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    background: transparent;
+}
+
+.btn-view {
+    color: #3b82f6;
+}
+
+.btn-view:hover {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* Responsive Prediction History */
+@media (max-width: 1200px) {
+    .prediction-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .prediction-table th,
+    .prediction-table td {
+        padding: 12px 10px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 768px) {
+    .prediction-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .prediction-controls .search-box {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .prediction-controls .filter-group {
+        width: 100%;
+    }
+    
+    .prediction-controls .filter-select {
+        flex: 1;
+    }
+    
+    .prediction-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .prediction-stat-card {
+        padding: 16px;
+    }
+    
+    /* Make table scrollable on mobile */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .prediction-table {
+        min-width: 800px;
+    }
+    
+    .prediction-table th,
+    .prediction-table td {
+        padding: 12px 8px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .prediction-controls {
+        padding: 16px;
+    }
+    
+    .prediction-stat-card {
+        padding: 14px;
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .stat-icon i {
+        font-size: 20px;
+    }
+    
+    .stat-value {
+        font-size: 24px;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+    }
+    
+    .prediction-table {
+        min-width: 700px;
+    }
+    
+    .prediction-table th,
+    .prediction-table td {
+        padding: 10px 6px;
+        font-size: 11px;
+    }
+    
+    .date-main,
+    .user-email,
+    .disease-name {
+        font-size: 12px;
+    }
+    
+    .date-time,
+    .location-cell {
+        font-size: 11px;
+    }
+    
+    .confidence-badge,
+    .validation-badge {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+}

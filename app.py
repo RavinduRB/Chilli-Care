@@ -2435,6 +2435,143 @@ def get_admin_users():
         }), 500
 
 
+@app.route('/api/admin/predictions', methods=['GET'])
+@login_required
+def get_admin_predictions():
+    """Get predictions for admin dashboard (admin only)"""
+    if current_user.user_type != 'admin':
+        return jsonify({
+            'success': False,
+            'error': 'Unauthorized - Admin access required'
+        }), 403
+    
+    try:
+        # Get pagination parameters
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 20))
+        skip = (page - 1) * limit
+        
+        # Get filter parameters
+        disease_filter = request.args.get('disease', '')
+        user_type_filter = request.args.get('user_type', '')
+        confidence_filter = request.args.get('confidence', '')
+        search_query = request.args.get('search', '')
+        
+        if not mongodb or not mongodb.connected:
+            return jsonify({
+                'success': False,
+                'error': 'Database not connected'
+            }), 500
+        
+        # Build query
+        query = {}
+        
+        if disease_filter:
+            query['predicted_disease'] = disease_filter
+        
+        if user_type_filter:
+            query['user_type'] = user_type_filter
+        
+        # Confidence filter
+        if confidence_filter:
+            if confidence_filter == 'high':
+                query['confidence'] = {'$gte': 90}
+            elif confidence_filter == 'medium':
+                query['confidence'] = {'$gte': 70, '$lt': 90}
+            elif confidence_filter == 'low':
+                query['confidence'] = {'$lt': 70}
+        
+        # Search query (search in disease, email, location)
+        if search_query:
+            query['$or'] = [
+                {'predicted_disease': {'$regex': search_query, '$options': 'i'}},
+                {'user_email': {'$regex': search_query, '$options': 'i'}},
+                {'location.city': {'$regex': search_query, '$options': 'i'}},
+                {'location.region': {'$regex': search_query, '$options': 'i'}},
+                {'location.country': {'$regex': search_query, '$options': 'i'}}
+            ]
+        
+        # Get predictions from database
+        predictions_cursor = mongodb.db.predictions.find(query)\
+            .sort("timestamp", -1)\
+            .skip(skip)\
+            .limit(limit)
+        
+        predictions = list(predictions_cursor)
+        total_count = mongodb.db.predictions.count_documents(query)
+        
+        # Format predictions
+        formatted_predictions = []
+        for pred in predictions:
+            # Format location
+            location_str = 'Unknown'
+            if 'location' in pred and pred['location']:
+                loc = pred['location']
+                location_parts = []
+                if loc.get('city'):
+                    location_parts.append(loc['city'])
+                if loc.get('region'):
+                    location_parts.append(loc['region'])
+                if loc.get('country'):
+                    location_parts.append(loc['country'])
+                location_str = ', '.join(location_parts) if location_parts else 'Unknown'
+            
+            formatted_predictions.append({
+                '_id': str(pred['_id']),
+                'timestamp': pred.get('timestamp').isoformat() if pred.get('timestamp') else None,
+                'user_email': pred.get('user_email', 'anonymous'),
+                'user_type': pred.get('user_type', 'guest'),
+                'predicted_disease': pred.get('predicted_disease', 'Unknown'),
+                'confidence': round(pred.get('confidence', 0), 2),
+                'location': location_str,
+                'location_data': pred.get('location', {}),
+                'validation_method': pred.get('validation_method', 'None'),
+                'validation_message': pred.get('validation_message', ''),
+                'image_filename': pred.get('image_filename'),
+                'top_3_predictions': pred.get('top_3_predictions', [])
+            })
+        
+        # Calculate statistics
+        all_predictions = list(mongodb.db.predictions.find({}))
+        total_predictions = len(all_predictions)
+        
+        # Calculate average confidence
+        avg_confidence = 0
+        if all_predictions:
+            total_conf = sum(p.get('confidence', 0) for p in all_predictions)
+            avg_confidence = round(total_conf / total_predictions, 2)
+        
+        # Count healthy vs diseased
+        healthy_count = mongodb.db.predictions.count_documents({
+            'predicted_disease': 'Chilli___healthy'
+        })
+        diseased_count = total_predictions - healthy_count
+        
+        return jsonify({
+            'success': True,
+            'predictions': formatted_predictions,
+            'pagination': {
+                'total': total_count,
+                'page': page,
+                'limit': limit,
+                'pages': (total_count + limit - 1) // limit if total_count > 0 else 1
+            },
+            'statistics': {
+                'total_predictions': total_predictions,
+                'avg_confidence': avg_confidence,
+                'healthy_count': healthy_count,
+                'diseased_count': diseased_count
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching predictions: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.route('/api/admin/diseases', methods=['GET'])
 @login_required
 def get_admin_diseases():

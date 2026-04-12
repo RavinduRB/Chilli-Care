@@ -210,8 +210,109 @@
                 
                 <!-- Prediction History Section -->
                 <section class="content-section" id="predictionsSection">
-                    <h2 class="section-title">Prediction History</h2>
-                    <p class="section-description">Coming soon - View all predictions</p>
+                    <!-- Filters and Search -->
+                    <div class="prediction-controls">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="predictionSearchInput" placeholder="Search by disease, email, location..." class="search-input">
+                        </div>
+                        <div class="filter-group">
+                            <select id="diseaseFilter" class="filter-select">
+                                <option value="">All Diseases</option>
+                                <option value="Chilli___healthy">Healthy</option>
+                                <option value="Chilli __Whitefly">Whitefly</option>
+                                <option value="Chilli__Anthacnose">Anthacnose</option>
+                                <option value="Chilli __Yellowish">Yellowish</option>
+                                <option value="Chilli__Leaf_Curl_Virus">Leaf Curl Virus</option>
+                            </select>
+                            <select id="userTypeFilter" class="filter-select">
+                                <option value="">All Users</option>
+                                <option value="farmer">Farmers</option>
+                                <option value="guest">Guests</option>
+                            </select>
+                            <select id="confidenceFilter" class="filter-select">
+                                <option value="">All Confidence</option>
+                                <option value="high">High (>90%)</option>
+                                <option value="medium">Medium (70-90%)</option>
+                                <option value="low">Low (<70%)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Cards -->
+                    <div class="prediction-stats-grid">
+                        <div class="prediction-stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 class="stat-value" id="predictionTotalCount">0</h3>
+                                <p class="stat-label">Total Predictions</p>
+                            </div>
+                        </div>
+                        <div class="prediction-stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 class="stat-value" id="predictionAvgConfidence">0%</h3>
+                                <p class="stat-label">Average Confidence</p>
+                            </div>
+                        </div>
+                        <div class="prediction-stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                <i class="fas fa-heartbeat"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 class="stat-value" id="predictionHealthyCount">0</h3>
+                                <p class="stat-label">Healthy Plants</p>
+                            </div>
+                        </div>
+                        <div class="prediction-stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">
+                                <i class="fas fa-bug"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 class="stat-value" id="predictionDiseaseCount">0</h3>
+                                <p class="stat-label">Diseased Plants</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Predictions Table -->
+                    <div class="table-container">
+                        <table class="prediction-table">
+                            <thead>
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>User</th>
+                                    <th>Predicted Disease</th>
+                                    <th>Confidence</th>
+                                    <th>Location</th>
+                                    <th>Validation</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="predictionTableBody">
+                                <tr class="loading-row">
+                                    <td colspan="7" class="text-center">
+                                        <i class="fas fa-spinner fa-spin"></i> Loading predictions...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination-controls">
+                        <button class="btn-pagination" id="predictionPrevPageBtn" disabled>
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                        <span class="page-info" id="predictionPageInfo">Page 1 of 1</span>
+                        <button class="btn-pagination" id="predictionNextPageBtn" disabled>
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
                 </section>
                 
                 <!-- District Mapping Section -->
