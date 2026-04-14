@@ -481,12 +481,14 @@
     background: #1f2937;
     color: white;
     padding: 16px 24px;
-    border-radius: 8px;
+    border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    z-index: 10000;
+    z-index: 99999;
     transform: translateY(100px);
     opacity: 0;
     transition: all 0.3s ease;
+    max-width: 500px;
+    min-width: 300px;
 }
 
 .toast.show {
@@ -500,6 +502,47 @@
 
 .toast.error {
     background: #ef4444;
+}
+
+.toast.info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    cursor: default;
+}
+
+.toast-content {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.toast-body {
+    flex: 1;
+    line-height: 1.6;
+}
+
+.toast-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.toast-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+.toast-close i {
+    font-size: 14px;
 }
 
 /* ============================================
@@ -796,6 +839,17 @@
         left: 16px;
         font-size: 14px;
         padding: 12px 16px;
+        max-width: calc(100% - 32px);
+        min-width: auto;
+    }
+    
+    .toast.info {
+        padding: 16px;
+    }
+    
+    .toast-close {
+        width: 24px;
+        height: 24px;
     }
     
     /* Better touch targets */
@@ -3132,6 +3186,28 @@
     font-size: 14px;
 }
 
+.filter-group-predictions {
+    display: flex;
+    flex-direction: row;
+    margin-left: auto;
+    gap: 16px;
+}
+
+.filter-group-predictions label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-group-predictions label i {
+    color: #1a4d2e;
+    font-size: 14px;
+}
+
 .mapping-filter-select {
     padding: 10px 14px;
     border: 1px solid #d1d5db;
@@ -3695,7 +3771,31 @@
 .prediction-controls .filter-group {
     display: flex;
     gap: 12px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    align-items: center;
+    margin-left: auto;
+}
+
+.prediction-controls .filter-select {
+    min-width: 150px;
+    padding: 10px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #374151;
+    background-color: white;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.prediction-controls .filter-select:hover {
+    border-color: #1a4d2e;
+}
+
+.prediction-controls .filter-select:focus {
+    outline: none;
+    border-color: #1a4d2e;
+    box-shadow: 0 0 0 3px rgba(26, 77, 46, 0.1);
 }
 
 /* Prediction Statistics Grid */
@@ -3799,6 +3899,7 @@
 .disease-name {
     font-weight: 600;
     color: #1f2937;
+    font-size: 14px;
 }
 
 /* Confidence Badge */
@@ -3911,10 +4012,18 @@
     
     .prediction-controls .filter-group {
         width: 100%;
+        flex-wrap: wrap;
+    }
+    
+    .filter-group-predictions {
+        margin-left: 0;
+        width: 100%;
+        flex-wrap: wrap;
     }
     
     .prediction-controls .filter-select {
         flex: 1;
+        min-width: 120px;
     }
     
     .prediction-stats-grid {

@@ -2541,9 +2541,12 @@ def get_admin_predictions():
             total_conf = sum(p.get('confidence', 0) for p in all_predictions)
             avg_confidence = round(total_conf / total_predictions, 2)
         
-        # Count healthy vs diseased
+        # Count healthy vs diseased (check both formats)
         healthy_count = mongodb.db.predictions.count_documents({
-            'predicted_disease': 'Chilli___healthy'
+            '$or': [
+                {'predicted_disease': 'Chilli___healthy'},
+                {'predicted_disease': 'Chilli healthy'}
+            ]
         })
         diseased_count = total_predictions - healthy_count
         

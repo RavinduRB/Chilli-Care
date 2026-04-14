@@ -520,17 +520,66 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    let currentToastTimeout = null;
+    
     function showToast(message, type = 'success', duration = 3000) {
         const toast = document.getElementById('toast');
         if (!toast) return;
         
-        toast.innerHTML = message;
+        // Clear any existing timeout
+        if (currentToastTimeout) {
+            clearTimeout(currentToastTimeout);
+        }
+        
+        // Add close button for info type toasts
+        let toastContent = message;
+        if (type === 'info') {
+            toastContent = `
+                <div class="toast-content">
+                    <div class="toast-body">${message}</div>
+                    <button class="toast-close" onclick="closeToast()" title="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+        }
+        
+        toast.innerHTML = toastContent;
         toast.className = 'toast show ' + type;
         
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, duration);
+        // Auto-close after duration only for non-info toasts
+        if (type !== 'info') {
+            currentToastTimeout = setTimeout(() => {
+                closeToast();
+            }, duration);
+        }
     }
+    
+    function handleToastClickOutside(event) {
+        const toast = document.getElementById('toast');
+        if (!toast) return;
+        
+        // Check if click is outside the toast
+        if (!toast.contains(event.target) && !event.target.closest('.btn-view')) {
+            closeToast();
+        }
+    }
+    
+    window.closeToast = function() {
+        const toast = document.getElementById('toast');
+        if (!toast) return;
+        
+        toast.classList.remove('show');
+        
+        // Remove click outside listener
+        document.removeEventListener('click', handleToastClickOutside);
+        
+        // Clear timeout
+        if (currentToastTimeout) {
+            clearTimeout(currentToastTimeout);
+            currentToastTimeout = null;
+        }
+    };
     
     function animateNumber(element, target) {
         const duration = 1000;
@@ -597,27 +646,69 @@ document.addEventListener('DOMContentLoaded', function() {
             if (confidenceFilter) params.append('confidence', confidenceFilter);
             if (searchQuery) params.append('search', searchQuery);
             
+            // Show loading state
+            const tableBody = document.getElementById('predictionTableBody');
+            if (tableBody) {
+                tableBody.innerHTML = `
+                    <tr class="loading-row">
+                        <td colspan="7" class="text-center">
+                            <i class="fas fa-spinner fa-spin"></i> Loading predictions...
+                        </td>
+                    </tr>
+                `;
+            }
+            
             const response = await fetch(`/api/admin/predictions?${params}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
             const data = await response.json();
             
             if (data.success) {
-                allPredictions = data.predictions;
+                allPredictions = data.predictions || [];
                 currentPredictionPage = page;
                 
                 // Update statistics
-                updatePredictionStatistics(data.statistics);
+                if (data.statistics) {
+                    updatePredictionStatistics(data.statistics);
+                }
                 
                 // Display predictions
-                displayPredictions(data.predictions);
+                displayPredictions(data.predictions || []);
                 
                 // Update pagination
-                updatePredictionPagination(data.pagination);
+                if (data.pagination) {
+                    updatePredictionPagination(data.pagination);
+                }
             } else {
                 showToast(data.error || 'Failed to load predictions', 'error');
+                if (tableBody) {
+                    tableBody.innerHTML = `
+                        <tr class="no-data-row">
+                            <td colspan="7" class="text-center">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <p>${data.error || 'Failed to load predictions'}</p>
+                            </td>
+                        </tr>
+                    `;
+                }
             }
         } catch (error) {
             console.error('Error loading predictions:', error);
-            showToast('Failed to load predictions', 'error');
+            showToast('Failed to load predictions: ' + error.message, 'error');
+            const tableBody = document.getElementById('predictionTableBody');
+            if (tableBody) {
+                tableBody.innerHTML = `
+                    <tr class="no-data-row">
+                        <td colspan="7" class="text-center">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>Error loading predictions. Please try again.</p>
+                        </td>
+                    </tr>
+                `;
+            }
         }
     }
     
@@ -627,10 +718,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const healthyCountEl = document.getElementById('predictionHealthyCount');
         const diseaseCountEl = document.getElementById('predictionDiseaseCount');
         
-        if (totalCountEl) totalCountEl.textContent = stats.total_predictions || 0;
-        if (avgConfidenceEl) avgConfidenceEl.textContent = (stats.avg_confidence || 0) + '%';
-        if (healthyCountEl) healthyCountEl.textContent = stats.healthy_count || 0;
-        if (diseaseCountEl) diseaseCountEl.textContent = stats.diseased_count || 0;
+        if (totalCountEl) totalCountEl.textContent = (stats.total_predictions || 0).toLocaleString();
+        if (avgConfidenceEl) avgConfidenceEl.textContent = Math.round(stats.avg_confidence || 0) + '%';
+        if (healthyCountEl) healthyCountEl.textContent = (stats.healthy_count || 0).toLocaleString();
+        if (diseaseCountEl) diseaseCountEl.textContent = (stats.diseased_count || 0).toLocaleString();
     }
     
     function displayPredictions(predictions) {
@@ -666,10 +757,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const diseaseName = formatDiseaseName(prediction.predicted_disease);
             
             // Confidence badge color
+            const confidenceValue = Math.round(prediction.confidence);
             let confidenceBadge = 'badge-success';
-            if (prediction.confidence < 70) {
+            if (confidenceValue < 70) {
                 confidenceBadge = 'badge-danger';
-            } else if (prediction.confidence < 90) {
+            } else if (confidenceValue < 90) {
                 confidenceBadge = 'badge-warning';
             }
             
@@ -683,7 +775,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // User type badge
-            const userTypeBadge = prediction.user_type === 'farmer' ? 'badge-success' : 'badge-secondary';
+            const userEmail = prediction.user_email || 'Anonymous';
+            const userType = prediction.user_type || 'guest';
+            const userTypeBadge = userType === 'farmer' ? 'badge-success' : 'badge-secondary';
+            
+            // Location display
+            const location = prediction.location || 'Unknown';
             
             html += `
                 <tr>
@@ -695,8 +792,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     </td>
                     <td>
                         <div class="user-info-cell">
-                            <div class="user-email">${prediction.user_email}</div>
-                            <span class="badge ${userTypeBadge}">${prediction.user_type}</span>
+                            <div class="user-email">${userEmail}</div>
+                            <span class="badge ${userTypeBadge}">${userType}</span>
                         </div>
                     </td>
                     <td>
@@ -706,24 +803,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     </td>
                     <td>
                         <span class="confidence-badge ${confidenceBadge}">
-                            ${prediction.confidence}%
+                            ${confidenceValue}%
                         </span>
                     </td>
                     <td>
                         <div class="location-cell">
                             <i class="fas fa-map-marker-alt"></i>
-                            ${prediction.location}
+                            ${location}
                         </div>
                     </td>
                     <td>
                         <span class="validation-badge ${validationBadge}">
                             ${validationText}
                         </span>
-                    </td>
-                    <td>
-                        <button class="btn-action btn-view" onclick="viewPredictionDetails('${prediction._id}')" title="View Details">
-                            <i class="fas fa-eye"></i>
-                        </button>
                     </td>
                 </tr>
             `;
@@ -739,7 +831,13 @@ document.addEventListener('DOMContentLoaded', function() {
             'Chilli __Whitefly': 'Whitefly',
             'Chilli__Anthacnose': 'Anthacnose',
             'Chilli __Yellowish': 'Yellowish',
-            'Chilli__Leaf_Curl_Virus': 'Leaf Curl Virus'
+            'Chilli__Leaf_Curl_Virus': 'Leaf Curl Virus',
+            // Also handle space-separated format
+            'Chilli healthy': 'Healthy',
+            'Chilli Whitefly': 'Whitefly',
+            'Chilli Anthacnose': 'Anthacnose',
+            'Chilli Yellowish': 'Yellowish',
+            'Chilli Leaf Curl Virus': 'Leaf Curl Virus'
         };
         return diseaseMap[disease] || disease;
     }
@@ -762,9 +860,41 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    async function populateDiseaseFilter() {
+        try {
+            const diseaseFilter = document.getElementById('diseaseFilter');
+            if (!diseaseFilter) return;
+            
+            // Get all predictions to extract unique diseases
+            const response = await fetch('/api/admin/predictions?page=1&limit=1000');
+            if (!response.ok) return;
+            
+            const data = await response.json();
+            if (!data.success || !data.predictions) return;
+            
+            // Extract unique disease names
+            const diseases = [...new Set(data.predictions.map(p => p.predicted_disease))].sort();
+            
+            // Populate the filter (keep "All Diseases" option)
+            let options = '<option value="">All Diseases</option>';
+            diseases.forEach(disease => {
+                const displayName = formatDiseaseName(disease);
+                options += `<option value="${disease}">${displayName}</option>`;
+            });
+            
+            diseaseFilter.innerHTML = options;
+        } catch (error) {
+            console.error('Error populating disease filter:', error);
+            // Keep default options if error occurs
+        }
+    }
+    
     function initPredictionManagement() {
         // Load initial predictions
         loadPredictions(1);
+        
+        // Populate disease filter dynamically
+        populateDiseaseFilter();
         
         // Set up filter event listeners
         const diseaseFilter = document.getElementById('diseaseFilter');
@@ -813,29 +943,48 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // View prediction details (placeholder function)
+    // View prediction details
     window.viewPredictionDetails = function(predictionId) {
         const prediction = allPredictions.find(p => p._id === predictionId);
-        if (!prediction) return;
+        if (!prediction) {
+            showToast('Prediction not found', 'error');
+            return;
+        }
+        
+        // Format timestamp
+        const timestamp = prediction.timestamp ? new Date(prediction.timestamp).toLocaleString() : 'N/A';
+        
+        // Format confidence
+        const confidence = Math.round(prediction.confidence);
         
         // Show prediction details in a toast or modal
         let detailsMessage = `
-            <strong>Prediction Details</strong><br>
-            Disease: ${formatDiseaseName(prediction.predicted_disease)}<br>
-            Confidence: ${prediction.confidence}%<br>
-            User: ${prediction.user_email}<br>
-            Location: ${prediction.location}<br>
-            Validation: ${prediction.validation_method || 'None'}
+            <div style="text-align: left;">
+                <strong style="font-size: 1.1em;">📊 Prediction Details</strong><br><br>
+                <strong>🦠 Disease:</strong> ${formatDiseaseName(prediction.predicted_disease)}<br>
+                <strong>📈 Confidence:</strong> ${confidence}%<br>
+                <strong>👤 User:</strong> ${prediction.user_email || 'Anonymous'}<br>
+                <strong>👥 User Type:</strong> ${prediction.user_type || 'guest'}<br>
+                <strong>📍 Location:</strong> ${prediction.location || 'Unknown'}<br>
+                <strong>✅ Validation:</strong> ${prediction.validation_method || 'None'}<br>
+                <strong>🕒 Time:</strong> ${timestamp}
         `;
         
+        if (prediction.validation_message) {
+            detailsMessage += `<br><strong>💬 Message:</strong> ${prediction.validation_message}`;
+        }
+        
         if (prediction.top_3_predictions && prediction.top_3_predictions.length > 0) {
-            detailsMessage += '<br><br><strong>Top 3 Predictions:</strong><br>';
+            detailsMessage += '<br><br><strong>🏆 Top 3 Predictions:</strong><br>';
             prediction.top_3_predictions.forEach((pred, idx) => {
-                detailsMessage += `${idx + 1}. ${formatDiseaseName(pred[0])}: ${pred[1].toFixed(2)}%<br>`;
+                const predConfidence = Math.round(pred[1]);
+                detailsMessage += `&nbsp;&nbsp;${idx + 1}. ${formatDiseaseName(pred[0])}: <strong>${predConfidence}%</strong><br>`;
             });
         }
         
-        showToast(detailsMessage, 'info', 8000);
+        detailsMessage += '</div>';
+        
+        showToast(detailsMessage, 'info', 10000);
     };
     
     // ============================================

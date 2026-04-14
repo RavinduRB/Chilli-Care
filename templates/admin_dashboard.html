@@ -216,7 +216,7 @@
                             <i class="fas fa-search"></i>
                             <input type="text" id="predictionSearchInput" placeholder="Search by disease, email, location..." class="search-input">
                         </div>
-                        <div class="filter-group">
+                        <div class="filter-group-predictions">
                             <select id="diseaseFilter" class="filter-select">
                                 <option value="">All Diseases</option>
                                 <option value="Chilli___healthy">Healthy</option>
@@ -228,7 +228,7 @@
                             <select id="userTypeFilter" class="filter-select">
                                 <option value="">All Users</option>
                                 <option value="farmer">Farmers</option>
-                                <option value="guest">Guests</option>
+                                <option value="admin">Admins</option>
                             </select>
                             <select id="confidenceFilter" class="filter-select">
                                 <option value="">All Confidence</option>
@@ -290,12 +290,11 @@
                                     <th>Confidence</th>
                                     <th>Location</th>
                                     <th>Validation</th>
-                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="predictionTableBody">
                                 <tr class="loading-row">
-                                    <td colspan="7" class="text-center">
+                                    <td colspan="6" class="text-center">
                                         <i class="fas fa-spinner fa-spin"></i> Loading predictions...
                                     </td>
                                 </tr>
