@@ -493,6 +493,114 @@ DISEASE_INFO = {
     }
 }
 
+# ============================================
+# PLANT PROGNOSIS DATA
+# Estimates for life expectancy, yield impact, and next likely disease.
+# Values represent the range when disease is unconfirmed (low confidence)
+# through fully confirmed (high confidence).
+# ============================================
+PROGNOSIS_DATA = {
+    "Chilli Whitefly": {
+        "life_weeks_min": 6,
+        "life_weeks_max": 20,
+        "life_label": "6–20 weeks remaining (with prompt treatment)",
+        "yield_min": 40,
+        "yield_max": 65,
+        "yield_label": "40–65% of normal yield expected",
+        "next_disease": "Chilli Leaf Curl Virus",
+        "next_disease_reason": (
+            "Whiteflies are the primary vector for Chilli Leaf Curl Virus. "
+            "Prolonged infestation dramatically raises the risk of viral transmission to the plant."
+        ),
+    },
+    "Chilli Yellowish": {
+        "life_weeks_min": 4,
+        "life_weeks_max": 14,
+        "life_label": "4–14 weeks remaining (depends on underlying cause)",
+        "yield_min": 25,
+        "yield_max": 55,
+        "yield_label": "25–55% of normal yield expected",
+        "next_disease": "Chilli Anthacnose",
+        "next_disease_reason": (
+            "Nutrient-stressed and chlorotic plants have weakened immunity, "
+            "making them prime targets for Anthracnose fungal infection."
+        ),
+    },
+    "Chilli Anthacnose": {
+        "life_weeks_min": 2,
+        "life_weeks_max": 8,
+        "life_label": "2–8 weeks remaining (spreads rapidly without treatment)",
+        "yield_min": 10,
+        "yield_max": 35,
+        "yield_label": "10–35% of normal yield expected",
+        "next_disease": "Chilli Yellowish",
+        "next_disease_reason": (
+            "Anthracnose-damaged tissue disrupts nutrient uptake, "
+            "leading to secondary chlorosis (yellowing) as the plant struggles to recover."
+        ),
+    },
+    "Chilli Leaf Curl Virus": {
+        "life_weeks_min": 1,
+        "life_weeks_max": 4,
+        "life_label": "1–4 weeks remaining (highly destructive viral disease)",
+        "yield_min": 5,
+        "yield_max": 20,
+        "yield_label": "5–20% of normal yield expected",
+        "next_disease": "Chilli Whitefly",
+        "next_disease_reason": (
+            "Virally weakened plants attract higher whitefly populations, "
+            "creating a destructive reinforcing cycle of infestation and viral spread."
+        ),
+    },
+    "Chilli healthy": {
+        "life_weeks_min": 24,
+        "life_weeks_max": 52,
+        "life_label": "6–12 months (full growing season ahead)",
+        "yield_min": 90,
+        "yield_max": 100,
+        "yield_label": "90–100% of expected yield",
+        "next_disease": "Chilli Whitefly",
+        "next_disease_reason": (
+            "Whitefly is the most common first infestation in healthy chilli crops. "
+            "Monitor the undersides of leaves regularly as a preventive measure."
+        ),
+    },
+}
+
+
+def get_plant_prognosis(disease_name, confidence):
+    """
+    Compute a confidence-adjusted plant prognosis.
+
+    For diseased plants: higher confidence → worse prognosis (disease is confirmed).
+    For healthy plants:  higher confidence → better prognosis (health is confirmed).
+
+    Returns a dict with life_weeks, yield_percentage, life_label,
+    yield_label, next_disease, next_disease_reason.
+    """
+    base = PROGNOSIS_DATA.get(disease_name)
+    if not base:
+        return None
+
+    factor = max(0.0, min(confidence / 100.0, 1.0))  # clamp 0–1
+
+    if disease_name == "Chilli healthy":
+        life_weeks = base["life_weeks_min"] + (base["life_weeks_max"] - base["life_weeks_min"]) * factor
+        yield_pct = base["yield_min"] + (base["yield_max"] - base["yield_min"]) * factor
+    else:
+        # High confidence → disease confirmed → closer to worst-case (min)
+        life_weeks = base["life_weeks_max"] - (base["life_weeks_max"] - base["life_weeks_min"]) * factor
+        yield_pct = base["yield_max"] - (base["yield_max"] - base["yield_min"]) * factor
+
+    return {
+        "life_weeks": round(life_weeks, 1),
+        "life_label": base["life_label"],
+        "yield_percentage": round(yield_pct, 1),
+        "yield_label": base["yield_label"],
+        "next_disease": base["next_disease"],
+        "next_disease_reason": base["next_disease_reason"],
+    }
+
 
 def load_model_and_classes():
     """Load the trained model and class names"""
@@ -1415,11 +1523,15 @@ def api_predict():
             user_agent
         )
         
+        # Compute plant prognosis
+        prognosis = get_plant_prognosis(disease_name, prediction_result['confidence'])
+
         # Prepare response
         response = {
             'success': True,
             'prediction': prediction_result,
             'disease_info': disease_data,
+            'prognosis': prognosis,
             'timestamp': datetime.now().isoformat(),
             'model_version': '1.0.0',
             'prediction_id': prediction_id

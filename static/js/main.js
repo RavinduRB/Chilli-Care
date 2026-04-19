@@ -1149,6 +1149,26 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update organic solutions
         updateList('organicList', diseaseInfo.organic_solutions || []);
 
+        // Update prognosis cards
+        if (data.prognosis) {
+            const prog = data.prognosis;
+
+            // Life expectancy
+            document.getElementById('lifeWeeks').textContent = prog.life_weeks;
+            document.getElementById('lifeNote').textContent = prog.life_label;
+            const lifePct = Math.min((prog.life_weeks / 52) * 100, 100);
+            document.getElementById('lifeFill').style.width = `${lifePct}%`;
+
+            // Yield
+            document.getElementById('yieldPct').textContent = prog.yield_percentage + '%';
+            document.getElementById('yieldNote').textContent = prog.yield_label;
+            document.getElementById('yieldFill').style.width = `${prog.yield_percentage}%`;
+
+            // Next likely disease
+            document.getElementById('nextDiseaseName').textContent = prog.next_disease;
+            document.getElementById('nextDiseaseReason').textContent = prog.next_disease_reason;
+        }
+
         // Update probability chart
         updateProbabilityChart(prediction.all_probabilities);
 

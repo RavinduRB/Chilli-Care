@@ -161,6 +161,58 @@
                     </ul>
                 </div>
 
+                <!-- Plant Life Expectancy Card -->
+                <div class="info-card prognosis-card" id="lifeCard">
+                    <div class="info-card-header">
+                        <i class="fas fa-heartbeat"></i>
+                        <h4>Plant Life Expectancy</h4>
+                    </div>
+                    <div class="prognosis-content">
+                        <div class="prognosis-stat">
+                            <span class="prognosis-value" id="lifeWeeks">–</span>
+                            <span class="prognosis-unit">weeks remaining</span>
+                        </div>
+                        <div class="prognosis-bar-wrap">
+                            <div class="prognosis-bar">
+                                <div class="prognosis-fill life-fill" id="lifeFill"></div>
+                            </div>
+                        </div>
+                        <p class="prognosis-note" id="lifeNote"></p>
+                    </div>
+                </div>
+
+                <!-- Expected Yield Card -->
+                <div class="info-card prognosis-card highlight" id="yieldCard">
+                    <div class="info-card-header">
+                        <i class="fas fa-seedling"></i>
+                        <h4>Expected Yield</h4>
+                    </div>
+                    <div class="prognosis-content">
+                        <div class="prognosis-stat">
+                            <span class="prognosis-value" id="yieldPct">–</span>
+                            <span class="prognosis-unit">% of normal yield</span>
+                        </div>
+                        <div class="prognosis-bar-wrap">
+                            <div class="prognosis-bar">
+                                <div class="prognosis-fill yield-fill" id="yieldFill"></div>
+                            </div>
+                        </div>
+                        <p class="prognosis-note" id="yieldNote"></p>
+                    </div>
+                </div>
+
+                <!-- Next Likely Disease Card -->
+                <div class="info-card prognosis-card danger" id="nextDiseaseCard">
+                    <div class="info-card-header">
+                        <i class="fas fa-virus"></i>
+                        <h4>Next Likely Disease</h4>
+                    </div>
+                    <div class="prognosis-content">
+                        <div class="next-disease-name" id="nextDiseaseName">–</div>
+                        <p class="next-disease-reason" id="nextDiseaseReason"></p>
+                    </div>
+                </div>
+
                 <!-- All Predictions Card -->
                 <div class="info-card">
                     <div class="info-card-header">
