@@ -81,7 +81,7 @@ def verify_mongodb_data():
             print("\nRecent Predictions (last 5):")
             for pred in predictions:
                 print(f"\n  • Disease: {pred.get('predicted_disease', 'N/A')}")
-                print(f"    Confidence: {pred.get('confidence', 0):.2%}")
+                print(f"    Confidence: {pred.get('confidence', 0):.4f}%")
                 print(f"    Timestamp: {pred.get('timestamp', 'N/A')}")
     except Exception as e:
         print(f"❌ Error fetching predictions: {e}")
