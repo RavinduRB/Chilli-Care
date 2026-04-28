@@ -408,527 +408,299 @@ html {
     color: var(--gray-600);
 }
 
-/* Responsive Design */
-
-/* Large Screens (1440px and above) */
-@media (min-width: 1440px) {
-    .analytics-content .container,
-    .analytics-header .container {
-        max-width: 1400px;
-        margin: 0 auto;
-    }
-
-    .stats-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-
-    .charts-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+/* ============================================
+   Disease Insights Section
+   ============================================ */
+.disease-insights-section {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: 2rem;
+    overflow: hidden;
 }
 
-/* Tablets and Small Laptops (1024px) */
-@media (max-width: 1024px) {
-    .analytics-header {
-        padding: 2.5rem 0 1.75rem;
-    }
-
-    .header-text h1 {
-        font-size: 1.75rem;
-    }
-
-    .header-text p {
-        font-size: 1rem;
-    }
-
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.25rem;
-    }
-
-    .charts-grid {
-        grid-template-columns: 1fr;
-        gap: 1.75rem;
-    }
-
-    .chart-container {
-        height: 280px;
-    }
-
-    .predictions-table th,
-    .predictions-table td {
-        padding: 0.875rem;
-        font-size: 0.9rem;
-    }
+.insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
-/* Mobile Landscape and Tablet Portrait (768px) */
+/* Insight Cards */
+.insight-card {
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.insight-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+}
+
+.insight-card-danger {
+    background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
+    border-color: #fecaca;
+}
+
+.insight-card-danger::before {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.insight-card-success {
+    background: linear-gradient(135deg, #f0fdf4 0%, #fff 100%);
+    border-color: #bbf7d0;
+}
+
+.insight-card-success::before {
+    background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.insight-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.insight-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.875rem;
+    border-radius: 9999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.insight-badge-danger {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.insight-badge-success {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.insight-rank {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.insight-disease-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+}
+
+.insight-disease-count {
+    font-size: 0.9rem;
+    color: var(--gray-500);
+    margin-bottom: 1.25rem;
+    font-weight: 500;
+}
+
+.insight-causes,
+.insight-prevention {
+    margin-top: 1.25rem;
+}
+
+.insight-causes h4,
+.insight-prevention h4 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.625rem;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.insight-causes h4 i {
+    color: #ef4444;
+}
+
+.insight-prevention h4 i {
+    color: #10b981;
+}
+
+.causes-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.causes-list li {
+    font-size: 0.9rem;
+    color: var(--gray-600);
+    padding-left: 1.25rem;
+    position: relative;
+    line-height: 1.5;
+}
+
+.causes-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: #ef4444;
+    font-size: 0.75rem;
+    top: 0.15em;
+}
+
+.insight-prevention p {
+    font-size: 0.9rem;
+    color: var(--gray-600);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Disease Ranking */
+.disease-ranking {
+    border-top: 1px solid var(--gray-200);
+    padding-top: 1.5rem;
+}
+
+.disease-ranking h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.disease-ranking h4 i {
+    color: var(--primary-color);
+}
+
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.ranking-item {
+    display: grid;
+    grid-template-columns: 1.75rem 1fr auto auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    transition: background-color var(--transition-fast);
+}
+
+.ranking-item:hover {
+    background: var(--gray-100);
+}
+
+.ranking-position {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--gray-400);
+    text-align: center;
+}
+
+.ranking-position.rank-1 { color: #f59e0b; }
+.ranking-position.rank-2 { color: #94a3b8; }
+.ranking-position.rank-3 { color: #b45309; }
+
+.ranking-name {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--gray-800);
+}
+
+.ranking-bar-wrap {
+    flex: 1;
+    background: var(--gray-200);
+    border-radius: 9999px;
+    height: 8px;
+    min-width: 60px;
+    overflow: hidden;
+}
+
+.ranking-bar {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.8s ease;
+    background: var(--gradient-primary);
+}
+
+.ranking-bar.bar-danger { background: linear-gradient(90deg, #ef4444, #dc2626); }
+.ranking-bar.bar-warning { background: linear-gradient(90deg, #f59e0b, #d97706); }
+.ranking-bar.bar-success { background: linear-gradient(90deg, #10b981, #059669); }
+
+.ranking-count {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    white-space: nowrap;
+}
+
+/* Insights Empty State */
+.insights-empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--gray-500);
+}
+
+.insights-empty i {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+    display: block;
+    opacity: 0.4;
+}
+
+.insights-empty p {
+    font-size: 0.9375rem;
+    max-width: 400px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* ============================================
+   Responsive — Disease Insights
+   ============================================ */
 @media (max-width: 768px) {
-    .analytics-header {
-        padding: 2rem 0 1.5rem;
-    }
-
-    .header-content {
-        flex-direction: column;
-        text-align: center;
-        gap: 1rem;
-    }
-
-    .header-icon {
-        font-size: 2.5rem;
-    }
-
-    .header-text h1 {
-        font-size: 1.5rem;
-    }
-
-    .header-text p {
-        font-size: 1rem;
-    }
-
-    .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-
-    .stat-card {
-        padding: 1.25rem;
-    }
-
-    .stat-icon {
-        width: 50px;
-        height: 50px;
-        font-size: 1.5rem;
-    }
-
-    .stat-value {
-        font-size: 1.5rem;
-    }
-
-    .stat-label {
-        font-size: 0.8125rem;
-    }
-
-    .charts-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-
-    .chart-card {
-        padding: 1.25rem;
-    }
-
-    .chart-header h3 {
-        font-size: 1.125rem;
-    }
-
-    .chart-container {
-        height: 260px;
-    }
-
-    .predictions-section {
+    .disease-insights-section {
         padding: 1.5rem;
     }
 
-    .section-header h2 {
-        font-size: 1.25rem;
+    .insights-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
     }
 
-    .predictions-table {
-        font-size: 0.875rem;
-        min-width: 0;
-    }
-
-    .predictions-table th,
-    .predictions-table td {
-        padding: 0.75rem 0.5rem;
-    }
-
-    /* Stack table for mobile */
-    .predictions-table thead {
-        display: none;
-    }
-
-    .predictions-table tbody tr {
-        display: block;
-        margin-bottom: 1rem;
-        border: 1px solid var(--gray-200);
-        border-radius: var(--radius-md);
-        padding: 1rem;
-        background: white;
-    }
-
-    .predictions-table tbody tr:hover {
-        background: var(--gray-50);
-    }
-
-    .predictions-table td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid var(--gray-100);
-        text-align: left;
-    }
-
-    .predictions-table td:last-child {
-        border-bottom: none;
-    }
-
-    .predictions-table td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: var(--gray-700);
-        margin-right: 0.5rem;
-    }
-
-    .empty-state {
-        padding: 2.5rem 1.5rem;
-    }
-
-    .empty-state i {
-        font-size: 3.5rem;
-    }
-
-    .auth-required-card {
-        padding: 2.5rem 1.75rem;
-    }
-}
-
-/* Mobile Portrait (480px) */
-@media (max-width: 480px) {
-    .analytics-header {
-        padding: 1.5rem 0 1.25rem;
-    }
-
-    .header-icon {
-        font-size: 2rem;
-    }
-
-    .header-text h1 {
-        font-size: 1.25rem;
-    }
-
-    .header-text p {
-        font-size: 0.9375rem;
-    }
-
-    .auth-required-card {
-        padding: 2rem 1.5rem;
-    }
-
-    .auth-required-card i {
-        font-size: 3rem;
-    }
-
-    .auth-required-card h2 {
-        font-size: 1.5rem;
-    }
-
-    .stat-card {
-        padding: 1rem;
-        gap: 1rem;
-    }
-
-    .stat-icon {
-        width: 45px;
-        height: 45px;
-        font-size: 1.25rem;
-    }
-
-    .stat-value {
-        font-size: 1.25rem;
-    }
-
-    .stat-label {
-        font-size: 0.75rem;
-    }
-
-    .chart-card {
-        padding: 1rem;
-    }
-
-    .chart-header {
-        margin-bottom: 1rem;
-    }
-
-    .chart-header h3 {
-        font-size: 1rem;
-    }
-
-    .chart-header p {
-        font-size: 0.8125rem;
-    }
-
-    .chart-container {
-        height: 250px;
-    }
-
-    .predictions-section {
+    .insight-card {
         padding: 1.25rem;
     }
 
-    .section-header {
-        margin-bottom: 1.5rem;
-    }
-
-    .section-header h2 {
-        font-size: 1.125rem;
-    }
-
-    .section-header p {
-        font-size: 0.8125rem;
-    }
-
-    .predictions-table tbody tr {
-        padding: 0.875rem;
-    }
-
-    .predictions-table td {
-        font-size: 0.875rem;
-        gap: 0.5rem;
-    }
-
-    .confidence-badge,
-    .status-badge {
-        font-size: 0.8125rem;
-        padding: 0.1875rem 0.625rem;
-    }
-
-    .empty-state {
-        padding: 2rem 1rem;
-    }
-
-    .empty-state i {
-        font-size: 3rem;
-    }
-
-    .empty-state h3 {
-        font-size: 1.125rem;
-    }
-
-    .empty-state p {
-        font-size: 0.9375rem;
-    }
-
-    .loading-card {
-        padding: 2.5rem 1.5rem;
-    }
-}
-
-/* Small Mobile Devices (360px) */
-@media (max-width: 360px) {
-    .analytics-header {
-        padding: 1.25rem 0 1rem;
-    }
-
-    .header-icon {
-        font-size: 1.75rem;
-    }
-
-    .header-text h1 {
-        font-size: 1.125rem;
-    }
-
-    .header-text p {
-        font-size: 0.875rem;
-    }
-
-    .auth-required-card {
-        padding: 1.75rem 1.25rem;
-    }
-
-    .auth-required-card i {
-        font-size: 2.5rem;
-    }
-
-    .auth-required-card h2 {
+    .insight-disease-name {
         font-size: 1.25rem;
     }
 
-    .auth-required-card p {
-        font-size: 0.9375rem;
+    .ranking-item {
+        padding: 0.75rem 0;
     }
-
-    .stat-card {
-        padding: 0.875rem;
-        gap: 0.875rem;
-    }
-
-    .stat-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 1.125rem;
-    }
-
-    .stat-value {
-        font-size: 1.125rem;
-    }
-
-    .stat-label {
-        font-size: 0.6875rem;
-    }
-
-    .chart-card {
-        padding: 0.875rem;
-    }
-
-    .chart-header h3 {
-        font-size: 0.9375rem;
-        gap: 0.375rem;
-    }
-
-    .chart-header p {
-        font-size: 0.75rem;
-    }
-
-    .chart-container {
-        height: 220px;
-    }
-
-    .chart-container canvas {
-        max-height: 220px;
-    }
-
-    .predictions-section {
-        padding: 1rem;
-    }
-
-    .section-header h2 {
-        font-size: 1rem;
-        gap: 0.375rem;
-    }
-
-    .section-header p {
-        font-size: 0.75rem;
-    }
-
-    .predictions-table tbody tr {
-        padding: 0.75rem;
-    }
-
-    .predictions-table td {
-        font-size: 0.8125rem;
-        padding: 0.375rem 0;
-    }
-
-    .predictions-table td::before {
-        font-size: 0.8125rem;
-    }
-
-    .confidence-badge,
-    .status-badge {
-        font-size: 0.75rem;
-        padding: 0.1875rem 0.5rem;
-        gap: 0.25rem;
-    }
-
-    .empty-state {
-        padding: 1.75rem 0.875rem;
-    }
-
-    .empty-state i {
-        font-size: 2.5rem;
-    }
-
-    .empty-state h3 {
-        font-size: 1rem;
-    }
-
-    .empty-state p {
-        font-size: 0.875rem;
-    }
-
-    .loading-card {
-        padding: 2rem 1.25rem;
-    }
-}
-
-/* Landscape orientation adjustments */
-@media (max-height: 600px) and (orientation: landscape) {
-    .analytics-header {
-        padding: 1.5rem 0 1rem;
-    }
-
-    .header-icon {
-        font-size: 2rem;
-    }
-
-    .chart-container {
-        height: 200px;
-    }
-}
-
-/* Touch-friendly styles for mobile devices */
-@media (hover: none) and (pointer: coarse) {
-    .stat-card {
-        cursor: default;
-    }
-
-    .stat-card:active {
-        transform: scale(0.98);
-    }
-
-    .btn {
-        min-height: 44px;
-        min-width: 44px;
-    }
-
-    .predictions-table tbody tr {
-        cursor: default;
-    }
-
-    .predictions-table tbody tr:active {
-        background-color: var(--gray-100);
-    }
-}
-
-/* Accessibility improvements for reduced motion */
-@media (prefers-reduced-motion: reduce) {
-    .stat-card {
-        transition: none;
-    }
-
-    .predictions-table tbody tr {
-        transition: none;
-    }
-}
-
-/* Print styles */
-@media print {
-    .analytics-header {
-        background: none !important;
-        color: black !important;
-        padding: 1rem 0;
-    }
-
-    .stat-card,
-    .chart-card,
-    .predictions-section {
-        box-shadow: none;
-        border: 1px solid #ddd;
-    }
-
-    .chart-container {
-        height: auto;
-    }
-
-    .load-more-container,
-    .btn {
-        display: none;
-    }
-}
-
-/* Hidden State */
-.hidden {
-    display: none !important;
-}
-
-/* Override for sections within main wrapper - use opacity instead */
-.analytics-main-wrapper > section.hidden {
-    display: block !important;
-    position: absolute !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none;
 }

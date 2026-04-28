@@ -32,6 +32,7 @@
                 <ul class="nav-menu desktop-menu">
                     <li><a href="/" {% if active_page == 'home' %}class="active"{% endif %}>Home</a></li>
                     <li><a href="/analytics" {% if active_page == 'analytics' %}class="active"{% endif %}>Analytics</a></li>
+                    <li><a href="/diseases" {% if active_page == 'diseases' %}class="active"{% endif %}>Diseases</a></li>
                     <li><a href="/about" {% if active_page == 'about' %}class="active"{% endif %}>About</a></li>
                     <li><a href="/contact" {% if active_page == 'contact' %}class="active"{% endif %}>Contact</a></li>
                 </ul>
@@ -111,6 +112,7 @@
                 <ul class="mobile-nav-list">
                     <li><a href="/" class="mobile-nav-item"><i class="fas fa-home"></i> Home</a></li>
                     <li><a href="/analytics" class="mobile-nav-item"><i class="fas fa-chart-line"></i> Analytics</a></li>
+                    <li><a href="/diseases" class="mobile-nav-item"><i class="fas fa-book-medical"></i> Diseases</a></li>
                     <li><a href="/about" class="mobile-nav-item"><i class="fas fa-info-circle"></i> About</a></li>
                     <li><a href="/contact" class="mobile-nav-item"><i class="fas fa-envelope"></i> Contact</a></li>
                     <li class="mobile-divider"></li>
@@ -224,7 +226,7 @@
                     <h4>Resources</h4>
                     <ul>
                         <li><a href="#">User Guide</a></li>
-                        <li><a href="#">Disease Database</a></li>
+                        <li><a href="/diseases">Disease Database</a></li>
                         <li><a href="#">Research Papers</a></li>
                         <li><a href="/faqs">FAQs</a></li>
                     </ul>

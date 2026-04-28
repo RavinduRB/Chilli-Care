@@ -159,6 +159,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Update charts
                 updateCharts(statsData.disease_stats);
+
+                // Update disease insights
+                updateDiseaseInsights(statsData.disease_stats);
                 
                 // Update predictions table
                 updatePredictionsTable(predictionsData.predictions);
@@ -380,14 +383,156 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/\s+/g, ' ')
             .trim();
     }
-    
+
+    // ============================================
+    // Disease Knowledge Base
+    // ============================================
+
+    const DISEASE_INFO = {
+        'Chilli Whitefly': {
+            causes: [
+                'Infestation by Bemisia tabaci or Trialeurodes vaporariorum (whitefly insects)',
+                'Spread through infested seedlings or neighboring host plants',
+                'Favored by hot, dry weather conditions with low humidity',
+                'Poor crop sanitation and unchecked weed growth nearby'
+            ],
+            prevention: 'Apply reflective mulches to repel whiteflies, use yellow sticky traps for monitoring, spray neem oil or insecticidal soap every 7–10 days, and introduce natural predators like Encarsia formosa.'
+        },
+        'Chilli Yellowish': {
+            causes: [
+                'Nutrient deficiency — especially nitrogen, iron, or magnesium in the soil',
+                'Viral infections transmitted by insect vectors such as aphids or whiteflies',
+                'Waterlogging or root damage disrupting nutrient uptake',
+                'Soil pH imbalance (too acidic or alkaline) blocking nutrient absorption'
+            ],
+            prevention: 'Conduct regular soil tests and apply balanced NPK fertilizer. Ensure good drainage, correct soil pH to 6.0–7.0, and control insect vectors to prevent viral spread.'
+        },
+        'Chilli Anthacnose': {
+            causes: [
+                'Caused by Colletotrichum capsici or C. gloeosporioides (fungal pathogens)',
+                'Spread through infected seeds, contaminated soil, or crop debris',
+                'Warm, humid weather (25–30°C) with frequent rainfall accelerates spread',
+                'Fruit injuries from insects or mechanical damage provide fungal entry points'
+            ],
+            prevention: 'Use certified disease-free seeds, apply copper-based fungicides preventively, ensure proper plant spacing for air circulation, and remove infected plant debris promptly after harvest.'
+        },
+        'Chilli Leaf Curl Virus': {
+            causes: [
+                'Caused by Chilli Leaf Curl Virus (ChiLCV), a begomovirus',
+                'Transmitted by whitefly (Bemisia tabaci) in a persistent circulative manner',
+                'High whitefly populations in surrounding areas increase infection risk',
+                'Planting during peak whitefly season (hot, dry months) elevates exposure'
+            ],
+            prevention: 'Control whitefly populations with systemic insecticides or neem oil, use virus-resistant chilli varieties, plant UV-reflective silver mulch, and remove and destroy infected plants immediately to prevent spread.'
+        },
+        'Chilli healthy': {
+            causes: [],
+            prevention: 'Continue maintaining good agricultural practices: balanced fertilization, regular scouting for pests, proper irrigation, and timely harvesting.'
+        }
+    };
+
+    // ============================================
+    // Disease Insights Functions
+    // ============================================
+
+    function updateDiseaseInsights(diseaseStats) {
+        const section = document.getElementById('diseaseInsightsSection');
+        const insightsEmpty = document.getElementById('insightsEmpty');
+        const insightsGrid = section.querySelector('.insights-grid');
+        const rankingContainer = document.getElementById('diseaseRankingContainer');
+
+        // Filter out healthy entries for the insights
+        const diseasedStats = diseaseStats.filter(s => !s.disease.toLowerCase().includes('healthy'));
+
+        if (diseasedStats.length === 0) {
+            insightsGrid.classList.add('hidden');
+            rankingContainer.classList.add('hidden');
+            insightsEmpty.classList.remove('hidden');
+            return;
+        }
+
+        insightsGrid.classList.remove('hidden');
+        rankingContainer.classList.remove('hidden');
+        insightsEmpty.classList.add('hidden');
+
+        // Most demanding = highest count (index 0, already sorted desc)
+        const most = diseasedStats[0];
+        // Least demanding = lowest count (last item)
+        const least = diseasedStats[diseasedStats.length - 1];
+
+        populateInsightCard('mostDemanding', most, true);
+        populateInsightCard('leastDemanding', least, false);
+        buildRankingList(diseasedStats);
+    }
+
+    function populateInsightCard(prefix, stat, isMost) {
+        const info = DISEASE_INFO[stat.disease] || {
+            causes: ['No detailed information available for this disease.'],
+            prevention: 'Consult a local agricultural extension officer for guidance.'
+        };
+
+        const nameEl = document.getElementById(prefix + 'Name');
+        const countEl = document.getElementById(prefix + 'Count');
+        const causesListEl = document.getElementById(prefix + 'CausesList');
+        const preventionTextEl = document.getElementById(prefix + 'PreventionText');
+
+        nameEl.textContent = formatDiseaseName(stat.disease);
+        countEl.textContent = `Detected ${stat.count} time${stat.count !== 1 ? 's' : ''} · Avg confidence ${Math.round(stat.avg_confidence)}%`;
+
+        // Build causes list
+        causesListEl.innerHTML = '';
+        if (info.causes.length === 0) {
+            const li = document.createElement('li');
+            li.textContent = 'No disease causes — plant is healthy.';
+            causesListEl.appendChild(li);
+        } else {
+            info.causes.forEach(cause => {
+                const li = document.createElement('li');
+                li.textContent = cause;
+                causesListEl.appendChild(li);
+            });
+        }
+
+        preventionTextEl.textContent = info.prevention;
+    }
+
+    function buildRankingList(diseasedStats) {
+        const rankingList = document.getElementById('diseaseRankingList');
+        rankingList.innerHTML = '';
+        const maxCount = diseasedStats[0].count;
+
+        const barClasses = ['bar-danger', 'bar-warning', 'bar-success'];
+
+        diseasedStats.forEach((stat, index) => {
+            const pct = maxCount > 0 ? (stat.count / maxCount) * 100 : 0;
+            const barClass = index === 0 ? 'bar-danger' : (index === diseasedStats.length - 1 ? 'bar-success' : 'bar-warning');
+            const rankClass = index < 3 ? `rank-${index + 1}` : '';
+
+            const item = document.createElement('div');
+            item.className = 'ranking-item';
+            item.innerHTML = `
+                <span class="ranking-position ${rankClass}">${index + 1}</span>
+                <span class="ranking-name">${formatDiseaseName(stat.disease)}</span>
+                <div class="ranking-bar-wrap">
+                    <div class="ranking-bar ${barClass}" style="width: ${pct}%"></div>
+                </div>
+                <span class="ranking-count">${stat.count} detection${stat.count !== 1 ? 's' : ''}</span>
+            `;
+            rankingList.appendChild(item);
+        });
+    }
+
+    // ============================================
+    // Sri Lanka Chilli Disease Reference Database
+    // ============================================
+
     // Load more predictions
     async function loadMorePredictions() {
         if (!hasMorePredictions) return;
-        
+
         loadMoreBtn.disabled = true;
         loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-        
+
         try {
             currentPage++;
             const response = await fetch(`/api/user/predictions?page=${currentPage}&per_page=10`);
