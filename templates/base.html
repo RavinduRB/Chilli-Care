@@ -218,6 +218,8 @@
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="/">Home</a></li>
+                        <li><a href="/analytics">Analytics</a></li>
+                        <li><a href="/diseases">Diseases</a></li>
                         <li><a href="/about">About</a></li>
                         <li><a href="/contact">Contact</a></li>
                     </ul>
@@ -247,8 +249,9 @@
     </footer>
 
     <!-- Notification System Script -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
-    
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>
