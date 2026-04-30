@@ -1644,6 +1644,12 @@ def about():
     return render_template('about.html')
 
 
+@app.route('/diseases')
+def diseases():
+    """Diseases page"""
+    return render_template('diseases.html')
+
+
 @app.route('/contact')
 def contact():
     """Contact page"""
