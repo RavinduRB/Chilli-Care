@@ -9,6 +9,11 @@ uploads/
 venv/
 env/
 
+# Hugging Face model cache (do not commit ~1GB model files)
+.cache/
+*.bin
+*.safetensors
+
 # Python cache
 __pycache__/
 *.py[cod]

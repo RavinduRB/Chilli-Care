@@ -102,7 +102,25 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
+### 4. Download BLIP Model (for Local Image Validation)
+The app uses the **Salesforce BLIP** model (`Salesforce/blip-image-captioning-base`) as a local fallback for validating that uploaded images are chilli plants. The model is ~1GB and is **not included in the repository** — it is downloaded automatically from Hugging Face on first use.
+
+**Option A — Auto-download on first run (recommended)**
+Simply run the app. The model will be downloaded and cached automatically (~1GB, one-time):
+```bash
+python app.py
+```
+The model is cached at `~/.cache/huggingface/hub/` and reused on all subsequent runs.
+
+**Option B — Pre-download before running**
+Run the test script which downloads and verifies the model:
+```bash
+python test_huggingface_local.py
+```
+
+> **Note:** `transformers` and `torch` must be installed first (`pip install -r requirements.txt`). Without the model, the app falls back to Google Gemini API for image validation, so it will still work.
+
+### 5. Configure Environment Variables
 Create a `.env` file in the project root:
 ```env
 SECRET_KEY=your-strong-random-secret-key
