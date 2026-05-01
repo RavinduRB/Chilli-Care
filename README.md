@@ -1,255 +1,222 @@
-# Chilli Leaf Disease Detection Web Application
+# Chilli Care — AI-Powered Chilli Disease Detection System
 
 ## 🌶️ Project Overview
-A Flask-based web application for detecting diseases in chilli leaves using a trained CNN model. This application provides an intuitive interface for farmers and agricultural professionals to identify chilli plant diseases through image upload.
+Chilli Care is a full-stack web application for detecting diseases in chilli plants using a trained deep learning model. It provides an AI-assisted platform for farmers and agricultural professionals in Sri Lanka to identify diseases through image upload or live camera capture, with a complete user authentication system, admin dashboard, prediction history, analytics, disease reference guide, and notification system.
 
 ## 📚 Dataset
-Link :- https://www.kaggle.com/datasets/ravindubandara3002/preprocessed-chilli-disease-dataset
+Kaggle: https://www.kaggle.com/datasets/ravindubandara3002/preprocessed-chilli-disease-dataset
 
 ## 🎯 Features
-- **Real-time Disease Detection**: Upload chilli leaf images and get instant predictions
-- **Camera Capture**: Take photos directly from your device camera for analysis
-- **Smart Image Validation**: Uses Google Gemini AI to verify that uploaded images are chilli plants
-- **5 Disease Classes**: Detects Whitefly, Yellowish, Healthy, Anthracnose, and Leaf Curl Virus
-- **Confidence Scores**: Shows prediction confidence and probability distribution
-- **Treatment Recommendations**: Provides symptoms and treatment guidelines for each disease
-- **User-Friendly Interface**: Clean, responsive design with drag-and-drop upload
-- **Mobile Responsive**: Works on desktop, tablet, and mobile devices
+
+### Core Detection
+- **Real-time Disease Detection** — Upload or capture chilli leaf images for instant AI diagnosis
+- **Camera Capture** — Use device camera directly in the browser
+- **Smart Image Validation** — Google Gemini AI verifies uploaded images are chilli plants
+- **5 AI-Detectable Disease Classes** — Whitefly, Yellowish, Healthy, Anthracnose, Leaf Curl Virus
+- **Confidence Scores & Probability Analysis** — Full probability breakdown for all classes
+- **Prognosis Cards** — Plant life expectancy, expected yield, and next likely disease prediction
+
+### User System
+- **User Authentication** — Signup, login, logout with bcrypt-hashed passwords
+- **Persistent Sessions** — 7-day login sessions via Flask-Login
+- **Prediction History** — Logged-in users can view all past detections
+- **Account Management** — Users can delete their own accounts
+
+### Admin Dashboard
+- **Admin Panel** — `/admin/dashboard` (admin accounts only)
+- **User Management** — View all registered users
+- **Prediction Analytics** — Platform-wide detection statistics and trends
+- **Disease Distribution Maps** — Location-based disease spread visualisation
+- **Contact Message Management** — View and reply to user contact submissions
+- **Broadcast Notifications** — Send system-wide notifications to all users
+- **Disease Database Editor** — Edit disease information stored in MongoDB
+
+### Information Pages
+- **Disease Reference Guide** — `/diseases` — 31 diseases & pests with symptoms, causes, prevention
+- **Analytics Page** — `/analytics` — Detection statistics and charts
+- **Contact Page** — `/contact` — Contact form with email notification
+- **About, FAQs, Privacy, Terms** pages
 
 ## 📋 Prerequisites
 - Python 3.8 or higher
-- Trained model file (`.keras`, `.h5`, or SavedModel format)
-- `class_names.json` file with disease labels
-
-## 🚀 Installation
-
-### 1. Clone or Navigate to Project Directory
-```bash
-cd "c:\Users\ASUS\Desktop\Chilli"
-```
-
-### 2. Install Required Packages
-```bash
-pip install -r requirements.txt
-```
-
-Or install manually:
-```bash
-pip install Flask tensorflow keras numpy Pillow Werkzeug
-```
+- MongoDB Atlas account (or local MongoDB instance)
+- Google Gemini API key (for image validation)
+- Gmail account with App Password (for email notifications)
 
 ## 📁 Project Structure
 ```
-Chilli/
+Chilli Care/
 │
-├── app.py                          # Main Flask application
-├── requirements.txt                # Python dependencies
-├── class_names.json               # Disease class names (auto-generated from notebook)
-├── best_chilli_disease_model.h5   # Trained model (from Jupyter notebook)
+├── app.py                              # Main Flask application
+├── mongodb_database.py                 # MongoDB database layer
+├── requirements.txt                    # Python dependencies
+├── class_names.json                    # Disease class labels
+│
+├── best_chilli_disease_model.h5        # Primary trained model
+├── chilli_disease_detection_model_final.h5
+├── chilli_disease_detection_model_final.keras
+├── chilli_disease_model_saved/         # TensorFlow SavedModel format
 │
 ├── templates/
-│   ├── index.html                 # Home page
-│   └── about.html                 # About page
+│   ├── base.html                       # Base layout
+│   ├── index.html                      # Home / detection page
+│   ├── diseases.html                   # Disease reference guide
+│   ├── analytics.html                  # Analytics dashboard
+│   ├── about.html
+│   ├── contact.html
+│   ├── faqs.html
+│   ├── privacy.html
+│   ├── terms.html
+│   ├── admin_base.html
+│   └── admin_dashboard.html
 │
 ├── static/
-│   ├── css/
-│   │   └── style.css              # Styling
-│   └── uploads/                   # Uploaded images (auto-created)
+│   ├── css/                            # Stylesheets
+│   ├── js/                             # Frontend JavaScript
+│   └── images/                         # Static assets
 │
-├── train/                         # Training data
-├── valid/                         # Validation data
-└── test/                          # Test data
+├── uploads/                            # Uploaded images (auto-created)
+├── train/                              # Training data
+├── valid/                              # Validation data
+└── test/                               # Test data
 ```
 
-## 🏃 Running the Application
+## 🚀 Installation & Setup
 
-### 1. Make Sure Model Files Exist
-Ensure you have trained the model using the Jupyter notebook and have either:
-- `chilli_disease_detection_model_final.keras` (recommended)
-- `chilli_disease_detection_model_final.h5`
-- `best_chilli_disease_model.h5`
+### 1. Clone or Navigate to Project Directory
+```bash
+cd "Chilli Care"
+```
 
-### 2. Set Up Gemini API Key (Required for Image Validation)
-The application uses Google's Gemini AI to validate that uploaded images are chilli plants.
-
-1. Get your free API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Create a `.env` file in the project root (or copy from `.env.example`):
-   ```bash
-   cp .env.example .env
-   ```
-3. Add your API key to the `.env` file:
-   ```
-   GEMINI_API_KEY=your_actual_api_key_here
-   ```
-
-**Note**: If you skip this step, the validation will be disabled and all images will be allowed through.
+### 2. Create and Activate Virtual Environment
+```bash
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# Linux/Mac
+source .venv/bin/activate
+```
 
 ### 3. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-This will install all required packages including:
-- Flask (Web framework)
-- TensorFlow/Keras (Deep learning)
-- google-generativeai (Gemini API)
-- Pillow (Image processing)
-- And other dependencies
+### 4. Configure Environment Variables
+Create a `.env` file in the project root:
+```env
+SECRET_KEY=your-strong-random-secret-key
 
-### 4. Start the Flask Server
+# MongoDB
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/chillicare
+
+# Google Gemini AI (image validation)
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Gmail (contact form & notifications)
+MAIL_USERNAME=your@gmail.com
+MAIL_PASSWORD=your_gmail_app_password
+```
+
+> **Note:** Never commit `.env` to version control. It is already listed in `.gitignore`.
+
+### 5. Create Admin User
+```bash
+python add_admin_user.py
+```
+Or use the interactive version to set custom credentials:
+```bash
+python create_admin.py
+```
+
+### 6. Start the Application
 ```bash
 python app.py
 ```
 
-Or on Windows:
+Access at: `http://127.0.0.1:5000`
+
+For production with Gunicorn:
 ```bash
-set FLASK_APP=app.py
-set GEMINI_API_KEY=your_api_key_here
-python app.py
-```
-
-On Linux/Mac:
-```bash
-export FLASK_APP=app.py
-export GEMINI_API_KEY=your_api_key_here
-python app.py
-```
-
-### 5. Access the Application
-Open your web browser and navigate to:
-```
-http://127.0.0.1:5000
-```
-
-Or from another device on the same network:
-```
-http://YOUR_IP_ADDRESS:5000
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ```
 
 ## 📱 How to Use
 
-1. **Upload Image**: 
-   - Click "Choose Image" or drag and drop a chilli leaf image
-   - OR click "Open Camera" to capture a photo directly
-   - Supported formats: PNG, JPG, JPEG
-
-2. **Automatic Validation**:
-   - The system uses AI to verify the image contains a chilli plant
-   - If it's not a chilli plant, you'll receive a clear error message
-   - This prevents false diagnoses from wrong plant types
-
-3. **Analyze**: 
-   - Click "Analyze Disease" button
-   - Wait for the AI model to process the image
-
-4. **View Results**:
-   - See the detected disease name
-   - Check the confidence score
-   - Review probability distribution for all classes
-   - Read disease information, symptoms, and treatment recommendations
-
-4. **Analyze More**: 
-   - Click "Analyze Another Image" to test more images
-
-## 🔧 Configuration
-
-### Change Port
-Edit `app.py` line 316:
-```python
-app.run(debug=True, host='0.0.0.0', port=5000)  # Change port number here
-```
-
-### Change Upload Size Limit
-Edit `app.py` line 16:
-```python
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB (change as needed)
-```
-
-### Model Selection
-The app automatically tries to load models in this order:
-1. `chilli_disease_detection_model_final.keras`
-2. `chilli_disease_detection_model_final.h5`
-3. `best_chilli_disease_model.h5`
+1. **Upload or Capture** — Choose an image file or use the camera button
+2. **Validation** — Gemini AI confirms the image is a chilli plant
+3. **Analyze** — Click "Analyze Disease" to run the model
+4. **Results** — View disease name, confidence score, symptoms, treatments, organic solutions, and prognosis
+5. **History** — Log in to save and review past detections
 
 ## 🧪 API Endpoints
 
-### Health Check
-```bash
-GET /health
-```
-Returns model loading status and class count.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/health` | System health check |
+| `POST` | `/api/predict` | Run disease detection |
+| `GET` | `/api/diseases` | List all diseases |
+| `GET` | `/api/disease/<name>` | Get disease details |
+| `POST` | `/api/auth/signup` | Register new user |
+| `POST` | `/api/auth/login` | User login |
+| `POST` | `/api/auth/logout` | User logout |
+| `GET` | `/api/auth/status` | Check auth status |
+| `GET` | `/api/history` | Get prediction history (auth required) |
+| `GET` | `/api/user/predictions` | User's own predictions |
+| `GET` | `/api/user/statistics` | User statistics |
+| `GET` | `/api/analytics/summary` | Platform analytics summary |
+| `POST` | `/api/contact` | Submit contact form |
+| `GET` | `/api/notifications` | Get user notifications |
+| `GET` | `/api/admin/dashboard` | Admin dashboard data (admin only) |
+| `GET` | `/api/admin/users` | All users (admin only) |
+| `GET` | `/api/admin/predictions` | All predictions (admin only) |
+| `GET` | `/api/admin/messages` | Contact messages (admin only) |
+| `POST` | `/api/admin/notifications/broadcast` | Broadcast notification (admin only) |
 
-### Predict Disease
-```bash
-POST /predict
-Content-Type: multipart/form-data
-Body: file=<image_file>
-```
-Returns JSON with prediction results.
+## 📊 Disease Classes (AI Detectable)
 
-## 🐛 Troubleshooting
+1. **Chilli Whitefly** — Insect infestation
+2. **Chilli Yellowish** — Nutrient deficiency / environmental stress
+3. **Chilli Healthy** — Normal healthy plant
+4. **Chilli Anthracnose** — Fungal disease (*Colletotrichum* spp.)
+5. **Chilli Leaf Curl Virus** — Viral disease (transmitted by whitefly)
 
-### Model Not Found Error
-- Run the Jupyter notebook to train and save the model first
-- Ensure model files are in the same directory as `app.py`
-
-### Import Errors
-```bash
-pip install --upgrade tensorflow keras flask
-```
-
-### Permission Errors
-- Ensure write permissions for `static/uploads` directory
-- Run: `mkdir static/uploads` if it doesn't exist
-
-### Port Already in Use
-- Change the port in `app.py` or kill the process using the port
-
-## 📊 Disease Classes
-
-1. **Chilli Whitefly** - Insect infestation
-2. **Chilli Yellowish** - Nutrient deficiency
-3. **Chilli Healthy** - Normal plant
-4. **Chilli Anthracnose** - Fungal disease
-5. **Chilli Leaf Curl Virus** - Viral disease
+The full disease reference guide covers 31 diseases and pests across fungal, bacterial, viral, pest, and nutritional categories.
 
 ## 🛠️ Technology Stack
 
-- **Backend**: Flask (Python)
-- **Deep Learning**: TensorFlow, Keras
-- **Frontend**: HTML5, CSS3, JavaScript
-- **Image Processing**: PIL, NumPy
-- **Model**: Custom CNN with 4 convolutional blocks
+| Layer | Technology |
+|-------|------------|
+| Backend | Flask, Flask-Login, Flask-Mail, Flask-CORS |
+| Database | MongoDB Atlas (via PyMongo) |
+| Deep Learning | TensorFlow, Keras |
+| AI Validation | Google Gemini API (`google-genai`) |
+| Password Security | bcrypt |
+| Frontend | HTML5, CSS3, Vanilla JavaScript |
+| Image Processing | Pillow, NumPy |
+| Deployment | Gunicorn (Procfile included) |
 
-## 📈 Future Enhancements
+## 🔐 Security Notes
 
-- [ ] Add user authentication
-- [ ] Save detection history
-- [ ] Batch image processing
-- [ ] Mobile app version
-- [ ] Real-time camera detection
-- [ ] Multi-language support
-- [ ] Export reports as PDF
+- Passwords are hashed with **bcrypt** (salted, never stored plain)
+- Session cookies are `HttpOnly` and `SameSite=Lax`
+- Set `SESSION_COOKIE_SECURE=True` and use HTTPS in production
+- Set a strong `SECRET_KEY` in `.env` before deploying
+- `.env` is excluded from version control via `.gitignore`
 
-## 👨‍💻 Development Mode
+## 🐛 Troubleshooting
 
-To run in development mode with auto-reload:
-```python
-app.run(debug=True, host='0.0.0.0', port=5000)
-```
-
-For production, use a WSGI server like Gunicorn:
-```bash
-pip install gunicorn
-gunicorn -w 4 -b 0.0.0.0:5000 app:app
-```
+| Issue | Fix |
+|-------|-----|
+| MongoDB not connecting | Check `MONGODB_URI` in `.env` |
+| Gemini validation failing | Check `GEMINI_API_KEY` in `.env` |
+| Model not loading | Ensure model `.h5` or `.keras` file is in project root |
+| Port already in use | Change port in `app.py` or kill the process |
+| Email not sending | Check Gmail App Password and `MAIL_USERNAME` in `.env` |
 
 ## 📄 License
-This is a final year project for educational purposes.
-
-## 🤝 Support
-For issues or questions, please refer to the project documentation or contact your project supervisor.
+Final year project — for educational purposes.
 
 ## 🎓 Credits
-Final Year Project - Chilli Leaf Disease Detection System
-Powered by TensorFlow, Keras, and Flask
+Chilli Care — AI-Powered Chilli Disease Detection System
+Powered by TensorFlow, Flask, MongoDB, and Google Gemini AI
