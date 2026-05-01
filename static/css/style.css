@@ -3303,3 +3303,67 @@ button {
         font-size: 1.5rem;
     }
 }
+
+/* ============================================
+   Shared Page Hero Banner (About, Diseases,
+   Analytics, Contact)
+   ============================================ */
+.page-hero-banner {
+    position: relative;
+    height: 200px;
+    background-color: #1b5e20;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+.page-hero-img {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 62%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+}
+.page-hero-fade {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 62%;
+    height: 100%;
+    background: linear-gradient(to right, #1b5e20 0%, #1b5e20 10%, rgba(27,94,32,0.6) 40%, transparent 100%);
+}
+.page-hero-text {
+    position: relative;
+    z-index: 2;
+}
+.page-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 0.6rem;
+}
+.page-breadcrumb a {
+    color: rgba(255,255,255,0.85);
+    text-decoration: none;
+}
+.page-breadcrumb a:hover { color: white; }
+.page-breadcrumb i {
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.7);
+}
+.page-hero-text h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+}
+@media (max-width: 768px) {
+    .page-hero-banner { height: 160px; }
+    .page-hero-img { width: 55%; }
+    .page-hero-fade { width: 55%; }
+    .page-hero-text h1 { font-size: 1.5rem; }
+}
+}

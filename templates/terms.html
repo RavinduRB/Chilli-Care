@@ -9,17 +9,19 @@
 {% endblock %}
 
 {% block content %}
-    <!-- Terms of Service Hero Section -->
-    <section class="terms-hero" style="padding: 6rem 0 4rem; background: var(--gradient-hero); color: white; text-align: center;">
-        <div class="container">
-            <h1 style="font-size: 3rem; font-weight: 700; margin-bottom: 1.5rem;">Terms of Service</h1>
-            <p style="font-size: 1.25rem; max-width: 800px; margin: 0 auto; opacity: 0.9;">
-                Please read these terms carefully before using Chilli Care.
-            </p>
-            <p style="font-size: 0.9rem; margin-top: 1rem; opacity: 0.8;">
-                Last Updated: March 29, 2026
-            </p>
+    <!-- Page Hero Banner -->
+    <section class="page-hero-banner">
+        <div class="page-hero-img" style="background-image: url('{{ url_for('static', filename='images/background.jpg') }}');"></div>
+        <div class="page-hero-fade"></div>
+        <div class="container page-hero-text">
+            <nav class="page-breadcrumb">
+                <a href="/">Home</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Terms and Conditions</span>
+            </nav>
+            <h1>Terms and Conditions</h1>
         </div>
+    </section>
     </section>
 
     <!-- Terms of Service Content Section -->
@@ -338,8 +340,7 @@
                     If you have questions about these Terms of Service, please contact us:
                 </p>
                 <div style="background: var(--gray-50); padding: 1.5rem; border-radius: var(--radius-lg); border-left: 4px solid var(--primary-color);">
-                    <p style="margin: 0.5rem 0; color: var(--gray-700);"><strong>Email:</strong> <a href="mailto:legal@chillicare.com" style="color: var(--primary-color); text-decoration: none;">legal@chillicare.com</a></p>
-                    <p style="margin: 0.5rem 0; color: var(--gray-700);"><strong>Support:</strong> <a href="mailto:support@chillicare.com" style="color: var(--primary-color); text-decoration: none;">support@chillicare.com</a></p>
+                    <p style="margin: 0.5rem 0; color: var(--gray-700);"><strong>Support:</strong> <a href="mailto:supportchillicare002@gmail.com" style="color: var(--primary-color); text-decoration: none;">supportchillicare002@gmail.com</a></p>
                     <p style="margin: 0.5rem 0; color: var(--gray-700);"><strong>Website:</strong> <a href="/contact" style="color: var(--primary-color); text-decoration: none;">Contact Page</a></p>
                 </div>
             </div>
@@ -358,4 +359,9 @@
 
 {% endblock %}
 
-{% block extra_js %}{% endblock %}
+{% block extra_js %}
+<!-- Chatbase Chatbot -->
+<script>
+(function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="CgkmkFtifEpgT2NTn4BfP";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+</script>
+{% endblock %}

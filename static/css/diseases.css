@@ -2,7 +2,37 @@
    Diseases Page Styles
    ============================================ */
 
-/* ── Hero ── */
+/* ── Hero Stats Strip (below page-hero-banner) ── */
+.diseases-stats-strip {
+    background: #2e7d32;
+    padding: 1rem 0;
+}
+.diseases-stats-strip .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+}
+.diseases-stats-strip .hero-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+}
+.diseases-stats-strip .hero-stat-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: white;
+    line-height: 1;
+}
+.diseases-stats-strip .hero-stat-label {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.85);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* ── Legacy hero (kept for reference) ── */
 .diseases-hero {
     background: var(--gradient-hero);
     color: white;
@@ -23,8 +53,8 @@
 
 .diseases-hero h1 {
     font-size: 2.5rem;
-    font-weight: 800;
-    margin-bottom: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
     line-height: 1.2;
 }
 

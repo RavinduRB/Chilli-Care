@@ -6,12 +6,16 @@
 
 {% block content %}
 
-    <section class="about-hero" style="padding: 6rem 0 4rem; background: var(--gradient-hero); color: white; text-align: center;">
-        <div class="container">
-            <h1 style="font-size: 3rem; font-weight: 700; margin-bottom: 1.5rem;">About Chilli Care</h1>
-            <p style="font-size: 1.25rem; max-width: 800px; margin: 0 auto; opacity: 0.9;">
-                Leveraging cutting-edge deep learning to revolutionize agricultural disease detection
-            </p>
+    <section class="page-hero-banner">
+        <div class="page-hero-img" style="background-image: url('{{ url_for('static', filename='images/background.jpg') }}');"></div>
+        <div class="page-hero-fade"></div>
+        <div class="container page-hero-text">
+            <nav class="page-breadcrumb">
+                <a href="/">Home</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>About Us</span>
+            </nav>
+            <h1>About Us</h1>
         </div>
     </section>
 
@@ -58,36 +62,36 @@
 
             <h2 style="font-size: 2rem; font-weight: 700; margin: 3rem 0 2rem; color: var(--gray-900);">Detected Diseases</h2>
             <ul style="list-style: none; padding: 0;">
-                <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: center; gap: 1rem;">
-                    <span style="width: 40px; height: 40px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">1</span>
+                <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 1rem;">
+                    <span style="width: 40px; height: 40px; min-width: 40px; min-height: 40px; flex-shrink: 0; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;"><i class="fas fa-1"></i></span>
                     <div>
                         <strong style="font-size: 1.125rem; color: var(--gray-900);">Whitefly Infestation</strong>
                         <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Sap-sucking insects causing yellowing and stunted growth</p>
                     </div>
                 </li>
-                <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: center; gap: 1rem;">
-                    <span style="width: 40px; height: 40px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">2</span>
+                <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 1rem;">
+                    <span style="width: 40px; height: 40px; min-width: 40px; min-height: 40px; flex-shrink: 0; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;"><i class="fas fa-2"></i></span>
                     <div>
                         <strong style="font-size: 1.125rem; color: var(--gray-900);">Leaf Yellowing (Chlorosis)</strong>
                         <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Nutrient deficiency or viral infections</p>
                     </div>
                 </li>
-                <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: center; gap: 1rem;">
-                    <span style="width: 40px; height: 40px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">3</span>
+                <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 1rem;">
+                    <span style="width: 40px; height: 40px; min-width: 40px; min-height: 40px; flex-shrink: 0; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;"><i class="fas fa-3"></i></span>
                     <div>
                         <strong style="font-size: 1.125rem; color: var(--gray-900);">Anthracnose</strong>
                         <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Fungal disease causing fruit rot and yield loss</p>
                     </div>
                 </li>
-                <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: center; gap: 1rem;">
-                    <span style="width: 40px; height: 40px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">4</span>
+                <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 1rem;">
+                    <span style="width: 40px; height: 40px; min-width: 40px; min-height: 40px; flex-shrink: 0; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;"><i class="fas fa-4"></i></span>
                     <div>
                         <strong style="font-size: 1.125rem; color: var(--gray-900);">Leaf Curl Virus</strong>
                         <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Devastating viral disease transmitted by whiteflies</p>
                     </div>
                 </li>
-                <li style="padding: 1rem; background: var(--primary-light); border-radius: var(--radius-md); display: flex; align-items: center; gap: 1rem;">
-                    <span style="width: 40px; height: 40px; background: var(--success-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">✓</span>
+                <li style="padding: 1rem; background: var(--primary-light); border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 1rem;">
+                    <span style="width: 40px; height: 40px; min-width: 40px; min-height: 40px; flex-shrink: 0; background: var(--success-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;"><i class="fas fa-check"></i></span>
                     <div>
                         <strong style="font-size: 1.125rem; color: var(--gray-900);">Healthy Plants</strong>
                         <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Detection of disease-free chilli plants</p>
@@ -110,7 +114,7 @@
                     <div style="color: var(--gray-600);">Recall</div>
                 </div>
                 <div style="text-align: center; padding: 2rem; background: var(--gray-50); border-radius: var(--radius-lg);">
-                    <div style="font-size: 3rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem;">2.8s</div>
+                    <div style="font-size: 3rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem;">10s</div>
                     <div style="color: var(--gray-600);">Avg Response Time</div>
                 </div>
             </div>
@@ -118,7 +122,7 @@
             <h2 style="font-size: 2rem; font-weight: 700; margin: 3rem 0 2rem; color: var(--gray-900);">Contact & Support</h2>
             <p style="font-size: 1.125rem; line-height: 1.8; color: var(--gray-700); margin-bottom: 2rem;">
                 For questions, bug reports, or feature requests, please reach out through our GitHub repository 
-                or contact us via email at <strong>support@chillicare.com</strong>.
+                or contact us via email at <strong>supportchillicare002@gmail.com</strong>.
             </p>
         </div>
     </section>
@@ -196,4 +200,9 @@
     </div>
 {% endblock %}
 
-{% block extra_js %}{% endblock %}
+{% block extra_js %}
+<!-- Chatbase Chatbot -->
+<script>
+(function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="CgkmkFtifEpgT2NTn4BfP";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+</script>
+{% endblock %}

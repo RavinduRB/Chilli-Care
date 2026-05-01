@@ -9,13 +9,17 @@
 {% endblock %}
 
 {% block content %}
-    <!-- Contact Hero Section -->
-    <section class="contact-hero" style="padding: 6rem 0 4rem; background: var(--gradient-hero); color: white; text-align: center;">
-        <div class="container">
-            <h1 style="font-size: 3rem; font-weight: 700; margin-bottom: 1.5rem;">Get In Touch</h1>
-            <p style="font-size: 1.25rem; max-width: 800px; margin: 0 auto; opacity: 0.9;">
-                Have questions about our AI-powered disease detection system? We'd love to hear from you!
-            </p>
+    <!-- Page Hero Banner -->
+    <section class="page-hero-banner">
+        <div class="page-hero-img" style="background-image: url('{{ url_for('static', filename='images/background.jpg') }}');"></div>
+        <div class="page-hero-fade"></div>
+        <div class="container page-hero-text">
+            <nav class="page-breadcrumb">
+                <a href="/">Home</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Contact Us</span>
+            </nav>
+            <h1>Contact Us</h1>
         </div>
     </section>
 
@@ -40,8 +44,7 @@
                             </div>
                             <div>
                                 <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--gray-900);">Email</h3>
-                                <p style="color: var(--gray-600); margin: 0;">support@chillicare.com</p>
-                                <p style="color: var(--gray-600); margin: 0;">info@chillicare.com</p>
+                                <p style="color: var(--gray-600); margin: 0;">supportchillicare002@gmail.com</p>
                             </div>
                         </div>
 
@@ -52,8 +55,8 @@
                             </div>
                             <div>
                                 <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--gray-900);">Phone</h3>
-                                <p style="color: var(--gray-600); margin: 0;">Support: +1 (555) 123-4567</p>
-                                <p style="color: var(--gray-600); margin: 0;">Business: +1 (555) 987-6543</p>
+                                <p style="color: var(--gray-600); margin: 0;">Support: + (94) 71189-0553</p>
+                                <p style="color: var(--gray-600); margin: 0;">Business: + (94) 71189-0553</p>
                             </div>
                         </div>
 
@@ -76,7 +79,6 @@
                             </div>
                             <div>
                                 <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--gray-900);">Working Hours</h3>
-                                <p style="color: var(--gray-600); margin: 0;">Monday - Friday: 9:00 AM - 6:00 PM</p>
                                 <p style="color: var(--gray-600); margin: 0;">Saturday: 10:00 AM - 4:00 PM</p>
                                 <p style="color: var(--gray-600); margin: 0;">Sunday: Closed</p>
                             </div>
@@ -89,9 +91,6 @@
                         <div style="display: flex; gap: 1rem;">
                             <a href="#" style="width: 45px; height: 45px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.2s;">
                                 <i class="fab fa-facebook-f"></i>
-                            </a>
-                            <a href="#" style="width: 45px; height: 45px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.2s;">
-                                <i class="fab fa-twitter"></i>
                             </a>
                             <a href="#" style="width: 45px; height: 45px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.2s;">
                                 <i class="fab fa-linkedin-in"></i>
@@ -189,54 +188,77 @@
         </div>
     </section>
 
-    <!-- FAQ Section -->
-    <section style="padding: 5rem 0; background: var(--gray-50);">
-        <div class="container" style="max-width: 900px;">
-            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 3rem; color: var(--gray-900); text-align: center;">Frequently Asked Questions</h2>
-            
-            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                <div style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
-                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--gray-900);">
-                        <i class="fas fa-question-circle" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
-                        How accurate is the disease detection?
-                    </h3>
-                    <p style="color: var(--gray-600); margin: 0; line-height: 1.7;">
-                        Our AI model achieves 95%+ accuracy in detecting chilli plant diseases, trained on thousands of real-world images and validated through extensive testing.
-                    </p>
+    <!-- Info Strip -->
+    <section class="contact-info-strip">
+        <div class="container">
+            <div class="contact-info-grid">
+                <div class="contact-info-item">
+                    <i class="fas fa-comment-dots"></i>
+                    <h3>Customer service</h3>
+                    <p>Reach out via the form above and we'll get back to you as soon as possible.</p>
                 </div>
-
-                <div style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
-                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--gray-900);">
-                        <i class="fas fa-question-circle" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
-                        Is the service free to use?
-                    </h3>
-                    <p style="color: var(--gray-600); margin: 0; line-height: 1.7;">
-                        Yes! Chilli Care is completely free for farmers and agricultural enthusiasts. Our mission is to support sustainable farming worldwide.
-                    </p>
+                <div class="contact-info-divider"></div>
+                <div class="contact-info-item">
+                    <i class="fas fa-clock"></i>
+                    <h3>Response time</h3>
+                    <p>We typically respond within 1–2 business days during regular hours.</p>
                 </div>
-
-                <div style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
-                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--gray-900);">
-                        <i class="fas fa-question-circle" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
-                        Can I use this on my mobile device?
-                    </h3>
-                    <p style="color: var(--gray-600); margin: 0; line-height: 1.7;">
-                        Absolutely! Our platform is fully responsive and works seamlessly on smartphones, tablets, and desktops. You can even use your phone's camera to capture images directly.
-                    </p>
-                </div>
-
-                <div style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
-                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--gray-900);">
-                        <i class="fas fa-question-circle" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
-                        What should I do after getting a diagnosis?
-                    </h3>
-                    <p style="color: var(--gray-600); margin: 0; line-height: 1.7;">
-                        Follow the treatment recommendations provided with your diagnosis. We offer both conventional and organic treatment options. For severe cases, consult with a local agricultural expert.
-                    </p>
+                <div class="contact-info-divider"></div>
+                <div class="contact-info-item">
+                    <i class="fas fa-lock"></i>
+                    <h3>Secure & private</h3>
+                    <p>Your information is kept confidential and never shared with third parties.</p>
                 </div>
             </div>
         </div>
     </section>
+
+    <style>
+    .contact-info-strip {
+        padding: 3.5rem 0;
+        background: #fff;
+        border-top: 1px solid var(--gray-200);
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .contact-info-grid {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .contact-info-item {
+        flex: 1;
+        text-align: center;
+        padding: 1rem 2.5rem;
+    }
+    .contact-info-item i {
+        font-size: 2rem;
+        color: var(--gray-700);
+        margin-bottom: 1rem;
+        display: block;
+    }
+    .contact-info-item h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin-bottom: 0.4rem;
+    }
+    .contact-info-item p {
+        font-size: 0.9rem;
+        color: var(--gray-500);
+        margin: 0;
+        line-height: 1.6;
+    }
+    .contact-info-divider {
+        width: 1px;
+        height: 80px;
+        background: var(--gray-200);
+        flex-shrink: 0;
+    }
+    @media (max-width: 768px) {
+        .contact-info-grid { flex-direction: column; }
+        .contact-info-divider { width: 80px; height: 1px; margin: 0.5rem 0; }
+    }
+    </style>
 
     <!-- Login Modal -->
     <div class="modal-overlay hidden" id="loginModal">
@@ -417,16 +439,15 @@
     <!-- Responsive CSS -->
     <style>
     @media (max-width: 768px) {
-        .contact-hero h1 {
-            font-size: 2rem !important;
-        }
-        .contact-hero p {
-            font-size: 1rem !important;
-        }
         [style*="grid-template-columns: 1fr 1fr"] {
             grid-template-columns: 1fr !important;
             gap: 2rem !important;
         }
     }
     </style>
+
+    <!-- Chatbase Chatbot -->
+    <script>
+    (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="CgkmkFtifEpgT2NTn4BfP";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+    </script>    
 {% endblock %}

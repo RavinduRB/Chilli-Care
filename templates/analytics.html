@@ -15,18 +15,17 @@
 
 {% block content %}
 
-    <!-- Analytics Header -->
-    <section class="analytics-header">
-        <div class="container">
-            <div class="header-content">
-                <div class="header-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="header-text">
-                    <h1>Your Analytics Dashboard</h1>
-                    <p>Track your prediction history and disease patterns</p>
-                </div>
-            </div>
+    <!-- Page Hero Banner -->
+    <section class="page-hero-banner">
+        <div class="page-hero-img" style="background-image: url('{{ url_for('static', filename='images/background.jpg') }}');"></div>
+        <div class="page-hero-fade"></div>
+        <div class="container page-hero-text">
+            <nav class="page-breadcrumb">
+                <a href="/">Home</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Analytics</span>
+            </nav>
+            <h1>Analytics</h1>
         </div>
     </section>
 
@@ -303,4 +302,9 @@
 {% block extra_js %}
     <!-- JavaScript -->
     <script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+    
+    <!-- Chatbase Chatbot -->
+    <script>
+    (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="CgkmkFtifEpgT2NTn4BfP";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+    </script>    
 {% endblock %}

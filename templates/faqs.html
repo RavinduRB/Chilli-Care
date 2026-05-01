@@ -9,13 +9,17 @@
 {% endblock %}
 
 {% block content %}
-    <!-- FAQs Hero Section -->
-    <section class="faqs-hero" style="padding: 6rem 0 4rem; background: var(--gradient-hero); color: white; text-align: center;">
-        <div class="container">
-            <h1 style="font-size: 3rem; font-weight: 700; margin-bottom: 1.5rem;">Frequently Asked Questions</h1>
-            <p style="font-size: 1.25rem; max-width: 800px; margin: 0 auto; opacity: 0.9;">
-                Find answers to common questions about our AI-powered disease detection system
-            </p>
+    <!-- Page Hero Banner -->
+    <section class="page-hero-banner">
+        <div class="page-hero-img" style="background-image: url('{{ url_for('static', filename='images/background.jpg') }}');"></div>
+        <div class="page-hero-fade"></div>
+        <div class="container page-hero-text">
+            <nav class="page-breadcrumb">
+                <a href="/">Home</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>FAQs</span>
+            </nav>
+            <h1>Frequently Asked Questions</h1>
         </div>
     </section>
 
@@ -435,5 +439,9 @@
                 });
             });
         });
+    </script>
+    <!-- Chatbase Chatbot -->
+    <script>
+    (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="CgkmkFtifEpgT2NTn4BfP";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
     </script>
 {% endblock %}

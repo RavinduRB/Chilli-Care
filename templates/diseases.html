@@ -14,19 +14,17 @@
 
 {% block content %}
 
-<!-- Page Hero -->
-<section class="diseases-hero">
-    <div class="container">
-        <div class="hero-content">
-            <div class="hero-icon"><i class="fas fa-book-medical"></i></div>
-            <h1>Chilli Disease Guide</h1>
-            <p>A comprehensive reference for all diseases &amp; pests affecting chilli plants in Sri Lanka — with symptoms, causes, and prevention strategies.</p>
-            <div class="hero-stats" id="heroStats">
-                <div class="hero-stat"><span class="hero-stat-value" id="statTotal">31</span><span class="hero-stat-label">Diseases &amp; Pests</span></div>
-                <div class="hero-stat"><span class="hero-stat-value">5</span><span class="hero-stat-label">Categories</span></div>
-                <div class="hero-stat"><span class="hero-stat-value">4</span><span class="hero-stat-label">AI Detectable</span></div>
-            </div>
-        </div>
+<!-- Page Hero Banner -->
+<section class="page-hero-banner">
+    <div class="page-hero-img" style="background-image: url('{{ url_for('static', filename='images/background.jpg') }}');"></div>
+    <div class="page-hero-fade"></div>
+    <div class="container page-hero-text">
+        <nav class="page-breadcrumb">
+            <a href="/">Home</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Diseases</span>
+        </nav>
+        <h1>Chilli Disease Guide</h1>
     </div>
 </section>
 
@@ -88,4 +86,9 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/diseases.js') }}"></script>
+
+<!-- Chatbase Chatbot -->
+<script>
+(function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="CgkmkFtifEpgT2NTn4BfP";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+</script>
 {% endblock %}

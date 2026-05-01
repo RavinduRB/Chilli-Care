@@ -559,21 +559,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // UI Event Handlers
     // ============================================
     
-    // Mobile menu toggle
-    if (mobileMenuToggle) {
-        mobileMenuToggle.addEventListener('click', function() {
-            mobileMenu.classList.toggle('active');
-            const icon = this.querySelector('i');
-            if (mobileMenu.classList.contains('active')) {
-                icon.classList.remove('fa-bars');
-                icon.classList.add('fa-times');
-            } else {
-                icon.classList.remove('fa-times');
-                icon.classList.add('fa-bars');
-            }
-        });
-    }
-    
     // Profile dropdowns
     if (guestProfileBtn) {
         guestProfileBtn.addEventListener('click', function(e) {
