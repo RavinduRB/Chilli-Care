@@ -27,8 +27,8 @@ def add_admin_user():
     print(f"\n✅ Connected to MongoDB: {mongodb.db.name}")
     
     # Default admin credentials
-    admin_email = "admin@chillicare.com"
-    admin_password = "admin123"
+    admin_email = "adminchillicare001@gmail.com"
+    admin_password = "admin@chilli001"
     
     print(f"\nAdmin Credentials:")
     print(f"  Email: {admin_email}")
@@ -98,8 +98,8 @@ if __name__ == '__main__':
         print("✅ SUCCESS - Admin user is ready!")
         print("="*60)
         print("\nLogin Credentials:")
-        print("  Email: admin@chillicare.com")
-        print("  Password: admin123")
+        print("  Email: adminchillicare001@gmail.com")
+        print("  Password: admin@chilli001")
         print("\n" + "="*60)
     else:
         print("\n❌ Failed to add admin user")
