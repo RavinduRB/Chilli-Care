@@ -24,6 +24,7 @@ from dotenv import load_dotenv
 import requests
 import bcrypt
 from functools import lru_cache
+import concurrent.futures
 
 # Load environment variables from .env file
 load_dotenv()
@@ -944,24 +945,22 @@ def validate_chilli_image(image_file):
         # === TIER 1: Try all Gemini API keys ===
         if GEMINI_API_KEYS:
             model_names = [
-                # TIER 1: Highest Accuracy (try these first)
-                'models/gemini-2.0-flash-exp',           # Best overall - experimental with image support
-                'models/gemini-2.5-pro',                 # Highest tier Pro model
-                'models/gemini-2.5-flash-image',         # Image specialist
-                
-                # TIER 2: Excellent Balance (accuracy + speed)
-                'models/gemini-2.0-flash-latest',        # Latest stable Flash
-                'models/gemini-pro-latest',              # Latest Pro model
-                'models/gemini-2.5-flash',               # Fast and accurate
-                
-                # TIER 3: Reliable Fallbacks
+                # TIER 1: Confirmed working models (from live logs)
+                'models/gemini-flash-latest',            # Confirmed 200 OK
+                'models/gemini-2.5-flash',               # Confirmed 200 OK
+
+                # TIER 2: Likely available fallbacks
                 'models/gemini-2.0-flash',               # Stable version
-                'models/gemini-flash-latest',            # Generic latest
                 'models/gemini-2.0-flash-001',           # Specific stable version
-                
-                # TIER 4: Lite Models (only if others exhausted)
-                'models/gemini-2.0-flash-lite',          # Lightweight but still capable
+                'models/gemini-2.0-flash-lite',          # Lightweight but capable
                 'models/gemini-2.5-flash-lite',          # Lite with newer tech
+
+                # TIER 3: Often quota-exhausted or 404 — try last
+                'models/gemini-2.5-pro',                 # High tier but quota-limited
+                'models/gemini-pro-latest',              # Quota-limited
+                'models/gemini-2.5-flash-image',         # Image specialist, quota-limited
+                'models/gemini-2.0-flash-exp',           # 404 on v1beta
+                'models/gemini-2.0-flash-latest',        # 404 on v1beta
             ]
             
             prompt = """Analyze this image carefully and determine if it shows a chilli pepper plant (also known as hot pepper, capsicum, or chile plant) or its leaves.
@@ -979,13 +978,12 @@ Important:
 
 Your response:"""
             
-            # Try each API key
-            for key_idx, api_key in enumerate(GEMINI_API_KEYS):
+            def _try_api_key(key_idx, api_key):
+                """Try all models for one API key; returns result tuple or None."""
                 try:
                     gemini_client = genai.Client(api_key=api_key)
-                    logger.info(f"🔑 Trying API Key #{key_idx + 1}/{len(GEMINI_API_KEYS)}")
+                    logger.info(f"🔑 [Thread] Trying API Key #{key_idx + 1}/{len(GEMINI_API_KEYS)}")
                     
-                    # Try each model with this API key
                     for model_name in model_names:
                         try:
                             response = gemini_client.models.generate_content(
@@ -999,10 +997,9 @@ Your response:"""
                             response_text = response.text.strip()
                             logger.info(f"✅ Success! Key #{key_idx + 1}, Model: {model_name}")
                             
-                            # Update the key index for next time
+                            global current_gemini_key_index
                             current_gemini_key_index = key_idx
                             
-                            # Parse response
                             if response_text.upper().startswith("VALID"):
                                 return True, "Image validated as chilli plant (Gemini API)"
                             else:
@@ -1019,12 +1016,51 @@ Your response:"""
                                 continue
                     
                     logger.warning(f"❌ All models exhausted for Key #{key_idx + 1}")
+                    return None
                     
                 except Exception as e:
                     logger.warning(f"❌ API Key #{key_idx + 1} failed: {str(e)[:50]}...")
-                    continue
-            
-            logger.warning("❌ All Gemini API keys exhausted - switching to backup methods")
+                    return None
+
+            def _run_gemini_validation():
+                """Run all API keys in parallel threads; return first successful result."""
+                num_keys = len(GEMINI_API_KEYS)
+                # Use shutdown(wait=False) so we don't block waiting for remaining
+                # key-threads after the first successful result is received.
+                key_executor = concurrent.futures.ThreadPoolExecutor(max_workers=num_keys)
+                try:
+                    futures = {
+                        key_executor.submit(_try_api_key, key_idx, api_key): key_idx
+                        for key_idx, api_key in enumerate(GEMINI_API_KEYS)
+                    }
+                    for future in concurrent.futures.as_completed(futures):
+                        result = future.result()
+                        if result is not None:
+                            return result  # Short-circuit: first winner wins
+                    return None  # All keys exhausted
+                finally:
+                    # Don't block – remaining threads finish independently in background
+                    key_executor.shutdown(wait=False)
+
+            # Run Gemini validation with a 10-second hard timeout.
+            # Use manual executor management (not `with`) so that shutdown(wait=False)
+            # is used on timeout – preventing a block until _run_gemini_validation
+            # finishes, which was the root cause of all three tiers always running.
+            gemini_result = None
+            outer_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+            try:
+                gemini_future = outer_executor.submit(_run_gemini_validation)
+                gemini_result = gemini_future.result(timeout=10)
+            except concurrent.futures.TimeoutError:
+                logger.warning("⏱ Gemini validation exceeded 10 seconds - falling back to Local BLIP model")
+            finally:
+                # Don't wait – let the background Gemini thread finish on its own
+                outer_executor.shutdown(wait=False)
+
+            if gemini_result is not None:
+                return gemini_result
+            if GEMINI_API_KEYS and gemini_result is None:
+                logger.warning("❌ All Gemini API keys exhausted - switching to backup methods")
         
         # === TIER 2: Try Local BLIP Model ===
         hf_result = validate_with_huggingface(image_bytes)
