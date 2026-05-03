@@ -475,9 +475,11 @@
    ============================================ */
 
 .toast {
-    position: fixed;
-    top: 80px;
-    right: 24px;
+    position: fixed !important;
+    top: 80px !important;
+    bottom: auto !important;
+    right: 24px !important;
+    left: auto !important;
     background: #1f2937;
     color: white;
     padding: 16px 24px;
@@ -834,9 +836,10 @@
     }
     
     .toast {
-        top: 70px;
-        right: 16px;
-        left: 16px;
+        top: 70px !important;
+        bottom: auto !important;
+        right: 16px !important;
+        left: 16px !important;
         font-size: 14px;
         padding: 12px 16px;
         max-width: calc(100% - 32px);
@@ -1827,6 +1830,8 @@
     background: #fff;
     position: relative;
     height: 100%;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .whatsapp-empty {
@@ -1883,8 +1888,10 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    min-height: 0;
     background: #efeae2;
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260"><defs><filter id="a" x="0" y="0"><feGaussianBlur in="SourceGraphic" stdDeviation="3"/></filter></defs><g opacity=".08" filter="url(%23a)"><path fill="%23fff" d="M145.5 173.5a12 12 0 1 1-24 0 12 12 0 0 1 24 0z"/></g></svg>');
+}
 }
 
 .whatsapp-conversation.hidden {
@@ -1956,6 +1963,55 @@
     overflow-x: hidden;
     padding: 20px 8%;
     scroll-behavior: smooth;
+    min-height: 0;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.whatsapp-messages-wrapper {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+    position: relative;
+    overflow: visible;
+}
+
+.messages-scroll-btns {
+    position: absolute;
+    right: -18px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 10;
+}
+
+.msg-scroll-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.92);
+    color: #54656f;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    font-size: 13px;
+    transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+
+.msg-scroll-btn:hover {
+    background: #00a884;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.msg-scroll-btn:active {
+    transform: scale(0.95);
 }
 
 /* Fix scrolling issue */
@@ -2315,6 +2371,10 @@
     .whatsapp-messages {
         padding: 16px 5%;
     }
+
+    .messages-scroll-btns {
+        right: -14px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -2347,6 +2407,10 @@
     .whatsapp-messages {
         padding: 12px 4%;
         padding-bottom: 80px;
+    }
+    
+    .messages-scroll-btns {
+        display: none;
     }
     
     .whatsapp-footer {
