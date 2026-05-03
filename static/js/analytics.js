@@ -559,27 +559,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // UI Event Handlers
     // ============================================
     
-    // Profile dropdowns
-    if (guestProfileBtn) {
-        guestProfileBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            guestProfileDropdown.classList.toggle('hidden');
-        });
-    }
-    
-    if (profileBtn) {
-        profileBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            profileDropdown.classList.toggle('hidden');
-        });
-    }
-    
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', function() {
-        if (guestProfileDropdown) guestProfileDropdown.classList.add('hidden');
-        if (profileDropdown) profileDropdown.classList.add('hidden');
-    });
-    
     // Auth required login button
     if (authRequiredLoginBtn) {
         authRequiredLoginBtn.addEventListener('click', function() {
