@@ -934,7 +934,7 @@ button {
    ============================================ */
 .toast {
     position: fixed;
-    bottom: 2rem;
+    top: 80px;
     right: 2rem;
     background: white;
     padding: 1rem 1.5rem;

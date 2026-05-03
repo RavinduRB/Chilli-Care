@@ -476,7 +476,7 @@
 
 .toast {
     position: fixed;
-    bottom: 24px;
+    top: 80px;
     right: 24px;
     background: #1f2937;
     color: white;
@@ -484,7 +484,7 @@
     border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     z-index: 99999;
-    transform: translateY(100px);
+    transform: translateX(400px);
     opacity: 0;
     transition: all 0.3s ease;
     max-width: 500px;
@@ -492,7 +492,7 @@
 }
 
 .toast.show {
-    transform: translateY(0);
+    transform: translateX(0);
     opacity: 1;
 }
 
@@ -834,7 +834,7 @@
     }
     
     .toast {
-        bottom: 16px;
+        top: 70px;
         right: 16px;
         left: 16px;
         font-size: 14px;
