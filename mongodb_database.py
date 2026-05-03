@@ -36,14 +36,37 @@ class MongoDB:
         if self.connection_uri:
             self.connect()
     
+    def ensure_connected(self):
+        """Check connection is alive and reconnect if needed. Returns True if connected."""
+        if self.connected and self.client:
+            try:
+                self.client.admin.command('ping')
+                return True
+            except Exception:
+                logger.warning("MongoDB connection lost — attempting to reconnect...")
+                self.connected = False
+                self.client = None
+                self.db = None
+
+        if self.connection_uri:
+            self.connect()
+
+        return self.connected
+
     def connect(self):
         """Establish connection to MongoDB"""
         try:
             # PyMongo 4.x connection parameters with TLS workaround for Windows
+            # maxIdleTimeMS: close idle connections before Atlas times them out (~10 min on free tier)
+            # socketTimeoutMS: detect stale sockets promptly
             connection_params = {
                 'serverSelectionTimeoutMS': 15000,
                 'connectTimeoutMS': 30000,
-                'maxPoolSize': 50,
+                'socketTimeoutMS': 45000,
+                'maxIdleTimeMS': 270000,   # 4.5 minutes — below Atlas free-tier idle timeout
+                'maxPoolSize': 10,
+                'retryWrites': True,
+                'retryReads': True,
                 'tls': True,
                 'tlsInsecure': True  # Bypasses all TLS verification (Windows OpenSSL 3.x workaround)
             }
