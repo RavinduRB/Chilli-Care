@@ -3003,6 +3003,53 @@ button {
     color: var(--text-secondary);
 }
 
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    transition: border-color 0.3s ease;
+}
+
+.password-wrapper:focus-within {
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.password-wrapper input {
+    flex: 1;
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding-right: 0.5rem !important;
+}
+
+.password-wrapper input:focus {
+    border: none !important;
+    background: transparent !important;
+}
+
+.password-toggle {
+    flex-shrink: 0;
+    padding: 0 0.875rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease;
+    height: 100%;
+}
+
+.password-toggle:hover {
+    color: var(--primary-color);
+}
+
 .form-error {
     padding: 0.75rem 1rem;
     background: rgba(255, 68, 68, 0.1);

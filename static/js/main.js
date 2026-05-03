@@ -58,6 +58,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeSignupModal = document.getElementById('closeSignupModal');
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
+
+    // Password toggle (eye icon)
+    document.querySelectorAll('.password-toggle').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const input = document.getElementById(this.getAttribute('data-target'));
+            if (!input) return;
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            this.querySelector('i').className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+        });
+    });
     const loginError = document.getElementById('loginError');
     const signupError = document.getElementById('signupError');
     const switchToSignup = document.getElementById('switchToSignup');
