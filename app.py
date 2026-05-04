@@ -1493,6 +1493,22 @@ def auth_status():
 # MAIN ROUTES
 # ============================================
 
+# Service Worker and PWA routes - must be at root for proper scope
+@app.route('/sw.js')
+def service_worker():
+    """Serve service worker from root path for full app control"""
+    return send_from_directory('static', 'sw.js', mimetype='application/javascript')
+
+@app.route('/manifest.json')
+def manifest():
+    """Serve PWA manifest"""
+    return send_from_directory('static', 'manifest.json', mimetype='application/json')
+
+@app.route('/offline.html')
+def offline():
+    """Serve offline fallback page"""
+    return send_from_directory('static', 'offline.html')
+
 # Routes
 @app.route('/')
 def index():

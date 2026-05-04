@@ -20,8 +20,8 @@
     // Register service worker when page loads
     window.addEventListener('load', async () => {
         try {
-            // Register the service worker
-            swRegistration = await navigator.serviceWorker.register('/static/sw.js', {
+            // Register the service worker from root for full app scope
+            swRegistration = await navigator.serviceWorker.register('/sw.js', {
                 scope: '/'
             });
 
