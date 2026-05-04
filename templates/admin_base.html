@@ -12,6 +12,10 @@
     <!-- Favicon -->
     <link rel="icon" href="{{ url_for('static', filename='images/Site icon.png') }}" type="image/png">
     
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/Site icon.png') }}">
+    
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -33,6 +37,7 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pwa.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="admin-dashboard-page">
@@ -121,6 +126,9 @@
             </div>
         </div>
     </div>
+
+    <!-- PWA Service Worker Registration -->
+    <script src="{{ url_for('static', filename='js/pwa.js') }}"></script>
 
     {% block extra_js %}{% endblock %}
 </body>

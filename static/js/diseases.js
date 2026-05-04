@@ -650,8 +650,10 @@ function buildCardHTML(d, idx) {
 
     // Image section — img with onerror fallback to category-coloured gradient
     const imgTag = d.image
-        ? `<img src="${escHtml(d.image)}" alt="${escHtml(d.name)}" loading="lazy"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />`
+        ? `<img src="${escHtml(d.image)}" alt="${escHtml(d.name)}" 
+               loading="lazy" decoding="async"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';console.error('Failed to load image: ${escHtml(d.image)}');" 
+               onload="this.style.opacity='1';" />`
         : '';
     const fallbackStyle = d.image ? 'display:none' : 'display:flex';
     const imageHTML = `
@@ -710,8 +712,10 @@ function openModal(d) {
 
     const modalImageHTML = d.image
         ? `<div class="modal-image-wrap">
-               <img src="${escHtml(d.image)}" alt="${escHtml(d.name)}" loading="lazy"
-                    onerror="this.parentElement.style.display='none';" />
+               <img src="${escHtml(d.image)}" alt="${escHtml(d.name)}" 
+                    loading="lazy" decoding="async"
+                    onerror="this.parentElement.style.display='none';console.error('Failed to load modal image: ${escHtml(d.image)}');"
+                    onload="this.style.opacity='1';" />
            </div>`
         : '';
 

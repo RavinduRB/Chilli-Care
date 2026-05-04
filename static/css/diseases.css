@@ -658,7 +658,13 @@
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform 0.35s ease;
+    transition: transform 0.35s ease, opacity 0.3s ease;
+    opacity: 0;
+    background: var(--gray-100);
+}
+
+.card-image-wrap img[style*="opacity: 1"] {
+    opacity: 1;
 }
 
 .disease-card:hover .card-image-wrap img {
@@ -705,6 +711,13 @@
     height: 260px;
     object-fit: cover;
     display: block;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: var(--gray-100);
+}
+
+.modal-image-wrap img[style*="opacity: 1"] {
+    opacity: 1;
 }
 
 /* ── Responsive ── */

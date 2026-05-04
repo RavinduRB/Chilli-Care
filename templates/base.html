@@ -9,6 +9,16 @@
     <!-- Favicon -->
     <link rel="icon" href="{{ url_for('static', filename='images/Site icon.png') }}" type="image/png">
     
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1a4d2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Chilli Care">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/Site icon.png') }}">
+    
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -17,6 +27,7 @@
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pwa.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -252,6 +263,9 @@
     <!-- Notification System Script -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script src="{{ url_for('static', filename='js/pwa.js') }}"></script>
 
     {% block extra_js %}{% endblock %}
 </body>

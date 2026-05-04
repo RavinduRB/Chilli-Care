@@ -752,6 +752,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Core Functions
     // ============================================
 
+    // Validate file before processing
+    function validateFile(file) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            showToast('Please select an image file', 'error');
+            return false;
+        }
+
+        // Validate file size (16MB max)
+        if (file.size > 16 * 1024 * 1024) {
+            showToast('File size must be less than 16MB', 'error');
+            return false;
+        }
+
+        return true;
+    }
+
     function handleFileSelect(file) {
         // Log for debugging
         console.log('File selected:', {
@@ -761,15 +778,8 @@ document.addEventListener('DOMContentLoaded', function() {
             lastModified: file.lastModified
         });
 
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            showToast('Please select an image file', 'error');
-            return;
-        }
-
-        // Validate file size (16MB max)
-        if (file.size > 16 * 1024 * 1024) {
-            showToast('File size must be less than 16MB', 'error');
+        // Validate the file
+        if (!validateFile(file)) {
             return;
         }
 
@@ -1016,6 +1026,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Close camera modal
                 closeCamera();
+
+                // Validate the captured file
+                if (!validateFile(capturedFile)) {
+                    return;
+                }
 
                 // Process the captured image
                 processAndPreviewImage(capturedFile);
