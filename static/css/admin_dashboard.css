@@ -1502,6 +1502,11 @@
     height: auto;
     border-radius: 12px;
     object-fit: cover;
+    transition: opacity 0.3s ease;
+}
+
+.disease-modal-body {
+    transition: opacity 0.3s ease;
 }
 
 .disease-info-section {

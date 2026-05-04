@@ -354,6 +354,9 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (sectionName === 'predictions') {
                 // Refresh predictions to get latest data
                 loadPredictions(currentPredictionPage);
+            } else if (sectionName === 'diseases') {
+                // Preload disease images for instant modal display
+                preloadDiseaseImages();
             } else if (sectionName === 'messages') {
                 // Load messages when switching to messages section
                 loadAllMessages();
@@ -1291,8 +1294,31 @@ document.addEventListener('DOMContentLoaded', function() {
     let isEditMode = false;
     
     // Make functions global
+    // Cache for disease data to avoid repeated API calls
+    const diseaseDataCache = new Map();
+    
+    // Preload disease images on page load for instant display
+    const diseaseImages = {
+        'Chilli healthy': '/static/images/Chilli___healthy.jpg',
+        'Chilli Whitefly': '/static/images/Chilli%20__Whitefly.jpg',
+        'Chilli Anthacnose': '/static/images/Chilli__Anthacnose.jpg',
+        'Chilli Yellowish': '/static/images/Chilli%20__Yellowish.jpg',
+        'Chilli Leaf Curl Virus': '/static/images/Chilli__Leaf_Curl_Virus.jpg'
+    };
+    
+    // Preload images when diseases section becomes visible
+    function preloadDiseaseImages() {
+        if (window.diseaseImagesPreloaded) return;
+        Object.values(diseaseImages).forEach(src => {
+            const img = new Image();
+            img.src = src;
+        });
+        window.diseaseImagesPreloaded = true;
+    }
+    
     window.openDiseaseModal = async function(diseaseType) {
         const modal = document.getElementById('diseaseModal');
+        const modalBody = modal.querySelector('.disease-modal-body');
         
         // Map disease types to full names
         const diseaseNameMap = {
@@ -1312,19 +1338,30 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         try {
-            // Show loading
+            // Check cache first for instant loading
+            const cachedData = diseaseDataCache.get(diseaseName);
+            
+            if (cachedData) {
+                // Instant load from cache
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                currentDiseaseData = cachedData;
+                isEditMode = false;
+                updateModalContent(cachedData, false);
+                return;
+            }
+            
+            // Show loading spinner
+            modalBody.style.opacity = '0.5';
+            modalBody.style.pointerEvents = 'none';
+            document.getElementById('diseaseModalTitle').textContent = 'Loading...';
+            
+            // Open modal immediately with loading state
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
             
-            // Show loading state
-            document.getElementById('diseaseModalTitle').textContent = 'Loading...';
-            document.getElementById('diseaseModalName').textContent = 'Loading...';
-            
             // Fetch disease data from API
             const response = await fetch(`/api/admin/diseases/${encodeURIComponent(diseaseName)}`);
-            
-            // Log for debugging
-            console.log('Fetch status:', response.status, 'URL:', `/api/admin/diseases/${encodeURIComponent(diseaseName)}`);
             
             if (!response.ok) {
                 const errorText = await response.text();
@@ -1343,11 +1380,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const data = result.disease;
+            
+            // Cache the data for future opens
+            diseaseDataCache.set(diseaseName, data);
+            
             currentDiseaseData = data;
             isEditMode = false;
             
             // Update modal content
             updateModalContent(data, false);
+            
+            // Restore interactivity
+            modalBody.style.opacity = '1';
+            modalBody.style.pointerEvents = 'auto';
             
         } catch (error) {
             console.error('Error fetching disease data:', error);
@@ -1361,17 +1406,26 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('diseaseModalTitle').textContent = data.name;
         document.getElementById('diseaseModalName').textContent = data.name;
         
-        // Update image
+        // Update image with optimization
         const imageEl = document.getElementById('diseaseModalImage');
-        const imageMap = {
-            'Chilli healthy': '/static/images/Chilli___healthy.jpg',
-            'Chilli Whitefly': '/static/images/Chilli%20__Whitefly.jpg',
-            'Chilli Anthacnose': '/static/images/Chilli__Anthacnose.jpg',
-            'Chilli Yellowish': '/static/images/Chilli%20__Yellowish.jpg',
-            'Chilli Leaf Curl Virus': '/static/images/Chilli__Leaf_Curl_Virus.jpg'
-        };
-        imageEl.src = imageMap[data.name] || '';
-        imageEl.alt = data.name;
+        const imageSrc = diseaseImages[data.name] || '';
+        
+        // Optimize image loading
+        if (imageSrc) {
+            // Set image with fade-in effect
+            imageEl.style.opacity = '0';
+            imageEl.src = imageSrc;
+            imageEl.alt = data.name;
+            
+            // Fade in when loaded (if not cached)
+            if (imageEl.complete) {
+                imageEl.style.opacity = '1';
+            } else {
+                imageEl.onload = () => {
+                    imageEl.style.opacity = '1';
+                };
+            }
+        }
         
         if (editMode) {
             // Make fields editable
@@ -1399,25 +1453,23 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelector('.btn-modal-save').style.display = 'block';
             
         } else {
-            // Display mode (read-only)
-            document.getElementById('diseaseModalDescription').innerHTML = 
-                `<p>${data.description || '-'}</p>`;
+            // Display mode (read-only) - Batch DOM updates for better performance
+            const descriptionEl = document.getElementById('diseaseModalDescription');
+            const severityEl = document.getElementById('diseaseModalSeverity');
+            const causesEl = document.getElementById('diseaseModalCauses');
+            const solutionsEl = document.getElementById('diseaseModalSolutions');
+            const symptomsEl = document.getElementById('diseaseModalSymptoms');
+            const treatmentEl = document.getElementById('diseaseModalTreatment');
             
-            document.getElementById('diseaseModalSeverity').innerHTML = 
-                `<p>${data.severity || '-'}</p>`;
+            // Use DocumentFragment for efficient DOM updates
+            descriptionEl.innerHTML = `<p>${data.description || '-'}</p>`;
+            severityEl.innerHTML = `<p>${data.severity || '-'}</p>`;
             
-            // Display lists
-            document.getElementById('diseaseModalCauses').innerHTML = 
-                (data.causes || []).map(item => `<li>${item}</li>`).join('');
-            
-            document.getElementById('diseaseModalSolutions').innerHTML = 
-                (data.organic_solutions || []).map(item => `<li>${item}</li>`).join('');
-            
-            document.getElementById('diseaseModalSymptoms').innerHTML = 
-                (data.symptoms || []).map(item => `<li>${item}</li>`).join('');
-            
-            document.getElementById('diseaseModalTreatment').innerHTML = 
-                (data.treatment || []).map(item => `<li>${item}</li>`).join('');
+            // Build HTML strings (faster than createElement for simple lists)
+            causesEl.innerHTML = (data.causes || []).map(item => `<li>${item}</li>`).join('');
+            solutionsEl.innerHTML = (data.organic_solutions || []).map(item => `<li>${item}</li>`).join('');
+            symptomsEl.innerHTML = (data.symptoms || []).map(item => `<li>${item}</li>`).join('');
+            treatmentEl.innerHTML = (data.treatment || []).map(item => `<li>${item}</li>`).join('');
             
             // Show edit button, hide save button
             document.querySelector('.btn-modal-edit').style.display = 'flex';
@@ -1498,6 +1550,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (result.success) {
                 showToast('Disease updated successfully', 'success');
+                
+                // Clear cache for this disease to force fresh data on next open
+                diseaseDataCache.delete(currentDiseaseData.name);
                 
                 // Update current data
                 currentDiseaseData = result.disease;
