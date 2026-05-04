@@ -1932,7 +1932,6 @@
     background: #efeae2;
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260"><defs><filter id="a" x="0" y="0"><feGaussianBlur in="SourceGraphic" stdDeviation="3"/></filter></defs><g opacity=".08" filter="url(%23a)"><path fill="%23fff" d="M145.5 173.5a12 12 0 1 1-24 0 12 12 0 0 1 24 0z"/></g></svg>');
 }
-}
 
 .whatsapp-conversation.hidden {
     display: none;
