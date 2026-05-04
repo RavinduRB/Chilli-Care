@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update UI based on authentication status
     function updateAuthUI(authenticated) {
         const dashboardBtn = document.getElementById('dashboardBtn');
+        const mobileDashboardBtn = document.getElementById('mobileDashboardBtn');
         
         if (authenticated && currentUser) {
             // Desktop UI
@@ -117,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (userEmail) userEmail.textContent = currentUser.email;
             if (userEmailDropdown) userEmailDropdown.textContent = currentUser.email;
             
-            // Show dashboard button only for admin users
+            // Show dashboard button only for admin users (Desktop)
             if (dashboardBtn) {
                 if (currentUser.user_type === 'admin') {
                     dashboardBtn.classList.remove('hidden');
@@ -130,6 +131,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (mobileAuthButtons) mobileAuthButtons.classList.add('hidden');
             if (mobileProfileSection) mobileProfileSection.classList.remove('hidden');
             if (mobileUserEmail) mobileUserEmail.textContent = currentUser.email;
+            
+            // Show dashboard button only for admin users (Mobile)
+            if (mobileDashboardBtn) {
+                if (currentUser.user_type === 'admin') {
+                    mobileDashboardBtn.classList.remove('hidden');
+                } else {
+                    mobileDashboardBtn.classList.add('hidden');
+                }
+            }
         } else {
             // Desktop UI
             if (guestProfileSection) guestProfileSection.classList.remove('hidden');
@@ -141,6 +151,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Mobile UI
             if (mobileAuthButtons) mobileAuthButtons.classList.remove('hidden');
             if (mobileProfileSection) mobileProfileSection.classList.add('hidden');
+            
+            // Hide mobile dashboard button
+            if (mobileDashboardBtn) mobileDashboardBtn.classList.add('hidden');
         }
     }
     

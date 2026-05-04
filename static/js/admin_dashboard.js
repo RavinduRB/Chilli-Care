@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const navItems = document.querySelectorAll('.nav-item');
     const contentSections = document.querySelectorAll('.content-section');
     const pageTitle = document.getElementById('pageTitle');
-    const adminLogoutBtn = document.getElementById('adminLogoutBtn');
     const manualRefreshBtn = document.getElementById('manualRefreshBtn');
     
     // Stats Elements
@@ -390,27 +389,93 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // ============================================
-    // LOGOUT
+    // LOGOUT FUNCTIONALITY
     // ============================================
     
-    if (adminLogoutBtn) {
-        adminLogoutBtn.addEventListener('click', async function() {
-            try {
-                const response = await fetch('/api/auth/logout', {
-                    method: 'POST'
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showToast('Logged out successfully', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/';
-                    }, 1000);
-                }
-            } catch (error) {
-                console.error('Logout error:', error);
-                showToast('Logout failed', 'error');
+    // DOM Elements for logout confirmation
+    const userProfileBtn = document.getElementById('userProfileBtn');
+    const logoutConfirmModal = document.getElementById('logoutConfirmModal');
+    const closeLogoutModal = document.getElementById('closeLogoutModal');
+    const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
+    const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+    
+    // Function to show logout confirmation modal
+    function showLogoutConfirmation() {
+        if (logoutConfirmModal) {
+            logoutConfirmModal.classList.add('active');
+        }
+    }
+    
+    // Function to hide logout confirmation modal
+    function hideLogoutConfirmation() {
+        if (logoutConfirmModal) {
+            logoutConfirmModal.classList.remove('active');
+        }
+    }
+    
+    // Function to perform logout
+    async function performLogout() {
+        try {
+            const response = await fetch('/api/auth/logout', {
+                method: 'POST'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('Logged out successfully', 'success');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1000);
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+            showToast('Logout failed', 'error');
+        }
+    }
+    
+    // User profile click handler (sidebar)
+    if (userProfileBtn) {
+        userProfileBtn.addEventListener('click', function() {
+            showLogoutConfirmation();
+        });
+        
+        // Also handle keyboard accessibility
+        userProfileBtn.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                showLogoutConfirmation();
+            }
+        });
+    }
+    
+    // Close modal button
+    if (closeLogoutModal) {
+        closeLogoutModal.addEventListener('click', function() {
+            hideLogoutConfirmation();
+        });
+    }
+    
+    // Cancel button
+    if (cancelLogoutBtn) {
+        cancelLogoutBtn.addEventListener('click', function() {
+            hideLogoutConfirmation();
+        });
+    }
+    
+    // Confirm logout button
+    if (confirmLogoutBtn) {
+        confirmLogoutBtn.addEventListener('click', async function() {
+            hideLogoutConfirmation();
+            await performLogout();
+        });
+    }
+    
+    // Close modal when clicking outside
+    if (logoutConfirmModal) {
+        logoutConfirmModal.addEventListener('click', function(e) {
+            if (e.target === logoutConfirmModal) {
+                hideLogoutConfirmation();
             }
         });
     }

@@ -75,13 +75,16 @@
             </nav>
             
             <div class="sidebar-footer">
-                <div class="user-profile">
+                <div class="user-profile" id="userProfileBtn" role="button" tabindex="0" title="Click to logout">
                     <div class="user-avatar">
                         <i class="fas fa-user-circle"></i>
                     </div>
                     <div class="user-info">
                         <div class="user-name">{% block admin_name %}Chilli Care{% endblock %}</div>
                         <div class="user-role">Admin</div>
+                    </div>
+                    <div class="user-actions">
+                        <i class="fas fa-sign-out-alt"></i>
                     </div>
                 </div>
             </div>
@@ -91,6 +94,32 @@
         <main class="dashboard-main">
             {% block content %}{% endblock %}
         </main>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal-overlay" id="logoutConfirmModal">
+        <div class="modal-content logout-confirm-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-sign-out-alt"></i> Confirm Logout</h3>
+                <button class="modal-close" id="closeLogoutModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="logout-confirm-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <p class="logout-confirm-text">Are you sure you want to logout from the admin dashboard?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelLogoutBtn">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="btn btn-danger" id="confirmLogoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
     </div>
 
     {% block extra_js %}{% endblock %}
