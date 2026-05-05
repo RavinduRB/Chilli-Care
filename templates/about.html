@@ -23,13 +23,15 @@
         <div class="container" style="max-width: 900px;">
             <h2 style="font-size: 1.7rem; font-weight: 600; margin-bottom: 2rem; color: var(--gray-900);">Our Mission</h2>
             <p style="font-size: 1.125rem; line-height: 1.8; color: var(--gray-700); margin-bottom: 2rem;">
-                Chilli Care is an industry-level plant disease detection system designed to help farmers, 
-                agricultural researchers, and plant enthusiasts identify and treat chilli plant diseases with 
-                unprecedented accuracy and speed.
+                Chilli Care is an AI-powered chilli plant disease detection platform designed to help farmers,
+                agricultural researchers, and plant enthusiasts identify and manage chilli diseases with high
+                accuracy and speed. Upload a leaf image or capture one directly with your camera and receive
+                an instant AI diagnosis with treatment recommendations.
             </p>
             <p style="font-size: 1.125rem; line-height: 1.8; color: var(--gray-700); margin-bottom: 2rem;">
-                Built using state-of-the-art Convolutional Neural Networks (CNN) and trained on thousands of 
-                real-world images, our system achieves 90%+ accuracy in detecting five major chilli diseases.
+                Built on a Custom Convolutional Neural Network (CNN) trained on over 3,500 real-world images,
+                the system identifies 5 classes of chilli plant conditions. Results are enriched by Google Gemini AI
+                for detailed treatment guidance, and every prediction is saved to your personal analytics dashboard.
             </p>
 
             <h2 style="font-size: 1.7rem; font-weight: 600; margin: 3rem 0 2rem; color: var(--gray-900);">Technology Stack</h2>
@@ -39,7 +41,7 @@
                         <i class="fas fa-brain"></i> Deep Learning
                     </h3>
                     <p style="color: var(--gray-600); line-height: 1.6;">
-                        TensorFlow 2.x, Keras, Custom CNN architecture with BatchNormalization and Dropout
+                        TensorFlow 2.16+, Keras 3, Custom CNN (27M parameters), trained with data augmentation on 3,509 images across 5 classes
                     </p>
                 </div>
                 <div style="padding: 1.5rem; background: var(--gray-50); border-radius: var(--radius-lg); border-left: 4px solid var(--primary-color);">
@@ -47,7 +49,7 @@
                         <i class="fas fa-server"></i> Backend
                     </h3>
                     <p style="color: var(--gray-600); line-height: 1.6;">
-                        Flask, Python 3.8+, RESTful API, CORS-enabled
+                        Flask 3, Python, MongoDB Atlas, Flask-Login, RESTful API, Google Gemini AI for treatment advice
                     </p>
                 </div>
                 <div style="padding: 1.5rem; background: var(--gray-50); border-radius: var(--radius-lg); border-left: 4px solid var(--primary-color);">
@@ -55,46 +57,46 @@
                         <i class="fas fa-palette"></i> Frontend
                     </h3>
                     <p style="color: var(--gray-600); line-height: 1.6;">
-                        Modern HTML5, CSS3, Vanilla JavaScript, Responsive Design
+                        HTML5, CSS3, Vanilla JavaScript, Progressive Web App (PWA) with offline support and mobile camera access
                     </p>
                 </div>
             </div>
 
-            <h2 style="font-size: 1.7rem; font-weight: 600; margin: 3rem 0 2rem; color: var(--gray-900);">Detected Diseases</h2>
+            <h2 style="font-size: 1.7rem; font-weight: 600; margin: 3rem 0 2rem; color: var(--gray-900);">Detected Conditions</h2>
             <ul style="list-style: none; padding: 0;">
                 <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 1rem;">
                     <span style="width: 40px; height: 40px; min-width: 40px; min-height: 40px; flex-shrink: 0; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;"><i class="fas fa-1"></i></span>
                     <div>
-                        <strong style="font-size: 1.125rem; color: var(--gray-900);">Whitefly Infestation</strong>
-                        <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Sap-sucking insects causing yellowing and stunted growth</p>
+                        <strong style="font-size: 1.125rem; color: var(--gray-900);">Chilli Whitefly</strong>
+                        <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Sap-sucking insect infestation causing yellowing, stunted growth, and virus transmission</p>
                     </div>
                 </li>
                 <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 1rem;">
                     <span style="width: 40px; height: 40px; min-width: 40px; min-height: 40px; flex-shrink: 0; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;"><i class="fas fa-2"></i></span>
                     <div>
-                        <strong style="font-size: 1.125rem; color: var(--gray-900);">Leaf Yellowing (Chlorosis)</strong>
-                        <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Nutrient deficiency or viral infections</p>
+                        <strong style="font-size: 1.125rem; color: var(--gray-900);">Chilli Yellowish (Chlorosis)</strong>
+                        <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Leaf yellowing caused by nutrient deficiency, viral infection, or root stress</p>
                     </div>
                 </li>
                 <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 1rem;">
                     <span style="width: 40px; height: 40px; min-width: 40px; min-height: 40px; flex-shrink: 0; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;"><i class="fas fa-3"></i></span>
                     <div>
-                        <strong style="font-size: 1.125rem; color: var(--gray-900);">Anthracnose</strong>
-                        <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Fungal disease causing fruit rot and yield loss</p>
+                        <strong style="font-size: 1.125rem; color: var(--gray-900);">Chilli Anthracnose</strong>
+                        <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Fungal disease caused by <em>Colletotrichum</em> spp., leading to fruit rot and significant yield loss</p>
                     </div>
                 </li>
                 <li style="padding: 1rem; margin-bottom: 1rem; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 1rem;">
                     <span style="width: 40px; height: 40px; min-width: 40px; min-height: 40px; flex-shrink: 0; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;"><i class="fas fa-4"></i></span>
                     <div>
-                        <strong style="font-size: 1.125rem; color: var(--gray-900);">Leaf Curl Virus</strong>
-                        <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Devastating viral disease transmitted by whiteflies</p>
+                        <strong style="font-size: 1.125rem; color: var(--gray-900);">Chilli Leaf Curl Virus</strong>
+                        <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Begomovirus transmitted by whiteflies, causing severe leaf curling and crop failure</p>
                     </div>
                 </li>
                 <li style="padding: 1rem; background: var(--primary-light); border-radius: var(--radius-md); display: flex; align-items: flex-start; gap: 1rem;">
                     <span style="width: 40px; height: 40px; min-width: 40px; min-height: 40px; flex-shrink: 0; background: var(--success-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;"><i class="fas fa-check"></i></span>
                     <div>
-                        <strong style="font-size: 1.125rem; color: var(--gray-900);">Healthy Plants</strong>
-                        <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Detection of disease-free chilli plants</p>
+                        <strong style="font-size: 1.125rem; color: var(--gray-900);">Healthy Chilli</strong>
+                        <p style="margin: 0.25rem 0 0; color: var(--gray-600);">Confirmed disease-free plant — no intervention required</p>
                     </div>
                 </li>
             </ul>
@@ -102,27 +104,56 @@
             <h2 style="font-size: 1.7rem; font-weight: 600; margin: 3rem 0 2rem; color: var(--gray-900);">Model Performance</h2>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
                 <div style="text-align: center; padding: 2rem; background: var(--gray-50); border-radius: var(--radius-lg);">
-                    <div style="font-size: 2.8rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0.5rem;">95.8%</div>
+                    <div style="font-size: 2.8rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0.5rem;">91.89%</div>
                     <div style="color: var(--gray-600);">Test Accuracy</div>
                 </div>
                 <div style="text-align: center; padding: 2rem; background: var(--gray-50); border-radius: var(--radius-lg);">
-                    <div style="font-size: 2.8rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0.5rem;">94.2%</div>
+                    <div style="font-size: 2.8rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0.5rem;">93.15%</div>
                     <div style="color: var(--gray-600);">Precision</div>
                 </div>
                 <div style="text-align: center; padding: 2rem; background: var(--gray-50); border-radius: var(--radius-lg);">
-                    <div style="font-size: 2.8rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0.5rem;">96.1%</div>
+                    <div style="font-size: 2.8rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0.5rem;">91.89%</div>
                     <div style="color: var(--gray-600);">Recall</div>
                 </div>
                 <div style="text-align: center; padding: 2rem; background: var(--gray-50); border-radius: var(--radius-lg);">
-                    <div style="font-size: 2.8rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0.5rem;">10s</div>
-                    <div style="color: var(--gray-600);">Avg Response Time</div>
+                    <div style="font-size: 2.8rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0.5rem;">0.9252</div>
+                    <div style="color: var(--gray-600);">F1-Score</div>
+                </div>
+            </div>
+
+            <h2 style="font-size: 1.7rem; font-weight: 600; margin: 3rem 0 2rem; color: var(--gray-900);">Key Features</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+                <div style="padding: 1.5rem; background: var(--gray-50); border-radius: var(--radius-lg); border-left: 4px solid var(--primary-color);">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--gray-900);">
+                        <i class="fas fa-chart-line"></i> Personal Analytics
+                    </h3>
+                    <p style="color: var(--gray-600); line-height: 1.6;">
+                        Logged-in users get a personal dashboard with prediction history, disease distribution charts, confidence trends, and disease risk insights.
+                    </p>
+                </div>
+                <div style="padding: 1.5rem; background: var(--gray-50); border-radius: var(--radius-lg); border-left: 4px solid var(--primary-color);">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--gray-900);">
+                        <i class="fas fa-mobile-alt"></i> PWA & Mobile Camera
+                    </h3>
+                    <p style="color: var(--gray-600); line-height: 1.6;">
+                        Installable as a Progressive Web App on any device. Capture leaf images directly from your phone's camera for instant in-field diagnosis.
+                    </p>
+                </div>
+                <div style="padding: 1.5rem; background: var(--gray-50); border-radius: var(--radius-lg); border-left: 4px solid var(--primary-color);">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--gray-900);">
+                        <i class="fas fa-robot"></i> Gemini AI Advice
+                    </h3>
+                    <p style="color: var(--gray-600); line-height: 1.6;">
+                        Every diagnosis is enriched by Google Gemini AI, providing detailed causes, treatment steps, and preventive recommendations tailored to the detected condition.
+                    </p>
                 </div>
             </div>
 
             <h2 style="font-size: 1.7rem; font-weight: 600; margin: 3rem 0 2rem; color: var(--gray-900);">Contact & Support</h2>
             <p style="font-size: 1.125rem; line-height: 1.8; color: var(--gray-700); margin-bottom: 2rem;">
-                For questions, bug reports, or feature requests, please reach out through our GitHub repository 
-                or contact us via email at <strong>supportchillicare002@gmail.com</strong>.
+                For questions, bug reports, or feature requests, contact us via our 
+                <a href="/contact"><strong>Contact page</strong></a> or reach us directly at 
+                <strong>supportchillicare002@gmail.com</strong>.
             </p>
         </div>
     </section>
