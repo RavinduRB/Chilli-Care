@@ -118,7 +118,46 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    function clearAnalyticsData() {
+        // Reset statistics
+        document.getElementById('totalPredictions').textContent = '0';
+        document.getElementById('diseasesDetected').textContent = '0';
+        document.getElementById('mostCommonDisease').textContent = '-';
+        document.getElementById('avgConfidence').textContent = '0%';
+
+        // Clear predictions table
+        if (predictionsTableBody) predictionsTableBody.innerHTML = '';
+
+        // Destroy charts
+        if (diseaseDistributionChart) {
+            diseaseDistributionChart.destroy();
+            diseaseDistributionChart = null;
+        }
+        if (confidenceChart) {
+            confidenceChart.destroy();
+            confidenceChart = null;
+        }
+
+        // Reset disease insights
+        document.getElementById('mostDemandingName').textContent = '\u2014';
+        document.getElementById('leastDemandingName').textContent = '\u2014';
+        document.getElementById('mostDemandingCount').textContent = '';
+        document.getElementById('leastDemandingCount').textContent = '';
+        document.getElementById('mostDemandingCausesList').innerHTML = '';
+        document.getElementById('leastDemandingCausesList').innerHTML = '';
+        document.getElementById('mostDemandingPreventionText').textContent = '';
+        document.getElementById('leastDemandingPreventionText').textContent = '';
+        document.getElementById('diseaseRankingList').innerHTML = '';
+
+        // Reset pagination
+        currentPage = 1;
+        hasMorePredictions = false;
+        if (loadMoreContainer) loadMoreContainer.classList.add('hidden');
+        if (emptyState) emptyState.classList.add('hidden');
+    }
+
     function showAuthRequired() {
+        clearAnalyticsData();
         loadingSection.classList.add('hidden');
         analyticsContent.classList.add('hidden');
         authRequired.classList.remove('hidden');
@@ -328,7 +367,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    function updatePredictionsTable(predictions) {
+    function updatePredictionsTable(predictions, append = false) {
+        if (!append) {
+            predictionsTableBody.innerHTML = '';
+        }
         predictions.forEach(prediction => {
             const row = createPredictionRow(prediction);
             predictionsTableBody.appendChild(row);
@@ -539,7 +581,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (data.success) {
-                updatePredictionsTable(data.predictions);
+                updatePredictionsTable(data.predictions, true);
                 
                 hasMorePredictions = data.page < data.total_pages;
                 if (!hasMorePredictions) {

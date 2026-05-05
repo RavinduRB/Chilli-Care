@@ -1,9 +1,9 @@
 // Service Worker for Chilli Care PWA
-// Version: 2.0.0 - Optimized disease images for mobile
+// Version: 2.1.0 - Fix stale auth/user data caching
 
-const CACHE_NAME = 'chilli-care-v2';
-const RUNTIME_CACHE = 'chilli-care-runtime-v2';
-const IMAGE_CACHE = 'chilli-care-images-v2';
+const CACHE_NAME = 'chilli-care-v3';
+const RUNTIME_CACHE = 'chilli-care-runtime-v3';
+const IMAGE_CACHE = 'chilli-care-images-v3';
 
 // App Shell - Critical resources to cache immediately
 const APP_SHELL = [
@@ -145,7 +145,18 @@ self.addEventListener('fetch', (event) => {
         return;
     }
     
-    // API requests - Network first, cache as fallback (Stale-While-Revalidate)
+    // Auth API - Always go to network, never serve from cache (prevents stale session data)
+    if (url.pathname.startsWith('/api/auth/')) {
+        return;
+    }
+
+    // User data API - Network first to ensure fresh data per authenticated user
+    if (url.pathname.startsWith('/api/user/')) {
+        event.respondWith(networkFirstStrategy(request));
+        return;
+    }
+
+    // Other API requests - Stale-While-Revalidate
     if (url.pathname.startsWith('/api/')) {
         event.respondWith(staleWhileRevalidate(request));
         return;
