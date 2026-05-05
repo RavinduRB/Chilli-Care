@@ -1,9 +1,9 @@
 // Service Worker for Chilli Care PWA
-// Version: 2.1.0 - Fix stale auth/user data caching
+// Version: 2.2.0 - Update cached content (about page, analytics fix)
 
-const CACHE_NAME = 'chilli-care-v3';
-const RUNTIME_CACHE = 'chilli-care-runtime-v3';
-const IMAGE_CACHE = 'chilli-care-images-v3';
+const CACHE_NAME = 'chilli-care-v4';
+const RUNTIME_CACHE = 'chilli-care-runtime-v4';
+const IMAGE_CACHE = 'chilli-care-images-v4';
 
 // App Shell - Critical resources to cache immediately
 const APP_SHELL = [
