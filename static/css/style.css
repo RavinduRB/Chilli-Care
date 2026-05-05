@@ -3000,7 +3000,7 @@ button {
 }
 
 .form-group input::placeholder {
-    color: var(--text-secondary);
+    color: #6b7280;
 }
 
 .password-wrapper {
