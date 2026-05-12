@@ -40,6 +40,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const userEmailDropdown = document.getElementById('userEmailDropdown');
     const logoutBtn = document.getElementById('logoutBtn');
     const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    const deleteAccountModal = document.getElementById('deleteAccountModal');
+    const closeDeleteAccountModal = document.getElementById('closeDeleteAccountModal');
+    const cancelDeleteAccountBtn = document.getElementById('cancelDeleteAccountBtn');
+    const confirmDeleteAccountBtn = document.getElementById('confirmDeleteAccountBtn');
     
     // Mobile Menu Elements
     const mobileMenu = document.getElementById('mobileMenu');
@@ -303,39 +307,56 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Delete account handler
-    if (deleteAccountBtn) {
-        deleteAccountBtn.addEventListener('click', async function() {
-            if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/auth/delete-account', {
-                    method: 'DELETE'
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    isAuthenticated = false;
-                    currentUser = null;
-                    updateAuthUI(false);
-                    profileDropdown.classList.add('hidden');
-                    
-                    // Hide notification bell
-                    if (typeof window.hideNotificationBell === 'function') {
-                        window.hideNotificationBell();
+    // Delete account — shared action
+    async function performDeleteAccount(fromMobile) {
+        try {
+            const response = await fetch('/api/auth/delete-account', {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+            if (data.success) {
+                isAuthenticated = false;
+                currentUser = null;
+                updateAuthUI(false);
+                if (!fromMobile && profileDropdown) profileDropdown.classList.add('hidden');
+                if (fromMobile) {
+                    if (mobileMenu) mobileMenu.classList.remove('active');
+                    if (mobileMenuToggle) {
+                        const icon = mobileMenuToggle.querySelector('i');
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
                     }
-                    
-                    showToast('Account deleted successfully', 'success');
-                } else {
-                    showToast(data.error || 'Failed to delete account', 'error');
                 }
-            } catch (error) {
-                console.error('Delete account error:', error);
-                showToast('Failed to delete account. Please try again.', 'error');
+                if (typeof window.hideNotificationBell === 'function') {
+                    window.hideNotificationBell();
+                }
+                showToast('Account deleted successfully', 'success');
+            } else {
+                showToast(data.error || 'Failed to delete account', 'error');
             }
+        } catch (error) {
+            console.error('Delete account error:', error);
+            showToast('Failed to delete account. Please try again.', 'error');
+        }
+    }
+
+    // Track which button triggered the modal
+    let _deleteFromMobile = false;
+
+    function openDeleteModal(fromMobile) {
+        _deleteFromMobile = fromMobile;
+        if (deleteAccountModal) deleteAccountModal.classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        if (deleteAccountModal) deleteAccountModal.classList.add('hidden');
+    }
+
+    // Delete account handler (desktop)
+    if (deleteAccountBtn) {
+        deleteAccountBtn.addEventListener('click', function() {
+            if (profileDropdown) profileDropdown.classList.add('hidden');
+            openDeleteModal(false);
         });
     }
     
@@ -377,43 +398,27 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Mobile delete account handler
     if (mobileDeleteAccountBtn) {
-        mobileDeleteAccountBtn.addEventListener('click', async function() {
-            if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/auth/delete-account', {
-                    method: 'DELETE'
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    isAuthenticated = false;
-                    currentUser = null;
-                    updateAuthUI(false);
-                    // Close mobile menu
-                    if (mobileMenu) mobileMenu.classList.remove('active');
-                    if (mobileMenuToggle) {
-                        const icon = mobileMenuToggle.querySelector('i');
-                        icon.classList.remove('fa-times');
-                        icon.classList.add('fa-bars');
-                    }
-                    
-                    // Hide notification bell
-                    if (typeof window.hideNotificationBell === 'function') {
-                        window.hideNotificationBell();
-                    }
-                    
-                    showToast('Account deleted successfully', 'success');
-                } else {
-                    showToast(data.error || 'Failed to delete account', 'error');
-                }
-            } catch (error) {
-                console.error('Delete account error:', error);
-                showToast('Failed to delete account. Please try again.', 'error');
-            }
+        mobileDeleteAccountBtn.addEventListener('click', function() {
+            openDeleteModal(true);
+        });
+    }
+
+    // Delete confirmation modal buttons
+    if (confirmDeleteAccountBtn) {
+        confirmDeleteAccountBtn.addEventListener('click', async function() {
+            closeDeleteModal();
+            await performDeleteAccount(_deleteFromMobile);
+        });
+    }
+    if (cancelDeleteAccountBtn) {
+        cancelDeleteAccountBtn.addEventListener('click', closeDeleteModal);
+    }
+    if (closeDeleteAccountModal) {
+        closeDeleteAccountModal.addEventListener('click', closeDeleteModal);
+    }
+    if (deleteAccountModal) {
+        deleteAccountModal.addEventListener('click', function(e) {
+            if (e.target === deleteAccountModal) closeDeleteModal();
         });
     }
     

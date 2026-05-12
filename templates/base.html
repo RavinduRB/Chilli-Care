@@ -234,7 +234,7 @@
                         <i class="fas fa-lock"></i> Password
                     </label>
                     <div class="password-wrapper">
-                        <input type="password" id="loginPassword" name="password" required placeholder="Enter your password">
+                        <input type="password" id="loginPassword" name="password" required placeholder="Enter your password" autocomplete="new-password">
                         <button type="button" class="password-toggle" data-target="loginPassword" aria-label="Toggle password visibility">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -272,7 +272,7 @@
                         <i class="fas fa-lock"></i> Password
                     </label>
                     <div class="password-wrapper">
-                        <input type="password" id="signupPassword" name="password" required placeholder="At least 6 characters">
+                        <input type="password" id="signupPassword" name="password" required placeholder="At least 6 characters" autocomplete="new-password">
                         <button type="button" class="password-toggle" data-target="signupPassword" aria-label="Toggle password visibility">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -283,7 +283,7 @@
                         <i class="fas fa-lock"></i> Confirm Password
                     </label>
                     <div class="password-wrapper">
-                        <input type="password" id="signupPasswordConfirm" name="passwordConfirm" required placeholder="Re-enter password">
+                        <input type="password" id="signupPasswordConfirm" name="passwordConfirm" required placeholder="Re-enter password" autocomplete="new-password">
                         <button type="button" class="password-toggle" data-target="signupPasswordConfirm" aria-label="Toggle password visibility">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -298,6 +298,26 @@
                 </p>
                 <p style="font-size: 0.85rem; text-align: center;">By creating an account, you agree to our <a href="/terms"><b>Terms of Service</b></a> and <a href="/privacy"><b>Privacy Policy</b></a>.</p>
             </form>
+        </div>
+    </div>
+
+    <!-- Delete Account Confirmation Modal -->
+    <div class="modal-overlay hidden" id="deleteAccountModal">
+        <div class="modal-content" style="max-width:420px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-trash" style="color:#e74c3c;margin-right:8px;"></i>Delete Account</h2>
+                <button class="modal-close" id="closeDeleteAccountModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div style="padding:1.5rem 1.5rem 0;">
+                <p style="margin:0 0 0.5rem;font-size:1rem;">Are you sure you want to <strong>permanently delete</strong> your account?</p>
+                <p style="margin:0;font-size:0.9rem;color:#888;">This action <strong>cannot be undone</strong>. All your data and prediction history will be removed.</p>
+            </div>
+            <div style="display:flex;gap:0.75rem;padding:1.5rem;justify-content:flex-end;">
+                <button class="btn" id="cancelDeleteAccountBtn" style="background:#f0f0f0;color:#333;border:none;padding:0.6rem 1.2rem;border-radius:6px;cursor:pointer;font-size:0.95rem;">Cancel</button>
+                <button class="btn" id="confirmDeleteAccountBtn" style="background:#e74c3c;color:#fff;border:none;padding:0.6rem 1.2rem;border-radius:6px;cursor:pointer;font-size:0.95rem;">Yes, Delete</button>
+            </div>
         </div>
     </div>
 
