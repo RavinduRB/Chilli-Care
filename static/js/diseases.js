@@ -707,8 +707,22 @@ function openModal(d) {
     const modelTag   = d.inModel
         ? `<span class="model-tag"><i class="fas fa-robot"></i> AI Detectable</span>`
         : '';
-    const causesHTML = (d.causes || []).map(c => `<li>${escHtml(c)}</li>`).join('');
-    const prevHTML   = d.prevention ? `<p>${escHtml(d.prevention)}</p>` : '<p>No specific information available.</p>';
+    const parseFacts = (value) => {
+        const list = Array.isArray(value)
+            ? value.filter(Boolean)
+            : (value ? String(value).split(/\s*;\s*/).filter(Boolean) : []);
+        return list.map(item => `<li>${escHtml(item)}</li>`).join('');
+    };
+
+    const symptomsHTML = parseFacts(d.symptoms);
+    const causesHTML   = parseFacts(d.causes);
+    const preventionHTML = parseFacts(d.prevention);
+    const prevHTML     = preventionHTML
+        ? `<ul class="modal-facts-list">${preventionHTML}</ul>`
+        : '<p>No specific information available.</p>';
+    const symptomsContent = symptomsHTML
+        ? `<ul class="modal-facts-list">${symptomsHTML}</ul>`
+        : `<p>${escHtml(d.symptoms || 'No symptoms listed.')}</p>`;
 
     const modalImageHTML = d.image
         ? `<div class="modal-image-wrap">
@@ -744,7 +758,7 @@ function openModal(d) {
                 <div class="modal-section-title">
                     <i class="fas fa-notes-medical"></i> Symptoms
                 </div>
-                <p>${escHtml(d.symptoms)}</p>
+                ${symptomsContent}
             </div>
 
             <div class="modal-section">

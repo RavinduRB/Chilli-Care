@@ -582,7 +582,8 @@
     margin: 0;
 }
 
-.modal-causes-list {
+.modal-causes-list,
+.modal-facts-list {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -591,7 +592,8 @@
     gap: 0.6rem;
 }
 
-.modal-causes-list li {
+.modal-causes-list li,
+.modal-facts-list li {
     font-size: 0.9375rem;
     color: var(--gray-700);
     padding-left: 1.5rem;
@@ -599,7 +601,8 @@
     line-height: 1.6;
 }
 
-.modal-causes-list li::before {
+.modal-causes-list li::before,
+.modal-facts-list li::before {
     content: '▸';
     position: absolute;
     left: 0;
