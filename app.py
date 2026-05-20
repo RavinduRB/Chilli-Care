@@ -140,9 +140,6 @@ GEMINI_API_KEYS = [
 # Remove empty keys
 GEMINI_API_KEYS = [key for key in GEMINI_API_KEYS if key]
 
-# Hugging Face - No API key needed for local model
-HUGGINGFACE_API_KEY = os.environ.get('HUGGINGFACE_API_KEY', '')  # Deprecated - using local model now
-
 if GEMINI_API_KEYS:
     logger.info(f"✓ Configured {len(GEMINI_API_KEYS)} Gemini API key(s)")
 else:
