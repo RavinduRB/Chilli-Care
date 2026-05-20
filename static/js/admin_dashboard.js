@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update page title
             const sectionTitles = {
                 'dashboard': 'Welcome, Chilli Care!',
-                'users': 'User Management',
+                'users': 'Users',
                 'diseases': 'Disease Management',
                 'predictions': 'Prediction History',
                 'mapping': 'District Mapping',
