@@ -1,9 +1,9 @@
 // Service Worker for Chilli Care PWA
-// Version: 2.4.2 - Cache update
+// Version: 2.4.3 - Cache update
 
-const CACHE_NAME = 'chilli-care-v8';
-const RUNTIME_CACHE = 'chilli-care-runtime-v8';
-const IMAGE_CACHE = 'chilli-care-images-v8';
+const CACHE_NAME = 'chilli-care-v9';
+const RUNTIME_CACHE = 'chilli-care-runtime-v9';
+const IMAGE_CACHE = 'chilli-care-images-v9';
 
 // App Shell - Critical resources to cache immediately
 const APP_SHELL = [
@@ -12,10 +12,13 @@ const APP_SHELL = [
     '/static/css/admin_dashboard.css',
     '/static/css/diseases.css',
     '/static/css/analytics.css',
+    '/static/css/pwa.css',
     '/static/js/main.js',
     '/static/js/admin_dashboard.js',
     '/static/js/diseases.js',
     '/static/js/analytics.js',
+    '/static/js/notifications.js',
+    '/static/js/pwa.js',
     '/static/images/Chilli Care Logo.png',
     '/static/images/Site icon.png',
     '/static/images/background.jpg',
