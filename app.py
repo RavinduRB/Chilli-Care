@@ -1,6 +1,5 @@
 """
-Chilli Disease Detection - Industry-Level Web Application
-Modern Flask API with TensorFlow Model Integration
+Chilli Disease Detection System - Modern Flask API with TensorFlow Model Integration
 """
 
 import os
